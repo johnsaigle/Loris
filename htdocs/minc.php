@@ -11,6 +11,7 @@ $minc_file = $DB->pselectOne($query, array('MincID' => $_REQUEST['minc_id']));
 
 $minc_file = getMincLocation() . $minc_file;
 
+print "$minc_file";
 $header = $_REQUEST['minc_headers'];
 $header_data = $_REQUEST['raw_data'];
 if($header_data) {
