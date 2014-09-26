@@ -1,12 +1,13 @@
 <?php
 require_once 'PEAR.php';
+require_once 'NDB_Page.class.inc';
 
 /**
  * Base Menu class
  *
  * @package main
  */
-class NDB_Menu extends PEAR
+class NDB_Menu extends NDB_Page
 {
     /**
      * The menu's name
@@ -39,13 +40,15 @@ class NDB_Menu extends PEAR
      * @throws PEAR_Error
      * @access public
      */
-    function &factory($menu, $mode)
+    static function &factory($menu, $mode)
     {
         // get the name of the class
         if (class_exists("NDB_Menu_$menu")) {
             $class = "NDB_Menu_$menu";
         } elseif (class_exists("NDB_Menu_Filter_$menu")) {
             $class = "NDB_Menu_Filter_$menu";
+        } elseif (class_exists("NDB_Menu_Filter_Form_$menu")) {
+            $class = "NDB_Menu_Filter_Form_$menu";
         } else {
             return PEAR::raiseError("The menu class ($menu) is not defined.");
         }
@@ -53,12 +56,16 @@ class NDB_Menu extends PEAR
         // create a new menu object
         $obj = new $class;
 
+        if(isset($_REQUEST['test_name'])) {
+            $obj->Module = $_REQUEST['test_name'];
+        } else {
+            $obj->Module = $menu;
+        }
         // set the local variables
         $obj->menu = $menu;
         $obj->mode = $mode;        
-
         $access = $obj->_hasAccess();
-        if (PEAR::isError($access)) {
+        if (Utility::isErrorX($access)) {
             return PEAR::raiseError("NDB_Menu::factory(): ".$access->getMessage());
         }
 
@@ -78,7 +85,7 @@ class NDB_Menu extends PEAR
      *
      *     // create user object
      *     $user =& User::singleton();
-     *     if(PEAR::isError($user)) {
+     *     if(Utility::isErrorX($user)) {
      *         return PEAR::raiseError("User Error: ".$user->getMessage());
      *     }
      *
@@ -117,7 +124,7 @@ class NDB_Menu extends PEAR
     function display()
     {
         // dump the html for the menu
-        $smarty = new Smarty_neurodb;
+        $smarty = new Smarty_neurodb($this->Module);
         $smarty->assign('mode', $this->mode);
         $smarty->assign($this->tpl_data);
         $html = $smarty->fetch("menu_$this->menu.tpl");

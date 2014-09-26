@@ -1,4 +1,6 @@
-<?
+<?php
+set_include_path(get_include_path().":../project/libraries:../php/libraries:");
+ini_set('default_charset', 'utf-8');
 /**
  * @version $Id: feedback_bvl_popup.php,v 3.13 2007/03/02 16:16:41 sebas Exp $
  * @package behavioural
@@ -49,13 +51,14 @@ if(!empty($_REQUEST['sessionID'])) {
 if (!empty($_REQUEST['commentID'])) {
     
     $tpl_data['commentID'] = $_REQUEST["commentID"];
+    $subtest = isset($_REQUEST['subtest']) ?  $subtest : null;
 
     if (!empty($_REQUEST['test_name'])) {
         if (file_exists($paths['base']."project/instruments/NDB_BVL_Instrument_$_REQUEST[test_name].class.inc")) {
             // otherwise create an instrument_<test_name> object
             include_once $paths['base']."project/instruments/NDB_BVL_Instrument_$_REQUEST[test_name].class.inc";
 
-            $instrument =& NDB_BVL_Instrument::factory($_REQUEST['test_name'], $_REQUEST['commentID'], $_REQUEST['subtest']);
+            $instrument =& NDB_BVL_Instrument::factory($_REQUEST['test_name'], $_REQUEST['commentID'], $subtest);
             if (PEAR::isError($instrument)) {
                 $tpl_data['error_message'][] = $instrument->getMessage();
             }
@@ -64,6 +67,17 @@ if (!empty($_REQUEST['commentID'])) {
         } else {
             $tpl_data['instrument_name'] = $_REQUEST['test_name'];
         }
+        
+        ///get the fields names....
+		// "Add Feedback" Form" - option array for select boxes - 2 arrays; one is for labels
+		$field_names=Utility::getSourcefields($_REQUEST['test_name']);
+		$Fields['Across All Fields'] = 'Across All Fields';
+		foreach($field_names as $field_name){
+			$Fields[$field_name['SourceField']] = $field_name['SourceField'];
+		}
+
+		$tpl_data['FieldNames'] = $Fields;
+
     }
 
 }
@@ -80,14 +94,14 @@ if (!empty($_REQUEST['commentID'])) {
 } else {
 }
 
-if (PEAR::isError($feedback)) {
+if (isset($feedback) && Utility::isErrorX($feedback)) {
 
     // if feedback object return an error
     $tpl_data['error_message'][] = $feedback->getMessage();
 
-} elseif (!is_object($feedback)) {
+} elseif (isset($feedback) && !is_object($feedback)) {
 
-} else {
+} elseif(isset($feedback)) {
 
     // define feedback level
     $tpl_data['feedbackLevel'] = $feedback->getFeedbackLevel();
@@ -118,22 +132,25 @@ if (PEAR::isError($feedback)) {
      * process form data
      */
     // add new threads
-    if ($_REQUEST['add_new_thread_form_submit'] == 'Save Data') {
+    if (isset($_REQUEST['add_new_thread_form_submit']) 
+        && $_REQUEST['add_new_thread_form_submit'] == 'Save Data') {
         foreach($_REQUEST['newFormThreadData'] as $type => $threadData) {
             if (!empty($threadData['Comment'])) {
                 
                 if (empty($threadData['Public'])) {
                     $tpl_data['form_error_message']['new'] = "Please select a 'Required Action?' value for every new type of feedback you want to create";
                     $tpl_data['new_thread_data'][$type]['CommentValue'] = $threadData['Comment'];
+                    $tpl_data['new_thread_data'][$type]['FieldNameValue'] = $threadData['FieldName'];
                     $tpl_data['new_thread_data'][$type]['PublicValue']  = $threadData['Public'];
                 } else {
                     // add the new thread
-                    $success = $feedback->createThread($threadData['Level'], $threadData['Type'], $threadData['Comment'], $threadData['Public']);
+                    $success = $feedback->createThread($threadData['Level'], $threadData['Type'], $threadData['Comment'], $threadData['Public'],$threadData['FieldName']);
                     if (PEAR::isError($success)) {
                         // pass form data
                         $tpl_data['form_error_message']['new'] .= "Unable to create a new $type thread: ".$success->getMessage();
                         $tpl_data['new_thread_data'][$type]['CommentValue'] = $threadData['Comment'];
                         $tpl_data['new_thread_data'][$type]['PublicValue']  = $threadData['Public'];
+                        $tpl_data['new_thread_data'][$type]['FieldNameValue']  = $threadData['FieldName'];
                     }
                     // unset the array to remove form data
                     unset($_REQUEST['new_thread_data'][$type]);
@@ -148,7 +165,8 @@ if (PEAR::isError($feedback)) {
     }
     
     // activate threads
-    if ($_REQUEST['activate_thread_form_submit'] == 'Post New Feedback') {
+    if ( isset($_REQUEST['activate_thread_form_submit']) && 
+        $_REQUEST['activate_thread_form_submit'] == 'Post New Feedback') {
         $success = $feedback->activateThread();
         if (PEAR::isError($success)) {
             $tpl_data['form_error_message']['activate'] = "Unable to post new feedback: ".$success->getMessage();
@@ -158,7 +176,8 @@ if (PEAR::isError($feedback)) {
     }
     
     // close threads
-    if ($_REQUEST['close_thread_form_submit'] == 'Close All Threads') {
+    if (isset($_REQUEST['close_thread_form_submit'])
+        && $_REQUEST['close_thread_form_submit'] == 'Close All Threads') {
         $success = $feedback->closeThread();
         if (PEAR::isError($success)) {
             $tpl_data['form_error_message']['close'] = "Unable to close threads: ".$success->getMessage();
@@ -168,7 +187,7 @@ if (PEAR::isError($feedback)) {
     }
 
     // add entries and/or update threads
-    if ($_REQUEST['existing_thread_form_submit'] == 'Save Data') {
+    if (isset($_REQUEST['existing_thread_form_submit']) && $_REQUEST['existing_thread_form_submit'] == 'Save Data') {
         // if anything is passed by the thread form
         if (is_array($_REQUEST['formThreadData'])) {
             
@@ -176,7 +195,7 @@ if (PEAR::isError($feedback)) {
                 
                 // comment is required for any action
                 if (!empty($threadData['Comment'])) {
-                    $success = $feedback->updateThread($threadData['FeedbackID'], $threadData['Comment'], $threadData['Type'], $threadData['Public'], $threadData['Status']);
+                	$success = $feedback->updateThread($threadData['FeedbackID'], $threadData['Comment'], $threadData['Type'], $threadData['Public'], $threadData['Status'],$threadData['FieldName']);
                     if (PEAR::isError($success)) {
                         // pass form data
                         $tpl_data['form_error_message'][$threadIndex]['Text'] = "Data Not Saved. Error: ".$success->getMessage();
@@ -211,12 +230,19 @@ if (PEAR::isError($feedback)) {
             
             $tpl_data['thread_summary_headers'] = array_keys($success[0]);
             for($i=0;$i<count($success);$i++){
-                $tpl_data['thread_summary_data'][$i]['QC_Class'] = $success[$i]['QC_Class'];
-                $tpl_data['thread_summary_data'][$i]['No_Threads'] = $success[$i]['No_Threads'];
-                $tpl_data['thread_summary_data'][$i]['Instrument'] = $success[$i]['Instrument'];
-                $tpl_data['thread_summary_data'][$i]['CommentID'] = $success[$i]['CommentID'];
-                $tpl_data['thread_summary_data'][$i]['Visit'] = $success[$i]['Visit'];
-                $tpl_data['thread_summary_data'][$i]['SessionID'] = $success[$i]['SessionID'];
+                $row = array(
+                    'QC_Class' => 
+                        isset($success[$i]['QC_Class']) ? $success[$i]['QC_Class'] : '',
+                    'No_Threads' =>
+                        isset($success[$i]['No_Threads']) ? $success[$i]['No_Threads'] : '',
+                    'Instrument' => 
+                        isset($success[$i]['Instrument']) ? $success[$i]['Instrument'] : '',
+                            'CommentID' => 
+                            isset($success[$i]['CommentID']) ? $success[$i]['CommentID'] : '',
+                    'Visit' => isset($success[$i]['Visit']) ? $success[$i]['Visit'] : '',
+                    'SessionID' => isset( $success[$i]['SessionID']) ? $success[$i]['SessionID'] : ''
+                );
+                $tpl_data['thread_summary_data'][$i] = $row;
             }
         }
     }
@@ -236,6 +262,9 @@ if (PEAR::isError($feedback)) {
            if (empty($tpl_data['existing_thread_data'][$z]['Public'])) {
                $tpl_data['existing_thread_data'][$z]['Public'] = $thread['Public'];
            }
+           if (empty($tpl_data['existing_thread_data'][$z]['FieldName'])) {
+				$tpl_data['existing_thread_data'][$z]['FieldName'] = $thread['FieldName'];
+		   }
            if (empty($tpl_data['existing_thread_data'][$z]['Type'])) {
                $tpl_data['existing_thread_data'][$z]['Type'] = $thread['TypeID'];
            }
@@ -297,7 +326,7 @@ if (!empty($_REQUEST['sessionID'])) {
     $tpl_data['formAction'] .= "sessionID=".$_REQUEST['sessionID']."&";
 }
 if (!empty($_REQUEST['commentID'])) {
-    $tpl_data['formAction'] .= "commentID=".$_REQUEST['commentID']."";
+    $tpl_data['formAction'] .= "commentID=".$_REQUEST['commentID']."&" . "test_name=".$_REQUEST['test_name']."";;
 }
 
 //set study name

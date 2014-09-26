@@ -1,4 +1,4 @@
-<?
+<?php
 set_time_limit(0);
 /**
  * QUAT uses the parameter_type table to determine the list of
@@ -33,6 +33,8 @@ mysql> describe parameter_type;
 | Queryable       | tinyint(1)                                    | YES  |     | 1       |                |
 +-----------------+-----------------------------------------------+------+-----+---------+----------------+
 */
+
+set_include_path(get_include_path().":../project/libraries:../php/libraries:");
 
 
 require_once "Utility.class.inc";

@@ -35,7 +35,7 @@ class NDB_BVL_LogicTest
             
             $success = $logicTestList[$objectName]->setup($type, $test_name, $commentID);
             
-            if (PEAR::isError($success)) {
+            if (Utility::isErrorX($success)) {
                 unset($logicTestList[$objectName]);
                 return PEAR::raiseError($success->getMessage());
             }
@@ -84,18 +84,20 @@ class NDB_BVL_LogicTest
     {
         // new DB Object
         $db =& Database::singleton();
-        if(PEAR::isError($db)) {
+        if(Utility::isErrorX($db)) {
             return PEAR::raiseError ("Could not connect to database: ".$db->getMessage());
         }
 
         // test type emtpy
         
-        $query = "SELECT Table_name, Field_name, Conditional_operator, Value from data_entry_logic_test WHERE Type = '".$this->getType()."' AND Test_name='".$this->getTestName()."'";
+        $query = "SELECT Table_name, Field_name, Conditional_operator, Value
+            FROM data_entry_logic_test WHERE Type = :VType AND Test_name=:TN";
         
-        $result = array();
-        $db->select($query, $result);
+        $result = $db->pselect($query, array('VType' => $this->getType(),
+            'TN' => $this->getTestName())
+        );
         
-        if(PEAR::isError($result)) {
+        if(Utility::isErrorX($result)) {
             return PEAR::raiseError("Delt construct DBError: " . $result->getMessage());
         }
 
@@ -157,7 +159,7 @@ class NDB_BVL_LogicTest
     {
         // new DB Object
         $db =& Database::singleton();
-        if(PEAR::isError($db)) {
+        if(Utility::isErrorX($db)) {
             return PEAR::raiseError ("Could not connect to database: ".$db->getMessage());
         }
         
@@ -167,7 +169,7 @@ class NDB_BVL_LogicTest
         $result = array();
         $db->select($query, $result);
         
-        if(PEAR::isError($result)) {
+        if(Utility::isErrorX($result)) {
             return PEAR::raiseError("DELT FAILURE ON: $query -- DBError: " . $result->getMessage());
         }
         
@@ -185,7 +187,7 @@ class NDB_BVL_LogicTest
     {
         $logicTestProblemCommentIDs = $this->delt_check_test();
         
-        if (PEAR::isError($logicTestProblemCommentIDs)) {
+        if (Utility::isErrorX($logicTestProblemCommentIDs)) {
             return PEAR::raiseError($logicTestProblemCommentIDs->getMessage());
         }
         

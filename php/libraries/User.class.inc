@@ -1,11 +1,29 @@
 <?php
+/**
+ * This file contains the Loris user class
+ *
+ * PHP Version 5
+ *
+ * @category Main
+ * @package  Main
+ * @author   Alex Zijdenbos <zijdenbos@example.com>
+ * @license  Loris license
+ * @link     https://www.github.com/aces/Loris-Trunk/
+ */
+
+require_once 'NDB_Factory.class.inc';
 require_once 'UserPermissions.class.inc';
+require_once 'CouchDB.class.inc';
 
 /**
- * User class
+ * User class. This deals with any User management except permissions,
+ * which is contained in the UserPermissions base class.
  *
- * @access public
- * @package main
+ * @category Main
+ * @package  Main
+ * @author   Alex Zijdenbos <zijdenbos@example.com>
+ * @license  Loris license
+ * @link     https://www.github.com/aces/Loris-Trunk/
  */
 class User extends UserPermissions
 {
@@ -21,7 +39,8 @@ class User extends UserPermissions
      *
      * Selects a user and its permissions
      *
-     * @param  string       Identifies the user
+     * @param string $username Identifies the user
+     *
      * @return User
      * @throws PEAR_Error
      * @access public
@@ -35,21 +54,25 @@ class User extends UserPermissions
 
         // get the user's permissions
         $success = $obj->select($username);
-        if (PEAR::isError($success)) {
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("User::factory(): ".$success->getMessage());
         }
 
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
-            return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
+        if (Utility::isErrorX($DB)) {
+            return PEAR::raiseError(
+                "Could not connect to database: ".$DB->getMessage()
+            );
         }
 
         // get user data from database
-        $query = "SELECT users.*, psc.Name AS Site FROM users, psc WHERE users.CenterID = psc.CenterID AND users.UserID = '$username'";
+        $query = "SELECT users.*, psc.Name AS Site FROM users 
+            LEFT JOIN psc ON (users.centerID=psc.CenterID)
+            WHERE users.UserID = :UID";
 
-        $DB->selectRow($query, $row);
-        if (PEAR::isError($row)) {
+        $row = $DB->pselectRow($query, array('UID' => $username));
+        if (Utility::isErrorX($row)) {
             return PEAR::raiseError("DB Error: ".$row->getMessage());
         }
         
@@ -61,9 +84,11 @@ class User extends UserPermissions
 
 
     /**
-     * Singleton method
+     * Singleton method. Retrieve the user passed as parameter, but only
+     * 1 instance.
      *
-     * @param  string      Identifies the user
+     * @param string $username Identifies the user
+     *
      * @return User
      * @throws PEAR_Error
      * @access public
@@ -74,8 +99,10 @@ class User extends UserPermissions
         static $instance;
         if (is_null($instance)) {
             $instance = User::factory($username);
-            if (PEAR::isError($instance)) {
-                return PEAR::raiseError("User Error ($username): ".$instance->getMessage());
+            if (Utility::isErrorX($instance)) {
+                return PEAR::raiseError(
+                    "User Error ($username): ".$instance->getMessage()
+                );
             }
         }
         return $instance;
@@ -85,8 +112,8 @@ class User extends UserPermissions
     /**
      * Inserts a user
      *
-     * @param  array       The array formatted for use in a Database call
-     * @param  string      Plain-text password for mantis to hash
+     * @param array $set The array formatted for use in a Database call
+     *
      * @return void
      * @throws PEAR_Error
      * @access public
@@ -96,12 +123,14 @@ class User extends UserPermissions
     {
         // create DB object
         $DB =& Database::singleton();
-        if(PEAR::isError($DB)) {
-            return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
+        if (Utility::isErrorX($DB)) {
+            return PEAR::raiseError(
+                "Could not connect to database: ".$DB->getMessage()
+            );
         }
 
         $success = $DB->insert('users', $set);
-        if(PEAR::isError($success)) {
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("DB Error: ".$success->getMessage());
         }
 
@@ -112,8 +141,8 @@ class User extends UserPermissions
     /**
      * Updates a user
      *
-     * @param  array       The array formatted for use in a Database call
-     * @param  string      Plain-text password for mantis to hash
+     * @param array $set The array formatted for use in a Database call
+     *
      * @return void
      * @throws PEAR_Error
      * @access public
@@ -122,12 +151,18 @@ class User extends UserPermissions
     {
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
-            return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
+        if (Utility::isErrorX($DB)) {
+            return PEAR::raiseError(
+                "Could not connect to database: ".$DB->getMessage()
+            );
         }
 
-        $success = $DB->update('users', $set, array('UserID' => $this->userInfo['UserID']));
-        if(PEAR::isError($success)) {
+        $success = $DB->update(
+            'users',
+            $set,
+            array('UserID' => $this->userInfo['UserID'])
+        );
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("DB Error: ".$success->getMessage());
         }
 
@@ -137,8 +172,9 @@ class User extends UserPermissions
     /**
      * Gets user data
      *
-     * @note          Call without any parameters to get the user data array
-     * @param string  Name of variable to get
+     * @param string $var Name of variable to get
+     *
+     * @note   Call without any parameters to get the entire user data array
      * @return mixed
      * @access public
      */
@@ -146,25 +182,57 @@ class User extends UserPermissions
     {
         if (is_null($var)) {
             return $this->userInfo;
-        }
-        else {
+        } else {
             return $this->userInfo[$var];
         }
     }
 
+    /**
+     * Get users real name
+     *
+     * @return string
+     */
+    function getFullname()
+    {
+        return $this->userInfo['Real_name'];
+    }
+    
+    /**
+     * Get the user's username
+     *
+     * @return string
+     */
     function getUsername()
     {
         return $this->userInfo['UserID'];
     }
+
+    /**
+     * Get the user's site's name
+     *
+     * @return string
+     */
     function getSiteName()
     {
         return $this->userInfo['Site'];
     }
+
+    /**
+     * Get the user's site's ID number
+     *
+     * @return integer
+     */
     function getCenterID()
     {
         return $this->userInfo['CenterID'];
     }
 
+    /**
+     * Unknown what this does. Maybe it should be removed?
+     * - Dave
+     *
+     * @return boolean
+     */
     function isMultiSiteEnabled()
     {
         // if $userID is not passed,then look-up current user
@@ -172,14 +240,16 @@ class User extends UserPermissions
         // like dcc ccc nih or similar
         // change 2002-10-23 Dario
         $config =& NDB_Config::singleton();
-        return in_array($this->userInfo['CenterID'], $config->getSetting('multiSiteEnabledCenters'));
+        return in_array(
+            $this->userInfo['CenterID'],
+            $config->getSetting('multiSiteEnabledCenters')
+        );
     }
 
     /**
-     * Checks that the email is valid
+     * Checks that the user's email is valid
      *
-     * @param  string  Email address
-     * @return bool
+     * @return boolean
      * @access public
      */
     function isEmailValid()
@@ -194,12 +264,13 @@ class User extends UserPermissions
     /**
      * Makes an md5 hash with a salt
      *
-     * @param  string  The word to hash
+     * @param string $word The word to hash
+     *
      * @return string
      * @access public
      * @static
      */
-    function md5_salt($word)
+    static function md5_salt($word)
     {
         // get a two-character hexadecimal salt from 10 to ff
         $salt = dechex(rand(16, 255));
@@ -212,9 +283,10 @@ class User extends UserPermissions
     /**
      * Checks an md5 salt
      *
-     * @param  string  The word to compare to the hash
-     * @param  string  The hash
-     * @return string
+     * @param string $word The word to compare to the hash
+     * @param string $hash The hash
+     *
+     * @return boolean
      * @access public
      * @static
      */
@@ -231,8 +303,8 @@ class User extends UserPermissions
     /**
      * Generates a random alphanumeric password
      *
-     * @note           Should use PEAR::Text_Password 
-     * @param  int     Length of password
+     * @param int $length Length of password to generate
+     *
      * @return string
      * @access public
      * @static
@@ -262,17 +334,21 @@ class User extends UserPermissions
      *
      * If the password fails a comparison, it is not strong
      *
-     * @param string  Password
-     * @param array   Values to compare password to
-     * @param array   Operators used in comparison
-     * @return bool
+     * @param string $password  Password to check
+     * @param array  $values    Values that can not be in the password
+     *                          should contain ie. the user's name
+     * @param array  $operators Operators used in comparison of values
+     *                          array
+     *
+     * @return boolean
      * @access public
      * @static
      */
     function isPasswordStrong($password, $values = array(), $operators = array())
     {
+        $CharTypes = 0;
         // less than 6 characters
-        if (strlen($password) < 6) {
+        if (strlen($password) < 8) {
             return false;
         }
 
@@ -286,9 +362,19 @@ class User extends UserPermissions
             return false;
         }
 
+        // preg_match returns 1 on match, 0 on non-match
+        $CharTypes += preg_match('/[0-9]+/', $password);
+        $CharTypes += preg_match('/[A-Za-z]+/', $password);
+        $CharTypes += preg_match('/[!\\\$\^@#%&\*\(\)]+/', $password);
+        if ($CharTypes < 3) {
+            return false;
+        }
+
         // compare password to values
         foreach ($values as $key => $value) {
-            $function = create_function('$a, $b', 'return $a ' . $operators[$key] . ' $b;');
+            $function = create_function(
+                '$a, $b', 'return $a ' . $operators[$key] . ' $b;'
+            );
             // if the comparison fails
             if (!$function($password, $value)) {
                 return false;
@@ -296,6 +382,54 @@ class User extends UserPermissions
         }
 
         return true;
+    }
+    /**
+     * Check if user belongs to DCC
+     *
+     * @return boolean
+     * @access public
+     */
+
+    function isUserDCC()
+    {
+        //DCC site = 1 by LORIS convention
+        return ($this->userInfo['CenterID']== 1);
+    }
+
+
+    function updateCouchUser($password)
+    {
+        $factory = NDB_Factory::singleton();
+        $cdb = $factory->CouchDB();
+        $config = $factory->Config();
+
+
+        $c_config = $config->getSetting('CouchDB');
+        if($c_config['SyncAccounts'] !== 'true') {
+            return false;
+        }
+        $username = $this->getUsername();
+        $auth = array('Authorization' => 'Basic ' 
+            . base64_encode($c_config['admin'] . ':' . $c_config['adminpass'])
+        );
+        $userjson = $cdb->_getURL("/_users/org.couchdb.user:" . $username, 'GET', $auth);
+        $userobj = json_decode($userjson, true);
+
+        if(isset($userobj['error']) && $userobj['error'] == 'not_found') {
+            $userobj = array('_id' => 'org.couchdb.user:' . $username,
+                'type' => 'user',
+                'name' => $username,
+                'roles' => array('dqg', $c_config['database'])
+            );
+        }
+        $userobj['password'] = $password;
+
+
+        $response = $cdb->_postURL(
+            "PUT /_users/org.couchdb.user:" . $username,
+            json_encode($userobj),
+            $auth
+        );
     }
 }
 ?>

@@ -1,6 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<meta charset="utf-8"/>
 <link rel="stylesheet" href="{$css}" type="text/css" />
 <!-- shortcut icon that displays on the browser window -->
 <link rel="shortcut icon" href="images/mni_icon.ico" type="image/ico" />
@@ -31,11 +32,11 @@
                 <tr>
                     <td align="left" colspan="3">
             			<ul>
-                			    <li>The password must be at least 6 characters long</li>
-			                    <li>The password must not contain only letters</li>
-                			    <li>The password must not contain only numbers</li>
-			                    <li>The password and the user name must not be the same</li>
-                			    <li>The password and the email address must not be the same</li>
+                            <li>The password must be at least 8 characters long</li>
+                            <li>The password must contain at least 1 letter, 1 number and 1 character from !@#$%^&amp;*()</li>
+                            <li>The password and the user name must not be the same</li>
+                            <li>The password and the email address must not be the same</li>
+
             			</ul>
 	        	    </td>
                	</tr>

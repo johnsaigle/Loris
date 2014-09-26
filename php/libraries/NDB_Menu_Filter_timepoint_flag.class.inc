@@ -30,7 +30,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
     {
         // create user object
         $user =& User::singleton();
-        if(PEAR::isError($user)) {
+        if(Utility::isErrorX($user)) {
             return PEAR::raiseError("User Error: ".$user->getMessage());
         }
 
@@ -49,13 +49,13 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
     {
         // setup the menu's variables
         $success = $this->_save();
-        if (PEAR::isError($success)) {
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("NDB_Menu_Filter::_save(): ".$success->getMessage());
         }
 
         // setup the menu's variables
         $success = $this->_setupVariables();
-        if (PEAR::isError($success)) {
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("NDB_Menu_Filter::setup() setup: ".$success->getMessage());
         }
 
@@ -68,14 +68,15 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
         }
 
         // start the filter form
-        $this->form = new HTML_QuickForm('filter');
+        $this->_setupPage(null, null, null, null, 'filter');
+       //  $this->form = new HTML_QuickForm('filter');
 
         // set the filters
         $this->_setupFilters();
 
         // build the menu
         $success = $this->_build();
-        if (PEAR::isError($success)) {
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("NDB_Menu_Filter::setup() build: ".$success->getMessage());
         }
 
@@ -85,7 +86,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
     function _setupVariables()
     {
         $user =& User::singleton();
-        if(PEAR::isError($user)) {
+        if(Utility::isErrorX($user)) {
             return PEAR::raiseError("User Error: ".$user->getMessage());
         }
 
@@ -133,44 +134,51 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
     function _setFilterForm()
     {
         $db =& Database::singleton();
-        if(PEAR::isError($db)) {
+        if(Utility::isErrorX($db)) {
             return PEAR::raiseError("Could not connect to database: ".$db->getMessage());
         }
 
         $user =& User::singleton();
-        if(PEAR::isError($user)) {
+        if(Utility::isErrorX($user)) {
             return PEAR::raiseError("User Error: ".$user->getMessage());
         }
 
         // add the mode select
         $this->form->setDefaults(array('mode' => $this->mode));
-        $this->form->addElement('select', 'mode', 'Mode:', array('' => 'Select one', 'subject' => 'Subject', 'flag' => 'Flag'), array("onchange"=>"parameterTimepointFilterForm.submit()"));
+        $this->addSelect('mode', 'Mode:', array('' => 'Select one', 'subject' => 'Subject', 'flag' => 'Flag'), array("onchange"=>"parameterTimepointFilterForm.submit()"));
 
         // add the mode select
         $this->form->setDefaults(array('subprojectID' => $this->mode));
-        $this->form->addElement('select', 'subprojectID', null, array('%' => 'All', '1' => 'Objective 1', '2' => 'Objective 2'));
+        $this->addSelect('subprojectID', null, array('%' => 'All', '1' => 'Objective 1', '2' => 'Objective 2'));
 
         // get the list of study sites - to be replaced by the Site object
         $list_of_sites =& Utility::getSiteList();
-        if (PEAR::isError($list_of_sites)) {
+        if (Utility::isErrorX($list_of_sites)) {
             return PEAR::raiseError("DB Error: ".$list_of_sites->getMessage());
         }
-        $this->form->addElement('select', 'centerID', 'Site:', array(null=>'All')+$list_of_sites);
+        $this->addSelect('centerID', 'Site:', array(null=>'All')+$list_of_sites);
 
         switch ($this->mode) {
 
             case 'subject':
 
-            $this->form->addElement('select', 'last_change', 'Show Subjects:', array(''=>'All', 'evaluated'=>'With timepoint evaluated', 'reviewed'=>'With all flags reviewed', 'non_reviewed'=>'With non-reviewed flags'), array("onchange"=>"parameterTimepointFilterForm.submit()"));
+            $this->addSelect('last_change', 'Show Subjects:', array(''=>'All', 'evaluated'=>'With timepoint evaluated', 'reviewed'=>'With all flags reviewed', 'non_reviewed'=>'With non-reviewed flags'), array("onchange"=>"parameterTimepointFilterForm.submit()"));
 
 
             // DCCID / Visit
             // this query includes only the subject w/ existing flags
+            $params = array();
             $query = "SELECT c.CandID, s.Visit_label, s.ID
             FROM candidate AS c, session AS s, parameter_timepoint_flag_session as p
             WHERE c.CandID = s.CandID AND p.SessionID = s.ID AND c.Entity_type = 'Human' AND c.Active = 'Y'";
-            if (!empty($_REQUEST['centerID'])) $query .= " AND s.CenterID = '".$this->filter['session.CenterID']."'";
-            if (!empty($_REQUEST['subprojectID'])) $query .= " AND s.SubprojectID like '".$_REQUEST['subprojectID']."'";
+            if (!empty($_REQUEST['centerID'])) {
+                $query .= " AND s.CenterID = :CentID";
+                $params['CentID'] = $this->filter['session.CenterID'];
+            }
+            if (!empty($_REQUEST['subprojectID'])) {
+                $query .= " AND s.SubprojectID LIKE :SubprojID";
+                $params['SubprojID'] = $_REQUEST['subprojectID'];
+            }
             if ($_REQUEST['last_change'] == 'evaluated') {
                 $query .= " AND s.BVLQCExclusion IS NOT NULL"; 
             } elseif ($_REQUEST['last_change'] == 'reviewed') {
@@ -180,8 +188,8 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
             }
             $query .= " GROUP BY c.CandID, s.Visit_label ORDER BY c.CandID DESC, s.Visit_label";
 
-            $db->select($query, $result);
-            if (PEAR::isError($result)) {
+            $result = $db->pselect($query, $params);
+            if (Utility::isErrorX($result)) {
                 return PEAR::raiseError("DB Error: ".$result->getMessage());
             }
 
@@ -193,10 +201,9 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
                 // the $result also includes the subjects w/ partially reviewed flags, i.e. some are still NULL
                 // check if the current subject/timepoint has any non-reviewed flags and if yes, exclude from array
                 if ($_REQUEST['last_change'] == 'reviewed') {
-                    $result1 = array();
-                    $query = "SELECT COUNT(ID) as count FROM parameter_timepoint_flag_session WHERE SessionID = '".$row['ID']."' AND Flag_status IS NULL GROUP BY SessionID";
-                    $db->selectRow($query, $result1);
-                    if (PEAR::isError($result1)) {
+                    $query = "SELECT COUNT(ID) as count FROM parameter_timepoint_flag_session WHERE SessionID = :SID  AND Flag_status IS NULL GROUP BY SessionID";
+                    $result1 = $db->pselectRow($query, array('SID' => $row['ID']));
+                    if (Utility::isErrorX($result1)) {
                         return PEAR::raiseError("DB Error: ".$result1->getMessage());
                     }
                     // skip to next subject/timepoint if there are non-reviewed flags
@@ -217,13 +224,17 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
 
             case 'flag':
             // Category / Flag
+            $params = array();
             $query = "SELECT f.Flag_name, f.Flag_label, fc.CategoryID, fc.Name 
             FROM parameter_timepoint_flag AS f, parameter_timepoint_flag_category AS fc 
             WHERE f.CategoryID = fc.CategoryID";
-            if (!empty($_REQUEST['subprojectID'])) $query .= " AND f.SubprojectID like '".$this->filter['session.SubprojectID']."'";
+            if (!empty($_REQUEST['subprojectID'])) {
+                $query .= " AND f.SubprojectID LIKE :SubprojID";
+                $params['SubprojID'] = $this->filter['session.SubprojectID'];
+            }
             $query .= " ORDER BY fc.Name, f.ID";
-            $db->select($query, $result);
-            if (PEAR::isError($result)) {
+            $result = $db->pselect($query, $params);
+            if (Utility::isErrorX($result)) {
                 return PEAR::raiseError("DB Error: ".$result->getMessage());
             }
 
@@ -283,7 +294,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
         if ($_REQUEST['mode']=='subject' && is_array($this->subjectFilterArray) && in_array($this->filter['candidate.CandID'], $this->subjectFilterArray) && !empty($this->filter['candidate.CandID']) && !empty($this->filter['session.ID'])) {
             // display the table
             $success = $this->_displayEvaluateTimepoint($this->filter['session.ID']);
-            if (PEAR::isError($success)) {
+            if (Utility::isErrorX($success)) {
                 return PEAR::raiseError("NDB_Menu_Filter_timepoint_flag::_setDataTableRows: ".$success->getMessage());
             }
         }
@@ -298,12 +309,12 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
 
             // create timepoint flag object
             $timepointFlag =& TimePoint_Flag::singleton($item['sessionID']);
-            if (PEAR::isError($timepointFlag)) {
+            if (Utility::isErrorX($timepointFlag)) {
                 return PEAR::raiseError("TimePoint Flag Error (".$item['sessionID']."): ".$timepointFlag->getMessage());
             }
             // get the current Excusion QC status, and lock the data table form if the status is set
             $currentStatus = $timepointFlag->getBVLQCExclusion();
-            if (PEAR::isError($currentStatus)) {
+            if (Utility::isErrorX($currentStatus)) {
                 return PEAR::raiseError("NDB_Menu_Filter_timepoint::_setDataTableRows: ".$currentStatus->getMessage());
             }
 
@@ -328,7 +339,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
                 if ($key == 'flag') {
                     $type = $timepointFlag->getFlagType($val);
                     $description = $timepointFlag->getFlagDescription($val);
-                    if (PEAR::isError($type)) {
+                    if (Utility::isErrorX($type)) {
                         return PEAR::raiseError("NDB_Menu_Filter_timepoint::_setDataTableRows: ".$type->getMessage());
                     }
                     $this->tpl_data['items'][$x][$i]['class'] = $type;
@@ -376,7 +387,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
 
             // get flag triggers
             $triggers = $timepointFlag->getFlagTriggersFieldValues($flag);
-            if (PEAR::isError($triggers)) {
+            if (Utility::isErrorX($triggers)) {
                 return PEAR::raiseError("NDB_Menu_Filter_timepoint::_setDataTableRows(): ".$triggers->getMessage());
             }
 
@@ -394,7 +405,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
 
             // get flag review fields
             $reviewFields = $timepointFlag->getFlagReviewFieldsValues($flag);
-            if (PEAR::isError($reviewFields)) {
+            if (Utility::isErrorX($reviewFields)) {
                 return PEAR::raiseError("NDB_Menu_Filter_timepoint::_setDataTableRows: ".$reviewFields->getMessage());
             }
 
@@ -427,7 +438,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
     function _save()
     {
         $user =& User::singleton();
-        if (PEAR::isError($user)) {
+        if (Utility::isErrorX($user)) {
             return PEAR::raiseError($user->getMessage());
         }
         $userID = $user->getUsername();
@@ -438,12 +449,12 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
 
             //timepoint object
             $timepointFlag =& TimePoint_Flag::singleton($_REQUEST['setBVLQCExclusionFlag_SessionID']);
-            if (PEAR::isError($timepointFlag)) {
+            if (Utility::isErrorX($timepointFlag)) {
                 return PEAR::raiseError("Timepoint_Flag error: ".$timepointFlag->getMessage());
             }
 
             $success = $timepointFlag->setBVLQCExclusion($_REQUEST['setBVLQCExclusionFlag']);
-            if (PEAR::isError($success)) {
+            if (Utility::isErrorX($success)) {
                 return PEAR::raiseError("NDB_Menu_Filter_timepoint_flag::_save: ".$success->getMessage());
             }
         }
@@ -463,7 +474,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
             foreach ($timepoints as $sessionID => $record) {
 
                 $currentFlagInfo = $this->_getCurrentFlagInfo($sessionID, $flagName);
-                if (PEAR::isError($currentFlagInfo)) {
+                if (Utility::isErrorX($currentFlagInfo)) {
                     return PEAR::raiseError("NDB_Menu_Timepoint_Flag::_save: ".$currentFlagInfo->getMessage());
                 }
 
@@ -511,13 +522,13 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
 
                 //  timepoint flag object
                 $timepointFlag = TimePoint_Flag::singleton($sessionID);
-                if (PEAR::isError($timepointFlag)) {
+                if (Utility::isErrorX($timepointFlag)) {
                     return PEAR::raiseError("TimePoint_Flag error: ".$timepointFlag->getMessage());
                 }
 
                 // update the flag record
                 $success = $timepointFlag->updateFlag($flagName, $userID, $newStatus, $newComment, $newPending, $newPendingComment);
-                if (PEAR::isError($success)) {
+                if (Utility::isErrorX($success)) {
                     return PEAR::raiseError("NDB_Menu_Timepoint_Flag::_save: ".$success->getMessage());
                 }
             }
@@ -538,7 +549,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
     {
         // get the current flag info
         $currentFlag = TimePoint_Flag::getFlag($sessionID, $flagName);
-        if (PEAR::isError($currentFlag)) {
+        if (Utility::isErrorX($currentFlag)) {
             return PEAR::raiseError("NDB_Menu_Filter_timepoint::_checkFlagCurrentStatus(): ".$currentFlag->getMessage());
         }
         return $currentFlag;
@@ -553,13 +564,13 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
     function _displayEvaluateTimepoint($sessionID)
     {
         $hasAccess = $this->_hasAccess_EvaluateTimepoint();
-        if (PEAR::isError($hasAccess)) {
+        if (Utility::isErrorX($hasAccess)) {
             return PEAR::raiseError("NDB_Menu_Filter_timepoint_flag::_displayEvaluateTimepoint: ".$hasAccess->getMessage());
         }
 
         // timepoint object
         $timepointFlag =& TimePoint_Flag::singleton($sessionID);
-        if (PEAR::isError($timepointFlag)) {
+        if (Utility::isErrorX($timepointFlag)) {
             return PEAR::raiseError("Timepoint_Flag error: ".$timepointFlag->getMessage());
         }
 
@@ -568,7 +579,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
 
         // get the current Excusion QC status, and lock the data table form if the status is set
         $currentStatus = $timepointFlag->getBVLQCExclusion();
-        if (PEAR::isError($currentStatus)) {
+        if (Utility::isErrorX($currentStatus)) {
             return PEAR::raiseError("NDB_Menu_Filter_timepoint::_displayEvaluateTimepoint: ".$currentStatus->getMessage());
         }
         // lock the data table form if the status is set
@@ -582,7 +593,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
             $showLinks = 1;
             // get the list of flag for the timepoint
             $list = $timepointFlag->getTimepointFlags();
-            if (PEAR::isError($list)) {
+            if (Utility::isErrorX($list)) {
                 return PEAR::raiseError("NDB_Menu_Filter_timepoint::_displayEvaluateTimepoint: ".$list->getMessage());
             }
 
@@ -622,7 +633,7 @@ class NDB_Menu_Filter_timepoint_flag extends NDB_Menu_Filter
     {
         // create user object
         $user =& User::singleton();
-        if(PEAR::isError($user)) {
+        if(Utility::isErrorX($user)) {
             return PEAR::raiseError("User Error: ".$user->getMessage());
         }
 

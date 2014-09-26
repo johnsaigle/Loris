@@ -12,6 +12,8 @@
  * @package behavioural
  */
 
+ set_include_path(get_include_path().":../project/libraries:../php/libraries:");
+
 //Ensure php version compatability
 //taken from php.net notes
 if (version_compare(phpversion(),'4.3.0','<'))
@@ -106,6 +108,8 @@ foreach($instruments AS $instrument){
                     $bits[0]="varchar(255)";
                 } else if ($bits[0]=="static") {
                     $bits[0]="varchar(255)";
+                } else if ($bits[0]=="radio") {
+                    $bits[0]=enumizeOptions($bits[3], $table, $bits[1]);
                 }
                 
                 $bits[2]=htmlspecialchars($bits[2]);

@@ -86,6 +86,12 @@ class NDB_Breadcrumb extends PEAR
         }
     }
 
+    function _getRequest($name) {
+        if(isset($_REQUEST[$name])) {
+            return $_REQUEST[$name];
+        }
+        return null;
+    }
     /**
      * Makes a breadcrumb
      *
@@ -97,12 +103,12 @@ class NDB_Breadcrumb extends PEAR
     {
         // set the parameters array
         $this->_parameters = array(
-                                   'test_name' => $_REQUEST['test_name'],
-                                   'subtest' => $_REQUEST['subtest'],
-                                   'candID' => $_REQUEST['candID'],
-                                   'sessionID' => $_REQUEST['sessionID'],
-                                   'commentID' => $_REQUEST['commentID'],
-                                   'identifier' => $_REQUEST['identifier']
+                                   'test_name' => $this->_getRequest('test_name'),
+                                   'subtest' => $this->_getRequest('subtest'),
+                                   'candID' => $this->_getRequest('candID'),
+                                   'sessionID' => $this->_getRequest('sessionID'),
+                                   'commentID' => $this->_getRequest('commentID'),
+                                   'identifier' => $this->_getRequest('identifier')
                                    );
 
         // check if test name is empty
@@ -112,14 +118,14 @@ class NDB_Breadcrumb extends PEAR
 
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
         // set the 'instrument list' crumb text
         if (!empty($_REQUEST['sessionID'])) {
             $timePoint =& TimePoint::singleton($_REQUEST['sessionID']);
-            if (PEAR::isError($timePoint)) {
+            if (Utility::isErrorX($timePoint)) {
                 return PEAR::raiseError("TimePoint Error (".$_REQUEST['sessionID']."): ".$timePoint->getMessage());
             }
             $this->_userFriendlyNames['instrument_list'] = 'TimePoint '.$timePoint->getVisitLabel().' Details';
@@ -128,7 +134,7 @@ class NDB_Breadcrumb extends PEAR
         // set the 'timepoint list' crumb text
         if (!empty($_REQUEST['candID'])) {
             $candidate =& Candidate::singleton($_REQUEST['candID']);
-            if (PEAR::isError($candidate)) {
+            if (Utility::isErrorX($candidate)) {
                 return PEAR::raiseError("Candidate Error (".$_REQUEST['candID']."): ".$candidate->getMessage());
             }
             $this->_userFriendlyNames['timepoint_list'] = 'Candidate Profile '.$candidate->getData('CandID').' / '.$candidate->getData('PSCID');
@@ -136,8 +142,13 @@ class NDB_Breadcrumb extends PEAR
 
         // add a crumb for subtests
         if (!empty($this->_parameters['subtest'])) {
-            $result = $DB->selectOne("SELECT Description FROM instrument_subtests WHERE Test_name = '" . $this->_parameters['test_name'] . "' AND Subtest_name = '" . $this->_parameters['subtest'] . "'");
-            if (PEAR::isError($result)) {
+            $params = array(
+                'PTestname' => $this->_parameters['test_name'],
+                'PSubtest'  => $this->_parameters['subtest']
+            );
+            $result = $DB->pselectOne("SELECT Description FROM instrument_subtests WHERE Test_name = :PTestname 
+                AND Subtest_name = :PSubtest", $params);
+            if (Utility::isErrorX($result)) {
                 return PEAR::raiseError("DB Error: ".$result->getMessage());
             }
 
@@ -150,8 +161,11 @@ class NDB_Breadcrumb extends PEAR
 
         // add a crumb for instruments
         if (!empty($this->_parameters['commentID'])) {
-            $result = $DB->selectOne("SELECT Full_name FROM test_names WHERE Test_name = '" . $this->_parameters['test_name'] . "'");
-            if (PEAR::isError($result)) {
+            $params = array(
+                'PTestname' => $this->_parameters['test_name']
+            );
+            $result = $DB->pselectOne("SELECT Full_name FROM test_names WHERE Test_name = :PTestname", $params);
+            if (Utility::isErrorX($result)) {
                 return PEAR::raiseError("DB Error: ".$result->getMessage());
             }
 
@@ -171,12 +185,14 @@ class NDB_Breadcrumb extends PEAR
                                                         'unset' => 'sessionID'),
                             'timepoint_list'   => array('next'  => 'candidate_list',
                                                         'unset' => 'candID'),
-                            'candidate_list'   => array('next'  => '')
+                            'candidate_list'   => array('next'  => '',
+                                                        'unset' => '')
                             );
 
         // loop through the crumbs according to the order above, or just make one crumb
         if (array_key_exists($this->_parameters['test_name'], $crumbOrder)) {
             while (!empty($this->_parameters['test_name'])) {
+
                 $this->_addCrumb($crumbOrder[$this->_parameters['test_name']]['next'], $crumbOrder[$this->_parameters['test_name']]['unset']);
             }
         } else {

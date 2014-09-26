@@ -4,6 +4,7 @@
  * @version $Id: NDB_Client.class.inc,v 1.7 2006/04/05 17:07:42 sebas Exp $
  * @package main
  */
+require_once 'Utility.class.inc';
 class NDB_Client
 {
     /**
@@ -58,13 +59,16 @@ class NDB_Client
         */
         $dbConfig = $config->getSetting('database');
         $DB =& Database::singleton($dbConfig['database'], $dbConfig['username'], $dbConfig['password'], $dbConfig['host']);
-        if(PEAR::isError($DB)) {
+        if(Utility::isErrorX($DB)) {
             die("Could not connect to database: ".$DB->getMessage());
         }
         $GLOBALS['DB'] =& $DB;
         
 	// tell Pear to print errors if the config says so
-	if($config->getSetting('showPearErrors')) PEAR::setErrorHandling(PEAR_ERROR_PRINT);
+        if($config->getSetting('showPearErrors')) {
+            $GLOBALS['_PEAR_default_error_mode'] = PEAR_ERROR_PRINT;
+            //$setoptions  = &$GLOBALS['_PEAR_default_error_options'];
+        }
         
         // stop here if this is a command line client
         if(!$this->_isWebClient) return true;
@@ -73,8 +77,9 @@ class NDB_Client
         session_start();
 
         // if exiting, destroy the php session
-        if($_REQUEST['logout']) {
+        if(isset($_REQUEST['logout']) && $_REQUEST['logout']) {
             session_destroy();
+            setcookie("FeedbackButtonBoolean", "");
             session_start();
         }
 
@@ -86,11 +91,11 @@ class NDB_Client
             $login = new SinglePointLogin();
             $_SESSION['State']->setProperty('login', $login);
         } else {
-            $login =& $_SESSION['State']->getProperty('login');
+            $login = $_SESSION['State']->getProperty('login');
         }
         if (!$login->isLoggedIn()) {
             $auth = $login->authenticate();
-            if(PEAR::isError($auth)) {
+            if(Utility::isErrorX($auth)) {
             } elseif($auth === true) {
                 $error = $login->setState();
             } elseif($auth === false) {
@@ -106,7 +111,7 @@ class NDB_Client
         }
         
         $user =& User::singleton($_SESSION['State']->getUsername());
-        if(PEAR::isError($user)) {
+        if(Utility::isErrorX($user)) {
              die("Could not validate user: ".$user->getMessage());
         }
 

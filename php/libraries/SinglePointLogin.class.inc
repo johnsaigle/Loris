@@ -7,6 +7,7 @@ require_once 'PEAR.php';
  * This class provides a single-point user login to the NeuroDB GUIs
  * Its public functions can be used to display a login window at the
  * current location while preserving the current state of the GUI.
+ *
  * @package main
  */
 class SinglePointLogin extends PEAR
@@ -30,8 +31,16 @@ class SinglePointLogin extends PEAR
      * @access public
      */
     function showLoginScreen()
-    {
-        $tpl_data['username'] = $_POST['username'];
+    {   
+        $tpl_data = array();
+        if(isset($_POST['username'])) {
+            $tpl_data['username'] = $_POST['username'];
+        } else {
+            $tpl_data['username'] = '';
+        }
+
+        $tpl_data['currentyear'] = date('Y'); 
+
 
         // remove logout from request
         parse_str($_SERVER['QUERY_STRING'], $params);
@@ -43,6 +52,25 @@ class SinglePointLogin extends PEAR
         $tpl_data['css']=$config->getSetting('css');
         $tpl_data['action'] = $_SERVER['PHP_SELF'].'?'.Utility::unparse_str($params);
         $tpl_data['error_message'] = $this->_lastError;
+        $study_links = $config->getSetting('Studylinks');// print_r($study_links);
+        foreach(Utility::toArray($study_links['link']) AS $link){
+            $LinkArgs = '';
+            $BaseURL = $link['@']['url'];
+            if(isset($link['@']['args'])) {
+                $LinkArgs = $link_args[$link['@']['args']];
+            }
+            $LinkLabel = $link['#'];
+            $WindowName = md5($link['@']['url']);
+            $tpl_data['studylinks'][]=array(
+                    'url'        => $BaseURL . $LinkArgs,
+                    'label'      => $LinkLabel,
+                    'windowName' => $WindowName
+                    );
+        }
+        $study_title = $config->getSetting('title');
+        $study_logo  = $config->getSetting('studylogo');
+        $tpl_data['study_title'] = $study_title;
+        $tpl_data['study_logo']  = $study_logo;
         
         //Output template using Smarty
         $smarty = new Smarty_neurodb;
@@ -103,7 +131,7 @@ class SinglePointLogin extends PEAR
     {
         // get saved data to pre-populate form
         $user =& User::factory($_POST['username']);
-        if (PEAR::isError($user)) {
+        if (Utility::isErrorX($user)) {
             return PEAR::raiseError("User Error (".$_POST['username']."): ".$user->getMessage());
         }
         
@@ -127,14 +155,14 @@ class SinglePointLogin extends PEAR
         
         // make the set
         $set = array(
-                     'Password' => NULL, 
+                     'Password' => null,
                      'Password_md5' => User::md5_salt($_POST['password']), 
                      'Password_expiry' => date('Y-m-d', mktime(0, 0, 0, date('n') + 6, date('j'), date('Y')))
                      );
         
         // update the user
         $success = $user->update($set);
-        if (PEAR::isError($success)) {
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("SinglePointLogin::save(): ".$success->getMessage());
         }
         
@@ -147,15 +175,15 @@ class SinglePointLogin extends PEAR
             
             // connect to proftpd database
             $ftpdb = new Database();
-	    $success = $ftpdb->connect($ftpSettings['database'], $ftpSettings['username'], $ftpSettings['password'], $ftpSettings['host'], false);
-            if (PEAR::isError($success)) {
+            $success = $ftpdb->connect($ftpSettings['database'], $ftpSettings['username'], $ftpSettings['password'], $ftpSettings['host'], false);
+            if (Utility::isErrorX($success)) {
                 return PEAR::raiseError("Could not connect to database: ".$success->getMessage());
             }
             
             // check users table to see if we have a valid user 
-            $query = "SELECT COUNT(*) AS User_count FROM ftpusers WHERE userid = '".$_POST['username']."'";
-            $ftpdb->selectRow($query, $row);
-            if (PEAR::isError($row)) {
+            $query = "SELECT COUNT(*) AS User_count FROM ftpusers WHERE userid = :UID";
+            $row = $ftpdb->pselectRow($query, array('UID' => $_POST['username']));
+            if (Utility::isErrorX($row)) {
                 return PEAR::raiseError("DB Error: ".$row->getMessage());
             }
             
@@ -164,7 +192,7 @@ class SinglePointLogin extends PEAR
                 
                 $setArray['passwd'] = crypt($_POST['password']);
                 $success = $ftpdb->update('ftpusers', $setArray, array('userid' => $_POST['username']));
-                if (PEAR::isError($success)) {
+                if (Utility::isErrorX($success)) {
                     return PEAR::raiseError("SinglePointLogin::save(): ".$success->getMessage());
                 }
             } 
@@ -174,8 +202,8 @@ class SinglePointLogin extends PEAR
                 
                 $query = "SELECT MAX(uid) as Max_UID FROM ftpusers";
                 
-                $maxUID = $ftpdb->selectOne($query);
-                if (PEAR::isError($maxUID)) {
+                $maxUID = $ftpdb->pselectOne($query, array());
+                if (Utility::isErrorX($maxUID)) {
                     return PEAR::raiseError("DB Error: ".$maxUID->getMessage());
                 }
                 
@@ -186,7 +214,7 @@ class SinglePointLogin extends PEAR
                 
                 // insert into proftpd
                 $success = $ftpdb->insert("ftpusers", $setArray);
-                if (PEAR::isError($success)) {
+                if (Utility::isErrorX($success)) {
                     return PEAR::raiseError("SinglePointLogin::save(): ".$success->getMessage());
                 }
             }
@@ -204,11 +232,25 @@ class SinglePointLogin extends PEAR
     function authenticate()
     {
         $this->_lastError = '';
+         
+         ///////////////////////////
+         ///initialization/////
+         //////////////////////////
+         $this->_username = isset($_POST['username']) ? $_POST['username'] : 'Unknown';
+         $setArray = array(
+             'userID'=> $this->_username,
+             'Success' => 'Y',
+             'Failcode' => null,
+             'Login_timestamp' => date('Y-m-d H:i:s'),
+             'IP_address' => $_SERVER['REMOTE_ADDR'],
+             'Page_requested' => $_SERVER['REQUEST_URI']
+         );
+
 
         // save the new password if the last password expired
         if (isset($_POST['expiry'])) {
             $success = $this->save();
-            if (PEAR::isError($success)) {
+            if (Utility::isErrorX($success)) {
                 return PEAR::raiseError("SinglePointLogin::authenticate(): ".$success->getMessage());
             }
 
@@ -223,23 +265,25 @@ class SinglePointLogin extends PEAR
         }
         if (empty($_POST['username'])) {
             $this->_lastError = 'Please enter a username';
+            $this->insertFailedDetail($this->_lastError, $setArray);///insert failed_detail into user_login_history
             return false;
         }
         if (empty($_POST['password'])) {
             $this->_lastError = 'Please enter a password';
+            $this->insertFailedDetail($this->_lastError, $setArray);///insert failed_detail into user_login_history
             return false;
         }
 
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
         // check users table to see if we have a valid user
-        $query = "SELECT COUNT(*) AS User_count, Password_md5, Password_expiry, Active FROM users WHERE UserID = :username GROUP BY UserID";
+        $query = "SELECT COUNT(*) AS User_count, Password_md5, Password_expiry, Active, Pending_approval FROM users WHERE UserID = :username GROUP BY UserID";
         $row = $DB->pselectRow($query, array('username' => $_POST['username']));
-        if (PEAR::isError($row)) {
+        if (Utility::isErrorX($row)) {
             return PEAR::raiseError("DB Error: ".$row->getMessage());
         }
 
@@ -249,6 +293,14 @@ class SinglePointLogin extends PEAR
                 // check that the user is active
                 if ($row['Active'] == 'N') {
                     $this->_lastError = "Your account has been deactivated.  Please contact your project administrator to reactivate this account.";
+                    $this->insertFailedDetail("user account not active", $setArray);///insert failed_detail into user_login_history
+
+                    return false;
+                }
+
+                if ($row['Pending_approval'] == '1') {
+                    $this->_lastError = "Your account has not yet been activated.  Please contact your project administrator to activate this account.";
+                    $this->insertFailedDetail("user account pending", $setArray);
                     return false;
                 }
 
@@ -260,12 +312,15 @@ class SinglePointLogin extends PEAR
 
                 // user is valid
                 $this->_username = $_POST['username'];
+                // insert the user into the user_login_history table
+                $result =  $DB->insert('user_login_history', $setArray);
                 return true;
             }
             // bad usename or password
         }
 
         $this->_lastError = "Incorrect username or password";
+        $this->insertFailedDetail($this->_lastError, $setArray);///insert failed_detail into user_login_history
         return false;
     }
 
@@ -306,5 +361,29 @@ class SinglePointLogin extends PEAR
 
         $_SESSION['State']->setUsername(null);
     }
+
+     /**
+     * Inserts the login (or failed-login) detail into the user_login_history
+     *
+     * @param String $description description for the failed-login 
+     * @param Array  $setArray    contains data to be inserted
+     * 
+     * @return null
+      */
+    function insertFailedDetail($description, $setArray)
+    {
+        // create DB object
+        $DB =& Database::singleton();
+        if (Utility::isErrorX($DB)) {
+            return PEAR::raiseError(
+                "Could not connect to database: ".$DB->getMessage()
+            );
+        }
+        $setArray['Success'] = 'N';
+        $setArray['Fail_detail'] = $description;
+        // in future, add mapping of error message to Failcode field enum
+        $result =  $DB->insert('user_login_history', $setArray);
+    }
+
 }
 ?>

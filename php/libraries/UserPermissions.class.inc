@@ -4,7 +4,7 @@ require_once 'PEAR.php';
 /**
  * Manages user permissions
  *
- * @access public
+ * @access  public
  * @package main
  */
 class UserPermissions
@@ -38,20 +38,21 @@ class UserPermissions
     {
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return("Could not connect to database: ".$DB->getMessage());
         }
 
         // get the proper ID from the database
-        $query = "SELECT ID FROM users WHERE UserID = '$username'";
-        $this->userID = $DB->selectOne($query);
-        if (PEAR::isError($this->userID)) {
+        $query = "SELECT ID FROM users WHERE UserID =:UName";
+        $params = array('UName' => $username);
+        $this->userID = $DB->pselectOne($query, $params);
+        if (Utility::isErrorX($this->userID)) {
             return PEAR::raiseError("DB Error: ".$this->userID->getMessage());
         }
 
-    	// load the user's permissions
-	    $success = $this->setPermissions();
-        if (PEAR::isError($success)) {
+        // load the user's permissions
+        $success = $this->setPermissions();
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("UserPermissions::select(): ".$success->getMessage());
         }
 
@@ -70,14 +71,14 @@ class UserPermissions
     {
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
         // get all the permissions for this user
-        $query = "SELECT code FROM permissions, user_perm_rel WHERE permissions.permID = user_perm_rel.permID AND userID = '$this->userID'";
-        $DB->select($query, $results);
-        if (PEAR::isError($results)) {
+        $query = "SELECT code FROM permissions, user_perm_rel WHERE permissions.permID = user_perm_rel.permID AND userID = :UID";
+        $results = $DB->pselect($query, array('UID' => $this->userID));
+        if (Utility::isErrorX($results)) {
             return PEAR::raiseError("DB Error: ".$results->getMessage());
         }
 
@@ -98,12 +99,20 @@ class UserPermissions
      *
      * @param  string  The permission code
      * @return bool
-     * @access public
-     * 
+     * @access 
      */
     function hasPermission($code)
     {
-        return ($this->permissions[$code] == true || $this->permissions['superuser'] == true);
+        if (isset($this->permissions[$code]) && $this->permissions[$code] === true) {
+            return true;
+        }
+
+        if (isset($this->permissions['superuser'])
+            && $this->permissions['superuser'] == true
+        ) {
+            return true;
+        }
+        return false;
     }
 
 
@@ -122,8 +131,8 @@ class UserPermissions
     /**
      * Add permissions to a user
      *
-     * @note               If saving permissions, remove all permissions first
-     * @param array        Array of permission IDs to add
+     * @note   If saving permissions, remove all permissions first
+     * @param  array        Array of permission IDs to add
      * @return void
      * @throws PEAR_Error
      * @access public
@@ -132,21 +141,21 @@ class UserPermissions
     {
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
         // add the permissions
         foreach ($set as $value) {
             $success = $DB->insert('user_perm_rel', array('userID' => $this->userID, 'permID' => $value));
-            if (PEAR::isError($success)) {
+            if (Utility::isErrorX($success)) {
                 return PEAR::raiseError("DB Error: ".$success->getMessage());
             }
         }
 
         // refresh the user permissions
-	    $success = $this->setPermissions();
-        if (PEAR::isError($success)) {
+        $success = $this->setPermissions();
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("UserPermissions::addPermissions(): ".$success->getMessage());
         }
 
@@ -157,8 +166,8 @@ class UserPermissions
     /**
      * Removes permissions from a user
      *
-     * @note               Passing no arguments deletes all permissions
-     * @param array        Array of permission IDs to remove
+     * @note   Passing no arguments deletes all permissions
+     * @param  array        Array of permission IDs to remove
      * @return void
      * @throws PEAR_Error
      * @access public
@@ -167,14 +176,14 @@ class UserPermissions
     {
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
         if (is_null($set)) {
             // remove all permissions
             $success = $DB->delete('user_perm_rel', array('userID' => $this->userID));
-            if (PEAR::isError($success)) {
+            if (Utility::isErrorX($success)) {
                 return PEAR::raiseError("DB Error: ".$success->getMessage());
             }
         }
@@ -182,15 +191,15 @@ class UserPermissions
             // remove the permissions
             foreach ($set as $value) {
                 $success = $DB->delete('user_perm_rel', array('userID' => $this->userID, 'permID' => $value));
-                if (PEAR::isError($success)) {
+                if (Utility::isErrorX($success)) {
                     return PEAR::raiseError("DB Error: ".$success->getMessage());
                 }
             }
         }
 
         // refresh the user permissions
-	    $success = $this->setPermissions();
-        if (PEAR::isError($success)) {
+        $success = $this->setPermissions();
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("UserPermissions::removePermissions(): ".$success->getMessage());
         }
 
@@ -207,16 +216,16 @@ class UserPermissions
      */
     function getPermissionIDs()
     {
-	// create DB object
+        // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
         // get all the permissions for this user
-        $query = "SELECT permissions.permID FROM permissions, user_perm_rel WHERE permissions.permID = user_perm_rel.permID AND userID = '$this->userID'";
-        $DB->select($query, $results);
-        if (PEAR::isError($results)) {
+        $query = "SELECT permissions.permID FROM permissions, user_perm_rel WHERE permissions.permID = user_perm_rel.permID AND userID = :UID";
+        $results = $DB->pselect($query, array('UID' => $this->userID));
+        if (Utility::isErrorX($results)) {
             return PEAR::raiseError("DB Error: ".$results->getMessage());
         }
 
@@ -235,17 +244,50 @@ class UserPermissions
     {
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
-        $query = "SELECT p.permID, p.code, p.description, pc.Description as type FROM permissions p JOIN user_perm_rel up ON (p.permID=up.PermID) LEFT JOIN permissions_category pc ON (pc.ID=p.categoryID) WHERE up.userID = '$this->userID' ORDER BY p.categoryID, p.description";
-        $DB->select($query, $results);
-        if (PEAR::isError($results)) {
+        $query = "SELECT p.permID, p.code, p.description, pc.Description as type FROM permissions p JOIN user_perm_rel up ON (p.permID=up.PermID) LEFT JOIN permissions_category pc ON (pc.ID=p.categoryID) WHERE up.userID = :UID ORDER BY p.categoryID, p.description";
+        $results = $DB->pselect($query, array ('UID' => $this->userID));
+        if (Utility::isErrorX($results)) {
             return PEAR::raiseError("DB Error: ".$results->getMessage());
         }
 
         return $results;
     }
+    
+    /**
+     * Inserts the user modifications into the user_account_history
+     *
+     * @param Integer $PermID     The ID of the permission
+     * @param String  $permAction The Type of user-modification ('D' or 'I')
+     * 
+     * @return null
+     */
+    function insertIntoUserAccountHistory(
+        $PermID=null,$permAction=null
+    ) {
+
+        // create DB object
+        $DB =& Database::singleton();
+        if (Utility::isErrorX($DB)) {
+            return PEAR::raiseError(
+                "Could not connect to database: ".$DB->getMessage()
+            );
+        }
+        //insert into the login_history
+        $sucess =  $DB->insert(
+            'user_account_history',
+            array(
+                'userID'=>$this->userID,'PermID'=>$PermID,
+                'PermAction'=>$permAction
+            )
+        );
+        if (Utility::isErrorX($success)) {
+            return PEAR::raiseError("DB Error: ".$success->getMessage());
+        }
+    }
+
 }
 ?>

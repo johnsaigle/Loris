@@ -1,3 +1,4 @@
+
 -- MySQL dump 10.11
 --
 -- Host: localhost    Database: smart_dummy
@@ -24,26 +25,29 @@ CREATE TABLE `candidate` (
   `ID` int(10) unsigned NOT NULL auto_increment,
   `CandID` int(6) NOT NULL default '0',
   `PSCID` varchar(255) NOT NULL default '',
+  `ExternalID` varchar(255) default NULL,
   `DoB` date default NULL,
   `EDC` date default NULL,
   `Gender` enum('Male','Female') default NULL,
   `CenterID` tinyint(2) unsigned NOT NULL default '0',
   `ProjectID` int(11) default NULL,
   `Ethnicity` varchar(255) default NULL,
-  `ZIP` varchar(12) default NULL,
-  `FamilyID` int(6) default NULL,
-  `Sibling1` int(6) default NULL,
-  `Sibling2` int(6) default NULL,
-  `Sibling3` int(6) default NULL,
   `Active` enum('Y','N') NOT NULL default 'Y',
   `Date_active` date default NULL,
   `RegisteredBy` varchar(255) default NULL,
   `UserID` varchar(255) NOT NULL default '',
   `Date_registered` date default NULL,
+  `flagged_caveatemptor` enum('true','false') default 'false',
+  `flagged_reason` int(6),
+  `flagged_other` varchar(255) default NULL,
+  `flagged_other_status` enum('not_answered') default NULL,
   `Testdate` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `Entity_type` enum('Human','Scanner') NOT NULL default 'Human',
+  `ProbandGender` enum('Male','Female') DEFAULT NULL,
+  `ProbandDoB` date DEFAULT NULL,
   PRIMARY KEY  (`CandID`),
   UNIQUE KEY `ID` (`ID`),
+  UNIQUE KEY `ExternalID` (`ExternalID`),
   KEY `FK_candidate_1` (`CenterID`),
   CONSTRAINT `FK_candidate_1` FOREIGN KEY (`CenterID`) REFERENCES `psc` (`CenterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -58,49 +62,8 @@ LOCK TABLES `candidate` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `cert_details`
+-- Table structure for table `document_repository`
 --
-
-DROP TABLE IF EXISTS `cert_details`;
-CREATE TABLE `cert_details` (
-  `certID` int(10) unsigned NOT NULL default '0',
-  `testID` int(10) unsigned NOT NULL default '0',
-  `pass` enum('Invalid','Invalid scoring','Valid') default NULL,
-  `comment` text,
-  PRIMARY KEY  (`certID`,`testID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `cert_details`
---
-
-LOCK TABLES `cert_details` WRITE;
-/*!40000 ALTER TABLE `cert_details` DISABLE KEYS */;
-/*!40000 ALTER TABLE `cert_details` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `cert_events`
---
-
-DROP TABLE IF EXISTS `cert_events`;
-CREATE TABLE `cert_events` (
-  `certID` int(10) unsigned NOT NULL auto_increment,
-  `examinerID` int(10) unsigned NOT NULL default '0',
-  `date_cert` date NOT NULL default '0000-00-00',
-  `candID` int(10) unsigned default NULL,
-  `visit_label` varchar(255) default NULL,
-  PRIMARY KEY  (`certID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `cert_events`
---
-
-LOCK TABLES `cert_events` WRITE;
-/*!40000 ALTER TABLE `cert_events` DISABLE KEYS */;
-/*!40000 ALTER TABLE `cert_events` ENABLE KEYS */;
-UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `document_repository`;
 CREATE TABLE `document_repository` (
@@ -121,9 +84,36 @@ CREATE TABLE `document_repository` (
   `multipart` enum('Yes','No') DEFAULT NULL,
   `EARLI` tinyint(1) DEFAULT '0',
   `hide_video` tinyint(1) DEFAULT '0',
-  `File_category` enum('abstract','audio_visual','image','instrument','manual','minutes','paper','presentation','protocol','spreadsheet_table','other') DEFAULT NULL,
+  `File_category` int(3) DEFAULT NULL,
   PRIMARY KEY (`record_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `document_repository`
+--
+
+LOCK TABLES `document_repository` WRITE;
+/*!40000 ALTER TABLE `document_repository` DISABLE KEYS */;
+/*!40000 ALTER TABLE `document_repository` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `document_repository_categories`
+--
+
+DROP TABLE IF EXISTS `document_repository_categories`;
+CREATE TABLE `document_repository_categories` (
+  `id` int(3) unsigned NOT NULL AUTO_INCREMENT,
+  `category_name` varchar(255) DEFAULT NULL,
+  `parent_id` int(3) DEFAULT '0',
+  `comments` text,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+LOCK TABLES `document_repository_categories` WRITE;
+/*!40000 ALTER TABLE `document_repository_categories` DISABLE KEYS */;
+/*!40000 ALTER TABLE `document_repository_categories` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `examiners`
@@ -134,6 +124,7 @@ CREATE TABLE `examiners` (
   `examinerID` int(10) unsigned NOT NULL auto_increment,
   `full_name` varchar(255) default NULL,
   `centerID` tinyint(2) unsigned default NULL,
+  `radiologist` tinyint(1) default NULL,
   PRIMARY KEY  (`examinerID`),
   UNIQUE KEY `full_name` (`full_name`,`centerID`),
   KEY `FK_examiners_1` (`centerID`),
@@ -147,40 +138,6 @@ CREATE TABLE `examiners` (
 LOCK TABLES `examiners` WRITE;
 /*!40000 ALTER TABLE `examiners` DISABLE KEYS */;
 /*!40000 ALTER TABLE `examiners` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `example_instrument`
---
-
-DROP TABLE IF EXISTS `example_instrument`;
-CREATE TABLE `example_instrument` (
-  `CommentID` char(255) NOT NULL default '',
-  `UserID` char(255) default NULL,
-  `Examiner` int(11) unsigned default NULL,
-  `Date_taken` date default NULL,
-  `Testdate` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  `Data_entry_completion_status` enum('Incomplete','Complete') NOT NULL default 'Incomplete',
-  `MenstruationCheck` enum('N','Y','NA') default NULL,
-  `QuickVueDate` date default NULL,
-  `QuickVueResult` enum('Positive','Negative','NA') default NULL,
-  `LaboratoryDate` date default NULL,
-  `LaboratoryResult` enum('Positive','Negative','NA') default NULL,
-  PRIMARY KEY  (`CommentID`),
-  KEY `FK_example_instrument_2` (`UserID`),
-  KEY `FK_example_instrument_3` (`Examiner`),
-  CONSTRAINT `FK_example_instrument_3` FOREIGN KEY (`Examiner`) REFERENCES `examiners` (`examinerID`),
-  CONSTRAINT `FK_example_instrument_1` FOREIGN KEY (`CommentID`) REFERENCES `flag` (`CommentID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_example_instrument_2` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `example_instrument`
---
-
-LOCK TABLES `example_instrument` WRITE;
-/*!40000 ALTER TABLE `example_instrument` DISABLE KEYS */;
-/*!40000 ALTER TABLE `example_instrument` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -306,8 +263,32 @@ CREATE TABLE `feedback_mri_comment_types` (
 
 LOCK TABLES `feedback_mri_comment_types` WRITE;
 /*!40000 ALTER TABLE `feedback_mri_comment_types` DISABLE KEYS */;
-INSERT INTO `feedback_mri_comment_types` VALUES (1,'Geometric intensity','volume','a:2:{s:5:\"field\";s:19:\"Geometric_intensity\";s:6:\"values\";a:5:{i:0;s:0:\"\";i:1;s:4:\"Good\";i:2;s:4:\"Fair\";i:3;s:4:\"Poor\";i:4;s:12:\"Unacceptable\";}}'),(2,'Intensity','volume','a:2:{s:5:\"field\";s:9:\"Intensity\";s:6:\"values\";a:5:{i:0;s:0:\"\";i:1;s:4:\"Good\";i:2;s:4:\"Fair\";i:3;s:4:\"Poor\";i:4;s:12:\"Unacceptable\";}}'),(3,'Movement artifact','volume','a:2:{s:5:\"field\";s:30:\"Movement_artifacts_within_scan\";s:6:\"values\";a:5:{i:0;s:0:\"\";i:1;s:4:\"None\";i:2;s:6:\"Slight\";i:3;s:4:\"Poor\";i:4;s:12:\"Unacceptable\";}}'),(4,'Packet movement artifact','volume','a:2:{s:5:\"field\";s:34:\"Movement_artifacts_between_packets\";s:6:\"values\";a:5:{i:0;s:0:\"\";i:1;s:4:\"None\";i:2;s:6:\"Slight\";i:3;s:4:\"Poor\";i:4;s:12:\"Unacceptable\";}}'),(5,'Coverage','volume','a:2:{s:5:\"field\";s:8:\"Coverage\";s:6:\"values\";a:5:{i:0;s:0:\"\";i:1;s:4:\"Good\";i:2;s:4:\"Fair\";i:3;s:5:\"Limit\";i:4;s:12:\"Unacceptable\";}}'),(6,'Overall','volume',''),(7,'Subject','visit','');
+INSERT INTO `feedback_mri_comment_types` VALUES (1,'Geometric intensity','volume','a:2:{s:5:\"field\";s:19:\"Geometric_intensity\";s:6:\"values\";a:5:{i:0;s:0:\"\";i:1;s:4:\"Good\";i:2;s:4:\"Fair\";i:3;s:4:\"Poor\";i:4;s:12:\"Unacceptable\";}}'),(2,'Intensity','volume','a:2:{s:5:\"field\";s:9:\"Intensity\";s:6:\"values\";a:5:{i:0;s:0:\"\";i:1;s:4:\"Good\";i:2;s:4:\"Fair\";i:3;s:4:\"Poor\";i:4;s:12:\"Unacceptable\";}}'),(3,'Movement artifact','volume','a:2:{s:5:\"field\";s:30:\"Movement_artifacts_within_scan\";s:6:\"values\";a:5:{i:0;s:0:\"\";i:1;s:4:\"None\";i:2;s:6:\"Slight\";i:3;s:4:\"Poor\";i:4;s:12:\"Unacceptable\";}}'),(4,'Packet movement artifact','volume','a:2:{s:5:\"field\";s:34:\"Movement_artifacts_between_packets\";s:6:\"values\";a:5:{i:0;s:0:\"\";i:1;s:4:\"None\";i:2;s:6:\"Slight\";i:3;s:4:\"Poor\";i:4;s:12:\"Unacceptable\";}}'),(5,'Coverage','volume','a:2:{s:5:\"field\";s:8:\"Coverage\";s:6:\"values\";a:5:{i:0;s:0:\"\";i:1;s:4:\"Good\";i:2;s:4:\"Fair\";i:3;s:5:\"Limit\";i:4;s:12:\"Unacceptable\";}}'),(6,'Overall','volume',''),(7,'Subject','visit',''),(8,'Dominant Direction Artifact (DWI ONLY)','volume','a:2:{s:5:"field";s:14:"Color_Artifact";s:6:"values";a:5:{i:0;s:0:"";i:1;s:4:"Good";i:2;s:4:"Fair";i:3;s:4:"Poor";i:4;s:12:"Unacceptable";}}'),(9,'Entropy Rating (DWI ONLY)','volume','a:2:{s:5:"field";s:7:"Entropy";s:6:"values";a:5:{i:0;s:0:"";i:1;s:10:"Acceptable";i:2;s:10:"Suspicious";i:3;s:12:"Unacceptable";i:4;s:13:"Not Available";}}');
 /*!40000 ALTER TABLE `feedback_mri_comment_types` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `feedback_mri_predefined_comments`
+--
+
+DROP TABLE IF EXISTS `feedback_mri_predefined_comments`;
+CREATE TABLE `feedback_mri_predefined_comments` (
+  `PredefinedCommentID` int(11) unsigned NOT NULL auto_increment,
+  `CommentTypeID` int(11) unsigned NOT NULL default '0',
+  `Comment` text NOT NULL,
+  PRIMARY KEY  (`PredefinedCommentID`),
+  KEY `CommentType` (`CommentTypeID`),
+  CONSTRAINT `FK_feedback_mri_predefined_comments_1` FOREIGN KEY (`CommentTypeID`) REFERENCES `feedback_mri_comment_types` (`CommentTypeID`)
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `feedback_mri_predefined_comments`
+--
+
+LOCK TABLES `feedback_mri_predefined_comments` WRITE;
+/*!40000 ALTER TABLE `feedback_mri_predefined_comments` DISABLE KEYS */;
+INSERT INTO `feedback_mri_predefined_comments` VALUES (1,2,'missing slices'),(2,2,'reduced dynamic range due to bright artifact/pixel'),(3,2,'slice to slice intensity differences'),(4,2,'noisy scan'),(5,2,'susceptibilty artifact above the ear canals.'),(6,2,'susceptibilty artifact due to dental work'),(7,2,'sagittal ghosts'),(8,3,'slight ringing artefacts'),(9,3,'severe ringing artefacts'),(10,3,'movement artefact due to eyes'),(11,3,'movement artefact due to carotid flow'),(12,4,'slight movement between packets'),(13,4,'large movement between packets'),(14,5,'Large AP wrap around, affecting brain'),(15,5,'Medium AP wrap around, no affect on brain'),(16,5,'Small AP wrap around, no affect on brain'),(17,5,'Too tight LR, cutting into scalp'),(18,5,'Too tight LR, affecting brain'),(19,5,'Top of scalp cut off'),(20,5,'Top of brain cut off'),(21,5,'Base of cerebellum cut off'),(22,5,'missing top third - minc conversion?'),(23,6,'copy of prev data'),(24,2,"checkerboard artifact"),(25,2,"horizontal intensity striping (Venetian blind effect, DWI ONLY)"),(26,2,"diagonal striping (NRRD artifact, DWI ONLY)"),(27,2,"high intensity in direction of acquisition"),(28,2,"signal loss (dark patches)"),(29,8,"red artifact"),(30,8,"green artifact"),(31,8,"blue artifact"),(32,6,"Too few remaining gradients (DWI ONLY)"),(33,6,"No b0 remaining after DWIPrep (DWI ONLY)"),(34,6,"No gradient information available from scanner (DWI ONLY)"),(35,6,"Incorrect diffusion direction (DWI ONLY)"),(36,6,"Duplicate series"),(37,3,"slice wise artifact (DWI ONLY)"),(38,3,"gradient wise artifact (DWI ONLY)");
+/*!40000 ALTER TABLE `feedback_mri_predefined_comments` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -352,29 +333,25 @@ LOCK TABLES `feedback_mri_comments` WRITE;
 /*!40000 ALTER TABLE `feedback_mri_comments` ENABLE KEYS */;
 UNLOCK TABLES;
 
---
--- Table structure for table `feedback_mri_predefined_comments`
---
-
-DROP TABLE IF EXISTS `feedback_mri_predefined_comments`;
-CREATE TABLE `feedback_mri_predefined_comments` (
-  `PredefinedCommentID` int(11) unsigned NOT NULL auto_increment,
-  `CommentTypeID` int(11) unsigned NOT NULL default '0',
-  `Comment` text NOT NULL,
-  PRIMARY KEY  (`PredefinedCommentID`),
-  KEY `CommentType` (`CommentTypeID`),
-  CONSTRAINT `FK_feedback_mri_predefined_comments_1` FOREIGN KEY (`CommentTypeID`) REFERENCES `feedback_mri_comment_types` (`CommentTypeID`)
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `feedback_mri_predefined_comments`
+-- Table structure for table `mri_processing_protocol`
 --
 
-LOCK TABLES `feedback_mri_predefined_comments` WRITE;
-/*!40000 ALTER TABLE `feedback_mri_predefined_comments` DISABLE KEYS */;
-INSERT INTO `feedback_mri_predefined_comments` VALUES (1,2,'missing slices'),(2,2,'reduced dynamic range due to bright artifact/pixel'),(3,2,'slice to slice intensity differences'),(4,2,'noisy scan'),(5,2,'susceptibilty artifact above the ear canals.'),(6,2,'susceptibilty artifact due to dental work'),(7,2,'sagittal ghosts'),(8,3,'slight ringing artefacts'),(9,3,'severe ringing artefacts'),(10,3,'movement artefact due to eyes'),(11,3,'movement artefact due to carotid flow'),(12,4,'slight movement between packets'),(13,4,'large movement between packets'),(14,5,'Large AP wrap around, affecting brain'),(15,5,'Medium AP wrap around, no affect on brain'),(16,5,'Small AP wrap around, no affect on brain'),(17,5,'Too tight LR, cutting into scalp'),(18,5,'Too tight LR, affecting brain'),(19,5,'Top of scalp cut off'),(20,5,'Top of brain cut off'),(21,5,'Base of cerebellum cut off'),(22,5,'missing top third - minc conversion?'),(23,6,'copy of prev data');
-/*!40000 ALTER TABLE `feedback_mri_predefined_comments` ENABLE KEYS */;
-UNLOCK TABLES;
+DROP TABLE IF EXISTS `mri_processing_protocol`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `mri_processing_protocol` (
+  `ProcessProtocolID` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `ProtocolFile` varchar(255) NOT NULL DEFAULT '',
+  `FileType` enum('xml','txt') DEFAULT NULL,
+  `Tool` varchar(255) NOT NULL DEFAULT '',
+  `InsertTime` int(10) unsigned NOT NULL DEFAULT '0',
+  `md5sum` varchar(32) DEFAULT NULL,
+  PRIMARY KEY (`ProcessProtocolID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 
 --
 -- Table structure for table `files`
@@ -388,13 +365,19 @@ CREATE TABLE `files` (
   `SeriesUID` varchar(64) DEFAULT NULL,
   `EchoTime` double DEFAULT NULL,
   `CoordinateSpace` varchar(255) default NULL,
-  `Algorithm` varchar(255) default NULL,
+  `ClassifyAlgorithm` varchar(255) default NULL,
   `OutputType` varchar(255) NOT NULL default '',
   `AcquisitionProtocolID` int(10) unsigned default NULL,
-  `FileType` enum('mnc','obj','xfm','xfmmnc','imp','vertstat') default NULL,
+  `FileType` enum('mnc','obj','xfm','xfmmnc','imp','vertstat','xml','txt','nii','nii.gz') default NULL,
   `PendingStaging` tinyint(1) NOT NULL default '0',
   `InsertedByUserID` varchar(255) NOT NULL default '',
   `InsertTime` int(10) unsigned NOT NULL default '0',
+  `SourcePipeline` varchar(255),
+  `PipelineDate` date,
+  `SourceFileID` int(10) unsigned DEFAULT '0',
+  `ProcessProtocolID` int(11) unsigned, 
+  `Caveat` tinyint(1) default NULL,
+  `TarchiveSource` int(11) default NULL,
   PRIMARY KEY  (`FileID`),
   KEY `file` (`File`),
   KEY `sessionid` (`SessionID`),
@@ -403,7 +386,9 @@ CREATE TABLE `files` (
   KEY `staging_filetype_outputtype` (`PendingStaging`,`FileType`,`OutputType`),
   KEY `AcquiIndex` (`AcquisitionProtocolID`,`SessionID`),
   CONSTRAINT `FK_files_2` FOREIGN KEY (`AcquisitionProtocolID`) REFERENCES `mri_scan_type` (`ID`),
-  CONSTRAINT `FK_files_1` FOREIGN KEY (`SessionID`) REFERENCES `session` (`ID`)
+  CONSTRAINT `FK_files_1` FOREIGN KEY (`SessionID`) REFERENCES `session` (`ID`),
+  CONSTRAINT `FK_files_3` FOREIGN KEY (`SourceFileID`) REFERENCES `files` (`FileID`),
+  CONSTRAINT `FK_files_4` FOREIGN KEY (`ProcessProtocolID`) REFERENCES `mri_processing_protocol` (`ProcessProtocolID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `files_qcstatus`;
@@ -464,29 +449,6 @@ CREATE TABLE `flag` (
 LOCK TABLES `flag` WRITE;
 /*!40000 ALTER TABLE `flag` DISABLE KEYS */;
 /*!40000 ALTER TABLE `flag` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `hardcopy_requests`
---
-
-DROP TABLE IF EXISTS `hardcopy_requests`;
-CREATE TABLE `hardcopy_requests` (
-  `CenterID` tinyint(2) unsigned NOT NULL default '0',
-  `Last_checked` tinyint(2) unsigned NOT NULL default '0',
-  `Next_selection` tinyint(2) unsigned NOT NULL default '0',
-  `Group_size` tinyint(2) unsigned NOT NULL default '0',
-  PRIMARY KEY  (`CenterID`),
-  CONSTRAINT `FK_hardcopy_requests_1` FOREIGN KEY (`CenterID`) REFERENCES `psc` (`CenterID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `hardcopy_requests`
---
-
-LOCK TABLES `hardcopy_requests` WRITE;
-/*!40000 ALTER TABLE `hardcopy_requests` DISABLE KEYS */;
-/*!40000 ALTER TABLE `hardcopy_requests` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -566,64 +528,6 @@ LOCK TABLES `mri_acquisition_dates` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `mri_efax_deleted_pages`
---
-
-DROP TABLE IF EXISTS `mri_efax_deleted_pages`;
-CREATE TABLE `mri_efax_deleted_pages` (
-  `ID` int(10) unsigned NOT NULL auto_increment,
-  `File_name` varchar(255) NOT NULL default '',
-  `Date` date NOT NULL default '0000-00-00',
-  PRIMARY KEY  (`File_name`,`Date`),
-  UNIQUE KEY `ID` (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `mri_efax_deleted_pages`
---
-
-LOCK TABLES `mri_efax_deleted_pages` WRITE;
-/*!40000 ALTER TABLE `mri_efax_deleted_pages` DISABLE KEYS */;
-/*!40000 ALTER TABLE `mri_efax_deleted_pages` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `mri_efax_parameter_form`
---
-
-DROP TABLE IF EXISTS `mri_efax_parameter_form`;
-CREATE TABLE `mri_efax_parameter_form` (
-  `ID` int(10) unsigned NOT NULL auto_increment,
-  `CenterID` tinyint(2) unsigned NOT NULL default '1',
-  `Scan_category` enum('subject','ACRQC','living_phantom','mritest') NOT NULL default 'subject',
-  `CandID` int(6) NOT NULL default '0',
-  `VisitNo` tinyint(1) NOT NULL default '0',
-  `Visit_label` varchar(255) default NULL,
-  `SessionID` int(10) unsigned default NULL,
-  `Acquisition_date` date default NULL,
-  `File_name` varchar(255) NOT NULL default '',
-  `Page` char(3) NOT NULL default '',
-  `UserID` varchar(255) NOT NULL default '',
-  `Date_taken` date default NULL,
-  `Testdate` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  `Comment` varchar(255) default NULL,
-  PRIMARY KEY  (`File_name`,`Page`),
-  UNIQUE KEY `ID` (`ID`),
-  KEY `CenterID` (`CenterID`),
-  KEY `Scan_category` (`Scan_category`),
-  KEY `VisitNo` (`VisitNo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `mri_efax_parameter_form`
---
-
-LOCK TABLES `mri_efax_parameter_form` WRITE;
-/*!40000 ALTER TABLE `mri_efax_parameter_form` DISABLE KEYS */;
-/*!40000 ALTER TABLE `mri_efax_parameter_form` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `mri_protocol`
 --
 
@@ -632,7 +536,6 @@ CREATE TABLE `mri_protocol` (
   `ID` int(11) unsigned NOT NULL auto_increment,
   `Center_name` varchar(4) NOT NULL default '',
   `ScannerID` int(10) unsigned NOT NULL default '0',
-  `Objective` tinyint(1) unsigned default NULL,
   `Scan_type` int(10) unsigned NOT NULL default '0',
   `TR_range` varchar(255) default NULL,
   `TE_range` varchar(255) default NULL,
@@ -661,38 +564,6 @@ CREATE TABLE `mri_protocol` (
 LOCK TABLES `mri_protocol` WRITE;
 /*!40000 ALTER TABLE `mri_protocol` DISABLE KEYS */;
 /*!40000 ALTER TABLE `mri_protocol` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `mri_safety`
---
-
-DROP TABLE IF EXISTS `mri_safety`;
-CREATE TABLE `mri_safety` (
-  `ID` int(10) unsigned NOT NULL auto_increment,
-  `SessionID` int(11) NOT NULL default '0',
-  `Acquisition_date` date NOT NULL default '0000-00-00',
-  `Date_review` date default NULL,
-  `Check_adverse` enum('N','Y') default NULL,
-  `Check_incidental` enum('N','Y') default NULL,
-  `Findings_confirmed` enum('In Progress','Included','Included_flagged','Excluded') default NULL,
-  `Findings_comment` text,
-  `Comment` text,
-  PRIMARY KEY  (`SessionID`,`Acquisition_date`),
-  UNIQUE KEY `ID` (`ID`),
-  KEY `Acquisition_date` (`Acquisition_date`),
-  KEY `Date_review` (`Date_review`),
-  KEY `Check_adverse` (`Check_adverse`),
-  KEY `Check_incidental` (`Check_incidental`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `mri_safety`
---
-
-LOCK TABLES `mri_safety` WRITE;
-/*!40000 ALTER TABLE `mri_safety` DISABLE KEYS */;
-/*!40000 ALTER TABLE `mri_safety` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -741,31 +612,6 @@ LOCK TABLES `mri_scanner` WRITE;
 /*!40000 ALTER TABLE `mri_scanner` DISABLE KEYS */;
 INSERT INTO `mri_scanner` VALUES (0,NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `mri_scanner` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `mri_staging`
---
-
-DROP TABLE IF EXISTS `mri_staging`;
-CREATE TABLE `mri_staging` (
-  `StagingID` int(10) unsigned NOT NULL auto_increment,
-  `SessionID` int(10) unsigned NOT NULL default '0',
-  `PatientName` varchar(255) default NULL,
-  `StudyDate` int(10) unsigned default NULL,
-  `Resolution` enum('accepted','to delete','deleted') default NULL,
-  `ResolvedBy` varchar(255) default NULL,
-  `ResolvedTime` int(10) unsigned default NULL,
-  PRIMARY KEY  (`StagingID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Table will be used in the future';
-
---
--- Dumping data for table `mri_staging`
---
-
-LOCK TABLES `mri_staging` WRITE;
-/*!40000 ALTER TABLE `mri_staging` DISABLE KEYS */;
-/*!40000 ALTER TABLE `mri_staging` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -917,6 +763,7 @@ CREATE TABLE `parameter_type` (
   `SourceCondition` text,
   `CurrentGUITable` varchar(255) default NULL,
   `Queryable` tinyint(1) default '1',
+  `IsFile` tinyint(1) default '0',
   PRIMARY KEY  (`ParameterTypeID`),
   KEY `name` (`Name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COMMENT='dictionary of all the variables in the project';
@@ -927,7 +774,7 @@ CREATE TABLE `parameter_type` (
 
 LOCK TABLES `parameter_type` WRITE;
 /*!40000 ALTER TABLE `parameter_type` DISABLE KEYS */;
-INSERT INTO `parameter_type` VALUES (1,'Selected','varchar(10)',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0),(2,'Geometric_intensity','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0),(3,'Intensity','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0),(4,'Movement_artifacts_within_scan','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0),(5,'Movement_artifacts_between_packets','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0),(6,'Coverage','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0),(7,'md5hash','varchar(255)','md5hash magically created by NeuroDB::File',NULL,NULL,'parameter_file.Value','parameter_file',NULL,'quat_table_1',1);
+INSERT INTO `parameter_type` VALUES (1,'Selected','varchar(10)',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0),(2,'Geometric_intensity','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0,0),(3,'Intensity','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0,0),(4,'Movement_artifacts_within_scan','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0,0),(5,'Movement_artifacts_between_packets','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0,0),(6,'Coverage','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0,0),(7,'md5hash','varchar(255)','md5hash magically created by NeuroDB::File',NULL,NULL,'parameter_file.Value','parameter_file',NULL,'quat_table_1',1,0),(8,'Color_Artifact','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0,0),(9,'Entropy','text',NULL,NULL,NULL,NULL,'parameter_file',NULL,NULL,0,0);
 /*!40000 ALTER TABLE `parameter_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1012,7 +859,7 @@ CREATE TABLE `permissions` (
 
 LOCK TABLES `permissions` WRITE;
 /*!40000 ALTER TABLE `permissions` DISABLE KEYS */;
-INSERT INTO `permissions` VALUES (1,'superuser','There can be only one Highlander','1'),(2,'user_accounts','User management','2'),(3,'user_accounts_multisite','Across all sites create and edit users','2'),(4,'context_help','Edit help documentation','2'),(5,'bvl_feedback','Behavioural QC','1'),(6,'mri_feedback','Edit MRI feedback threads','2'),(7,'mri_efax','Edit MRI Efax files','2'),(8,'send_to_dcc','Send to DCC','2'),(9,'unsend_to_dcc','Reverse Send from DCC','2'),(10,'access_all_profiles','Across all sites access candidate profiles','2'),(11,'data_entry','Data entry','1'),(12,'certification','Certify examiners','2'),(13,'certification_multisite','Across all sites certify examiners','2'),(14,'timepoint_flag','Edit exclusion flags','2'),(15,'timepoint_flag_evaluate','Evaluate overall exclusionary criteria for the timepoint','2'),(16,'mri_safety','Review MRI safety form for accidental findings','2'),(17,'conflict_resolver','Resolving conflicts','2'),(18,'data_dict','Parameter Type description','2'),(19,'violated_scans','Violated Scans','2'),(20,'violated_scans_modifications','Editing the MRI protocol table (Violated Scans moduleiolated Scans)','2');
+INSERT INTO `permissions` VALUES (1,'superuser','There can be only one Highlander','1'),(2,'user_accounts','User management','2'),(3,'user_accounts_multisite','Across all sites create and edit users','2'),(4,'context_help','Edit help documentation','2'),(5,'bvl_feedback','Behavioural QC','1'),(6,'mri_feedback','Edit MRI feedback threads','2'),(7,'mri_efax','Edit MRI Efax files','2'),(8,'send_to_dcc','Send to DCC','2'),(9,'unsend_to_dcc','Reverse Send from DCC','2'),(10,'access_all_profiles','Across all sites access candidate profiles','2'),(11,'data_entry','Data entry','1'),(12,'certification','Certify examiners','2'),(13,'certification_multisite','Across all sites certify examiners','2'),(14,'timepoint_flag','Edit exclusion flags','2'),(15,'timepoint_flag_evaluate','Evaluate overall exclusionary criteria for the timepoint','2'),(16,'mri_safety','Review MRI safety form for accidental findings','2'),(17,'conflict_resolver','Resolving conflicts','2'),(18,'data_dict','Parameter Type description','2'),(19,'violated_scans','Violated Scans','2'),(20,'violated_scans_modifications','Editing the MRI protocol table (Violated Scans module)','2'),(21,'data_integrity_flag','Data Integrity Flag','2'),(22,'config','Edit configuration settings','2');
 
 /*!40000 ALTER TABLE `permissions` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -1049,19 +896,19 @@ DROP TABLE IF EXISTS `psc`;
 CREATE TABLE `psc` (
   `CenterID` tinyint(2) unsigned NOT NULL auto_increment,
   `Name` varchar(150) NOT NULL default '',
-  `PSCArea` varchar(150) NOT NULL default '',
-  `Address` varchar(150) NOT NULL default '',
-  `City` varchar(150) NOT NULL default '',
-  `StateID` tinyint(2) unsigned NOT NULL default '0',
-  `ZIP` varchar(12) NOT NULL default '',
-  `Phone1` varchar(12) NOT NULL default '',
-  `Phone2` varchar(12) NOT NULL default '',
-  `Contact1` varchar(150) NOT NULL default '',
-  `Contact2` varchar(150) NOT NULL default '',
+  `PSCArea` varchar(150),
+  `Address` varchar(150),
+  `City` varchar(150),
+  `StateID` tinyint(2) unsigned,
+  `ZIP` varchar(12),
+  `Phone1` varchar(12),
+  `Phone2` varchar(12),
+  `Contact1` varchar(150),
+  `Contact2` varchar(150),
   `Alias` char(3) NOT NULL default '',
   `MRI_alias` varchar(4) NOT NULL default '',
-  `Account` varchar(8) NOT NULL default '',
-  `Study_site` enum('N','Y') default NULL,
+  `Account` varchar(8),
+  `Study_site` enum('N','Y') default 'Y',
   PRIMARY KEY  (`CenterID`),
   UNIQUE KEY `Name` (`Name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
@@ -1329,6 +1176,7 @@ CREATE TABLE `test_battery` (
   `SubprojectID` int(11) default NULL,
   `Visit_label` varchar(255) default NULL,
   `CenterID` int(11) default NULL,
+  `firstVisit` enum('Y','N') default NULL,
   PRIMARY KEY  (`ID`),
   KEY `age_test` (`AgeMinDays`,`AgeMaxDays`,`Test_name`),
   KEY `FK_test_battery_1` (`Test_name`),
@@ -1353,8 +1201,8 @@ CREATE TABLE `test_names` (
   `ID` int(10) unsigned NOT NULL auto_increment,
   `Test_name` varchar(255) default NULL,
   `Full_name` varchar(255) default NULL,
-  `LimitAge` smallint(5) unsigned NOT NULL default '0',
   `Sub_group` int(11) unsigned default NULL,
+  `IsDirectEntry` boolean default NULL,
   PRIMARY KEY  (`ID`),
   UNIQUE KEY `Test_name` (`Test_name`),
   KEY `FK_test_names_1` (`Sub_group`),
@@ -1389,39 +1237,6 @@ LOCK TABLES `test_subgroups` WRITE;
 /*!40000 ALTER TABLE `test_subgroups` DISABLE KEYS */;
 INSERT INTO test_subgroups VALUES (1, 'Instruments');
 /*!40000 ALTER TABLE `test_subgroups` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `tracking_logs`
---
-
-DROP TABLE IF EXISTS `tracking_logs`;
-CREATE TABLE `tracking_logs` (
-  `Tracking_log_ID` int(11) NOT NULL auto_increment,
-  `Subproject_ID` int(11) default NULL,
-  `CenterID` int(11) unsigned default NULL,
-  `CandID` int(11) default NULL,
-  `PSCID` varchar(255) default NULL,
-  `Visit_label` varchar(255) default NULL,
-  `aMRI_date` date default NULL,
-  `Relaxometry_done` tinyint(1) default NULL,
-  `DTI_done` tinyint(1) default NULL,
-  `Second_DC_done` tinyint(1) default NULL,
-  `MRS_done` tinyint(1) default NULL,
-  `MRSI_done` tinyint(1) default NULL,
-  `eDTI_done` tinyint(1) default NULL,
-  `Lock_record` enum('','Locked','Unlocked') default NULL,
-  `Comments` text,
-  PRIMARY KEY  (`Tracking_log_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `tracking_logs`
---
-
-LOCK TABLES `tracking_logs` WRITE;
-/*!40000 ALTER TABLE `tracking_logs` DISABLE KEYS */;
-/*!40000 ALTER TABLE `tracking_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1481,13 +1296,14 @@ CREATE TABLE `users` (
   `Email` varchar(255) NOT NULL default '',
   `CenterID` tinyint(2) unsigned NOT NULL default '0',
   `Privilege` tinyint(1) NOT NULL default '0',
-  `PSCPI` enum('N','Y') NOT NULL default 'N',
+  `PSCPI` enum('Y','N') NOT NULL default 'N',
   `DBAccess` varchar(10) NOT NULL default '',
   `Active` enum('Y','N') NOT NULL default 'Y',
   `Examiner` enum('Y','N') NOT NULL default 'N',
   `Password_md5` varchar(34) default NULL,
   `Password_expiry` date NOT NULL default '0000-00-00',
-  `Pending_approval` tinyint(1) default NULL,
+  `Pending_approval` enum('Y','N') default 'Y',
+  `Doc_Repo_Notifications` enum('Y','N') default 'N',
   PRIMARY KEY  (`ID`),
   UNIQUE KEY `Email` (`Email`),
   UNIQUE KEY `UserID` (`UserID`),
@@ -1501,7 +1317,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'admin',NULL,'Admin account',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'',1,0,'N','','Y','N','4817577f267cc8bb20c3e58b48a311b9f6','2006-11-27',NULL);
+INSERT INTO `users` (ID,UserID,Real_name,First_name,Last_name,Email,CenterID,Privilege,PSCPI,DBAccess,Active,Examiner,Password_md5,Password_expiry) VALUES (1,'admin','Admin account','Admin','account','admin@localhost',1,0,'N','','Y','N','4817577f267cc8bb20c3e58b48a311b9f6','2015-03-30');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1526,9 +1342,11 @@ CREATE TABLE `mri_protocol_violated_scans` (
   `ystep_range` varchar(255) DEFAULT NULL,
   `zstep_range` varchar(255) DEFAULT NULL,
   `time_range` varchar(255)  DEFAULT NULL,
+  `SeriesUID` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`ID`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `conflicts_unresolved` (
+      `ConflictID` int(10) NOT NULL AUTO_INCREMENT,
       `TableName` varchar(255) NOT NULL,
       `ExtraKeyColumn` varchar(255) DEFAULT NULL,
       `ExtraKey1` varchar(255) NOT NULL,
@@ -1538,10 +1356,11 @@ CREATE TABLE `conflicts_unresolved` (
       `Value1` varchar(255) DEFAULT NULL,
       `CommentId2` varchar(255) NOT NULL,
       `Value2` varchar(255) DEFAULT NULL,
-      PRIMARY KEY (`TableName`,`CommentId1`,`CommentId2`,`ExtraKey1`,`ExtraKey2`,`FieldName`)
+      PRIMARY KEY (`ConflictID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `conflicts_resolved` (
+      `ResolvedID` int(10) NOT NULL AUTO_INCREMENT,
       `UserID` varchar(255) NOT NULL,
       `ResolutionTimestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       `User1` varchar(255) DEFAULT NULL,
@@ -1556,7 +1375,8 @@ CREATE TABLE `conflicts_resolved` (
       `OldValue1` varchar(255) DEFAULT NULL,
       `OldValue2` varchar(255) DEFAULT NULL,
       `NewValue` varchar(255) DEFAULT NULL,
-      PRIMARY KEY (`TableName`,`CommentId1`,`CommentId2`,`ExtraKey1`,`ExtraKey2`,`FieldName`)
+      `ConflictID` int(10) DEFAULT NULL,
+      PRIMARY KEY (`ResolvedID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `tarchive_find_new_uploads` (
@@ -1639,9 +1459,6 @@ UNLOCK TABLES;
 
 -- Dump completed on 2012-08-21 16:13:53
 
---
--- Table structure for table `parameter_type_override`
---
 
 -- This table needs to be MyISAM because InnoDB doesn't
 -- support full text indexes
@@ -1664,5 +1481,445 @@ CREATE TABLE `help_related_links` (
     PRIMARY KEY (`helpID`,`relatedID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-INSERT INTO help (helpID, topic, content) VALUES ('1','LORIS HELP: Using the Database','Welcome to LORIS database. The help section provides you with guidelines for adding and updating information in the database'), ('2','HOW TO - Guide','Under Construction.Please visit us later'), ('3','Guidelines','Under Construction.Please visit us later'), ('5','Instruments - Guide','Under Construction.Please visit us later');
+--
+-- Table structure for table `data_integrity_flag`
+--
 
+DROP TABLE IF EXISTS `data_integrity_flag`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `data_integrity_flag` (
+  `dataflag_id` int(11) NOT NULL AUTO_INCREMENT,
+  `dataflag_visitlabel` varchar(255) NOT NULL,
+  `dataflag_instrument` varchar(255) NOT NULL,
+  `dataflag_date` date NOT NULL,
+  `dataflag_status` int(11) NOT NULL,
+  `dataflag_comment` text,
+  `latest_entry` tinyint(1) NOT NULL DEFAULT '1',
+  `dataflag_fbcreated` int(11) NOT NULL DEFAULT '0',
+  `dataflag_fbclosed` int(11) NOT NULL DEFAULT '0',
+  `dataflag_fbcomment` int(11) NOT NULL DEFAULT '0',
+  `dataflag_fbdeleted` int(11) NOT NULL DEFAULT '0',
+  `dataflag_userid` varchar(255) NOT NULL,
+  PRIMARY KEY (`dataflag_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `data_integrity_flag`
+--
+
+LOCK TABLES `data_integrity_flag` WRITE;
+/*!40000 ALTER TABLE `data_integrity_flag` DISABLE KEYS */;
+/*!40000 ALTER TABLE `data_integrity_flag` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+CREATE TABLE `final_radiological_review` (
+      `CommentID` varchar(255) NOT NULL,
+      `Review_Done` enum('yes','no','not_answered') DEFAULT NULL,
+      `Final_Review_Results` enum('normal','abnormal','atypical','not_answered') DEFAULT NULL,
+      `Final_Exclusionary` enum('exclusionary','non_exclusionary','not_answered') DEFAULT NULL,
+      `SAS` int(11) DEFAULT NULL,
+      `PVS` int(11) DEFAULT NULL,
+      `Final_Incidental_Findings` text,
+      `Final_Examiner` int(11) DEFAULT NULL,
+      `Final_Review_Results2` enum('normal','abnormal','atypical','not_answered') DEFAULT NULL,
+      `Final_Examiner2` int(11) DEFAULT NULL,
+      `Final_Exclusionary2` enum('exclusionary','non_exclusionary','not_answered') DEFAULT NULL,
+      `Review_Done2` tinyint(1) DEFAULT NULL,
+      `SAS2` int(11) DEFAULT NULL,
+      `PVS2` int(11) DEFAULT NULL,
+      `Final_Incidental_Findings2` text,
+      `Finalized` enum('yes','no','not_answered') DEFAULT NULL,
+      PRIMARY KEY (`CommentID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- Dump completed on 2012-10-05 10:49:10
+
+CREATE TABLE participant_status_options (
+        ID int(10) unsigned NOT NULL auto_increment,
+        Description varchar(255) default NULL,
+        Required boolean default NULL,
+        parentID int(10) default NULL,
+        PRIMARY KEY  (ID),
+        UNIQUE KEY ID (ID) 
+);
+INSERT INTO `participant_status_options` VALUES (1,'Active',0,NULL),(2,'Refused/Not Enrolled',0,NULL),(3,'Ineligible',0,NULL),(4,'Excluded',0,NULL),(5,'Inactive',1,NULL),(6,'Incomplete',1,NULL),(7,'Complete',0,NULL),(8,'Unsure',NULL,5),(9,'Requiring Further Investigation',NULL,5),(10,'Not Responding',NULL,5),(11,'Death',NULL,6),(12,'Lost to Followup',NULL,6);
+
+CREATE TABLE participant_status (
+        ID int(10) unsigned NOT NULL auto_increment,
+        CandID int(6) UNIQUE NOT NULL default '0',
+        UserID varchar(255) default NULL,
+        Examiner varchar(255) default NULL,
+        entry_staff varchar(255) default NULL,
+        data_entry_date timestamp NOT NULL,
+        participant_status integer DEFAULT NULL REFERENCES participant_status_options(ID),
+        participant_suboptions integer DEFAULT NULL REFERENCES participant_status_options(ID),
+        reason_specify text default NULL,
+        reason_specify_status enum('dnk','not_applicable','refusal','not_answered') default NULL,
+        study_consent enum('yes','no','not_answered') default NULL,
+        study_consent_date date default NULL,
+        study_consent_withdrawal date default NULL,
+        PRIMARY KEY  (ID),
+        UNIQUE KEY ID (ID) 
+);
+
+
+--
+-- Table structure for table `certification`
+--
+
+DROP TABLE IF EXISTS `certification`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `certification` (
+  `certID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `examinerID` int(10) unsigned NOT NULL DEFAULT '0',
+  `date_cert` date DEFAULT NULL,
+  `visit_label` varchar(255) DEFAULT NULL,
+  `testID` varchar(255) NOT NULL DEFAULT '',
+  `pass` enum('not_certified','in_training','certified') DEFAULT NULL,
+  `comment` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`certID`,`testID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `certification`
+--
+
+LOCK TABLES `certification` WRITE;
+/*!40000 ALTER TABLE `certification` DISABLE KEYS */;
+/*!40000 ALTER TABLE `certification` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+--
+-- Table structure for table `certification_history`
+--
+
+DROP TABLE IF EXISTS `certification_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `certification_history` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `col` varchar(255) NOT NULL DEFAULT '',
+  `old` text,
+  `old_date` date DEFAULT NULL,
+  `new` text,
+  `new_date` date DEFAULT NULL,
+  `primaryCols` varchar(255) DEFAULT 'certID',
+  `primaryVals` text,
+  `testID` int(3) DEFAULT NULL,
+  `visit_label` varchar(255) DEFAULT NULL,
+  `changeDate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `userID` varchar(255) NOT NULL DEFAULT '',
+  `type` char(1) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `files_intermediary`
+--
+
+DROP TABLE IF EXISTS `files_intermediary`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `files_intermediary` (
+  `IntermedID` int(11) NOT NULL AUTO_INCREMENT,
+  `Output_FileID` int(10) unsigned NOT NULL,
+  `Input_FileID` int(10) unsigned NOT NULL,
+  `Tool` varchar(255) NOT NULL,
+  PRIMARY KEY (`IntermedID`),
+  KEY `FK_files_intermediary_1` (`Output_FileID`),
+  KEY `FK_files_intermediary_2` (`Input_FileID`),
+  CONSTRAINT `FK_files_intermediary_1` FOREIGN KEY (`Output_FileID`) REFERENCES `files` (`FileID`),
+  CONSTRAINT `FK_files_intermediary_2` FOREIGN KEY (`Input_FileID`) REFERENCES `files` (`FileID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+DROP TABLE IF EXISTS `project_rel`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project_rel` (
+  `ProjectID` int(2) DEFAULT NULL,
+  `SubprojectID` int(2) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_account_history` (
+ID int(10) unsigned NOT NULL AUTO_INCREMENT,
+UserID varchar(255) NOT NULL DEFAULT '',
+PermID int(10) unsigned DEFAULT NULL,
+PermAction enum('I','D') DEFAULT NULL,
+ChangeDate timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+INSERT INTO `help` VALUES  (1,-1,NULL,'LORIS HELP: Using the Database','Welcome to the LORIS database. \r\nThis Help section provides you with guidelines for adding and updating information in the database. On each page, click on the question-mark icon in the Menu Bar across the top of the screen to access detailed information specific to the page.\r\n\r\nUpon logging into the LORIS database, the user will come to the home page. Here, key user information can automatically be seen at the right-hand side of the Menu Bar at the top of the screen indicating the user’s name and the site to which the user belongs. To return to the home page at any time, the user can click on the “LORIS” button at the far left corner of the Menu Bar.\r\nThe menus spanning horizontally across the Menu Bar represent different categories of features within the database that allow data acquisition, storage, processing and dissemination using the web based interface. Please note that when accessing LORIS via tablet, mobile device, or in a narrow-width desktop browser window, these main menus will be hidden under the downward-pointing arrow icon in the Menu Bar. Clicking on this button will show or hide all main menus in a vertical list.\r\nThere are five main drop-down menus: Candidate, Clinical, Imaging, Reports and Admin. Hover over on each menu to display a list of features or modules, organized by category:\r\n- Candidate: New Profile, Access Profile\r\n- Clinical: Reliability Coding, Conflict Resolver, Certification, Document Repository\r\n- Imaging: Radiological Review, DICOM Archive, Imaging Browser, Imaging Uploader\r\n- Reports: Database Statistics, Data Dictionary, Data Querying Tool, Data Team Helper, Data Integrity Tool\r\n- Admin: User Accounts, Instrument Builder\r\n\r\nOn the right side of the Menu Bar there are two icons linking to the Feedback Module, a pencil on paper icon , and Help, a question mark icon. Each of these modules will open in a new pop-up window, or new tab on a mobile browser.\r\n\r\nAll five main menus, the two icons listed above, the user’s site and the user’s name are accessible from any page in LORIS, via the Menu Bar at the top of the screen. \r\n\r\nTo log out of the database, click on the username displayed at the right edge of the Menu Bar, and select the “Log Out” option from the drop-down menu. \r\n\r\nThe “My Preferences” feature, also listed in this menu, can be used to update certain user profile settings and change the user’s password. \r\n','2014-09-01 00:00:00',NULL),(2,-1,NULL,'HOW TO - Guide','Under Construction. Please visit us later','0000-00-00 00:00:00',NULL),(3,-1,NULL,'Guidelines','Under Construction. Please visit us later','0000-00-00 00:00:00',NULL),(5,-1,NULL,'Instruments - Guide', 'For each instrument in a visit, the user needs to mark Administration as “All”, “Partial” or “None” and mark Data Entry as “Complete” in order to save the form. If the instrument includes a Validity flag, Validity needs to be marked as “Valid”, “Questionable” or “Invalid”. \r\nNote the administration status is an indication of whether a particular instrument was conducted at the given time point. Administration, Data Entry status (and Validity, if applicable) can be found within the far left panel. Data Entry is automatically marked as “In Progress” once the user opens an instrument form. \r\n\r\nThe “Top” or first page of each instrument requires the user to enter the “Date of Administration” and “Examiner”. “Date of administration” refers to the date the testing was performed. “Examiner” refers to the name of the person that performed the testing.\r\nSome instruments include all fields for data entry in one page, whereas other instruments include questions that have been organized onto different pages. These additional pages can be accessed through the far left panel under the heading “Subtests”. In order to mark Data Entry as “Complete”, all items across all pages need to be filled out. After completing data entry for a page, please click the button “Save Data”, found at the bottom of the page. Any items for which no data is entered in the paper form should be marked as “Not Answered” in the database. If this option is selected for any field, a note in golden text will appear indicating “Any entered data will not be saved”. Additional data entry for fields already marked with “not_answered” will also be disabled. \r\n\r\nAfter saving all data for a specific instrument, certain values specific to the instrument will be automatically calculated by the database and will appear on the first page of the form. For instance, “Candidate Age” is automatically calculated based on the amount of time that has passed between the “Date of Administration” and the Candidate’s Date of Birth (entered when the candidate’s profile was first created).\r\n\r\nOnce data for an instrument have been fully entered, and the “Administration” and “Validity” have been selected, Data Entry can be marked as “Complete” as previously mentioned. It is important to enter data in all required fields, otherwise the database will not allow the user to proceed with data entry completion. When viewing an Instrument Form in a narrow browser window or on a mobile device, the navigation panel typically found to the left is hidden. The instrument navigation panel contains the Administration Menu, the Validity Menu, the Data Entry Menu, and the Subtest Menu. Similar to the visit panel, it can be accessed and hidden by selecting the list icon at the left edge of the Menu Bar.\r\nLastly, the user can return to the visit through the white banner near the top of the screen and clicking “TimePoint <i>visit</i> Details”. ','2014-09-01 00:00:00',NULL),(6,-1,'7292dd87f9a200f21bf40ded779a582c','Hand Preference','Under Construction. Please visit us later','2014-09-01 00:00:00',NULL),(7,-1,md5('new_profile'),'New Profile','By clicking on “New Profile” under the Candidate Menu, users with appropriate permissions can register a new candidate for their study site. Once inside the “New Profile” page, the “Date of Birth” field must be entered twice, in order to minimize error in data entry. \r\nThe PSCID refers to an alphanumeric identifier entered by the user. This identifier is typically comprised of a site-specific code (e.g., AAA), followed by a numeric code specific to the candidate at that site (e.g., AAA0000). Other fields are customized for specific projects and can be configured as drop-down fields or user input fields. \r\n\r\nOnce all the required data fields are completed, the user can click on the “Create” button to finish registering the candidate. It is crucial that no mistakes in data entry are made at this point, as information cannot be modified after clicking the “Create” button. \r\n\r\nEach new candidate will then be assigned a 6 digit numerical DCC-ID. The DCCID, along with the previously entered PSCID, will always be used to identify this candidate.\r\n' ,'2014-09-01 00:00:00', NULL),(8,-1,md5('candidate_list'),'Access Profile','In many cases, the candidate`s profile will already be created. The Access Profile module, also found under the Candidate menu, allows the user to efficiently search for an existing candidate and access the related data. \r\n\r\nThere are 3 main ways to search for a candidate:\r\n\r\n<u>Option 1:</u> Using PSC-ID and DCC-ID\r\nA specific candidate profile can be accessed directly by entering both the PSC-ID and the DCC-ID in the white boxes to the right of the screen and then clicking the button “Open Profile”. In a narrow browser window or mobile device the PSC-ID and DCC-ID fields are found below the selection filter.\r\n\r\n<u>Option 2:</u> Basic Filter Options\r\nUsers may search for particular candidates by selecting from the “Basic” filter options. Users may select from drop-down select boxes, and then click “Show Data” to view a list of candidates. If only a fragment of the candidate ID is known, the user may search for the profile by entering the known fragment, and then click show data to find the appropriate profile. For example, searching with “531” under “DCCID” will retrieve the profile of candidate DCC1107 (with full DCCID 531861).\r\n\r\n<u>Option 3:</u> Advanced Filter Options\r\nMore detailed filter options can be accessed by clicking on the “Advanced” button. Users will select from a number of drop-down select boxes including Site, Project, Subproject, Gender etc., and then click “Show Data” to view a list of candidates. To return to “Basic” selection filters please select “Basic”.\r\n\r\nTo view a specific candidate’s dataset, click on the candidate’s PSCID found in blue text under the “PSCID” column. At the top of the table, column headings will appear underlined and show a click icon when the user hovers over the heading title. Data can be sorted in ascending order according to a given column by clicking on the column heading (i.e. DCCID, Site, PSCID etc.), and by clicking again, in descending order. In both standard and mobile view, the selection filter can be hidden by selecting the upward arrow icon, allowing easier viewing of the data. Once in this view, users can click on the downward arrow icon to display the features of the selection filter once again. This feature applies to all pages that include a Selection Filter.\r\nNote that the form remembers previously selected data such that when the user returns to the “Access Profile” page, the selection filter will automatically select profiles according to the last selection settings. Depending on the magnitude of the search, there may be several pages of search results for the user to look through. If “No candidates found” appears, this indicates no profiles matched the information specified by the selection filter(s). \r\nWhen on a mobile device or narrow browser window, the table will have a slider at the bottom of the table, facilitating scrolling of the data. The user may also hover or click the arrows that flank the table to see the remainder of the table. When scrolling through search results, the PSC-ID column will freeze and remain displayed on the lefthand side, to allow for easy reference and access to relevant information.','2014-09-01 00:00:00',NULL),(9,-1,md5('timepoint_list'),'Candidate Profile','The database facilitates data collection of longitudinal studies; following the same candidates at various intervals for long periods of time. Each candidate may have several time-points stretching the duration of the study. Each time-point will be given a name called a “Visit Label”. The time-points refer to data collection on different visits for the same candidate. Every time-point contains a subset of data collected in a given time frame with the intention of keeping this subset in a tightly related group. \r\n\r\nA new candidate time-point can be created from the Candidate Profile page by opening a specific profile and clicking “Create Time Point” among the Actions buttons visible above the “List of Visits” table. Authorized users may also edit general information about the candidate, such as adding comments and updating participant status, by clicking the “Edit Candidate Info” button.\r\n\r\nOnce a candidate’s profile has been opened, the PSC-ID and DCC-ID will remain at the top of the screen in white text on a banner for reference. Clicking on the candidate’s IDs in white will return the user to the Candidate Profile. \r\nBelow the candidate’s information, the user will find a list of time points under “Visit Label (Click to Open)”. Clicking on the time point itself in navy text can open the profile for the candidate at that time point.\r\n','2014-09-01 00:00:00',NULL),(10,-1,md5('candidate_parameters'),'Candidate Parameters','The Candidate Parameters Page provides users an opportunity to add important general information about the candidate. There are three sections of the Candidate Parameters Page that can be updated as required by authorized users: “Candidate Information”, “Participant Status”, and “Participation Consent Status”. To return to the Candidate Profile, please click the “Return to timepoint list” button.','2014-09-01 00:00:00',NULL),(11,10,md5('update_candidate_info'), 'Update Candidate Information', 'The Update Candidate Information Page allows users to document any additional comments about the candidate that may be important for analysis, as well as external identifiers. Please note the caveat emptor flag is set to “False” by default. A candidate with a unique case for data analysis should have the caveat emptor flag marked as “True”, with a reason for the flag specified through the drop-down option(s) provided, outlining the most common flagged cases for the study at hand, or through the text box field. Additional comments can also be entered. The user must “Save” the updates before navigating back to the Candidate Parameters page via the “Return to Candidate Info” button.','2014-09-01 00:00:00',NULL),(12,10,md5('update_participant_status'), 'Participant Status', 'All candidates are marked as “Active” in the database by default. The participant status can be updated to one of the following options: Active, Refused/Not Enrolled, Ineligible, Excluded, Inactive, Incomplete, Complete.\r\n• Active: Candidate active in the study\r\n• Refused/Not Enrolled: Candidate recruited for the study but opted out\r\n• Ineligible: Candidate met exclusionary criterion/criteria during screening and was never scheduled for a visit\r\n• Excluded: Candidate was enrolled but met exclusionary criterion/criteria after starting the study (e.g. scan was reviewed as exclusionary by radiologist)\r\n• Inactive: Candidate continues to be part of the study but currently is inactive (e.g. Candidate is \"Unsure\" about continuing, \"Requiring further investigation\", or \"Not responding\")\r\n• Incomplete: Candidate has withdrawn.\r\n• Complete: Candidate has completed the study \r\nIf the candidate is listed as Inactive or Incomplete, a reason for the chosen status is required. Additional comments regarding the status can also be entered. The user must “Save” the updates before navigating back to the Candidate Parameters page via the button “Return to Candidate Info”.','2014-09-01 00:00:00',NULL),(13,10,md5('update_consent_info'), 'Participation Consent Status', 'Updates can be made on the following participant consent status items:\r\n• Consent to Study: Users may choose from options “Yes/No”, based on whether written consent was obtained for the study\r\n• Date of Consent to Study: This field is required if Consent to Study=Yes. Users are required to enter the date to consent twice, to minimize error in data entry.\r\n• Date of Withdrawal of Consent to Study: Users are not required to enter anything in this field if the candidate did not retract their consent.\r\nSpecific projects require additional consent for collaborative projects and/or for specific procedures (i.e. consent to draw blood). The same consent status fields apply to any additional consent items pertaining to the study.\r\nPlease note that written consent is required prior to data entry in the database.','2014-09-01 00:00:00',NULL),(14,-1,md5('instrument_list'), 'Time-Point Instrument List','Once inside a time point, the user will see some general information about the candidate across the top of the screen, such as gender, visit label, and subproject. The status of each particular visit can be viewed in the far left panel, where status can be marked as “Pass”, “Failure”, “Withdrawal”, or “In Progress”. “Send Time Point” is selected by the user to “Send to DCC”, and is the final step in completing data entry for a visit. \r\nThe “BVL QC Type” is used to record whether the Behavioural quality control was done on an electronic device or as a hard copy, and the “BVL QC Status” records if quality control has been completed. When viewing a visit in a narrow browser window or mobile device, this panel is hidden. The visit panel contains the Actions Menu, the Visit Stage, the Send Time Point, and QC Information. This menu can be opened for viewing or hidden by selecting the list icon at the top lefthand menu. \r\n\r\nEach time point carries a unique set of tests, also known as instruments. In addition to seeing the names of the instruments contained within each behavioural battery, users can view Administration and Data Entry Status, as well as whether any feedback exists for that particular instrument. Information about Double Data Entry progress can also be found within the behavioural battery table.  Click on any instrument name to open the instrument form and perform data entry. Double data entry can be performed by clicking on the \"Double Data Entry\" link for a given instrument.' ,'2014-09-01 00:00:00', NULL),(15,-1,md5('reliability'), 'Reliability Coding','The Reliability Coding module was designed to allow users across and within sites to be confident in the scoring of data, thus improving the integrity of the data wit\r\nhin the database on an on-going basis. This module may not be employed by your study if it does not require inter-rater agreement. Reliability immediately brings forw\r\nard any discrepancies in instrument administration or data reports, as well as helping reduce human error within data reports. Under the Reliability Coding module, the user can apply the selection filter to narrow down candidates of interest. \r\nA list of entries will appear that organizes candidates by PSCID, the site of reliability, cohort, DCCID, gender, visit label, instrument, reliability score and an indication of whether the chosen candidate has reliable data. Note that certain headings (i.e. DCCID, Site, PSCID etc.) at the top of the table will become underlined and show a click icon when the user hovers over the heading title. These titles can be clicked to sort the table data; clicking more than once will toggle the sort order between ascending and descending order. On a narrow browser window or mobile device, this table has a slider bar at the bottom, as well as arrows flanking the sides for easy scrolling. In this tab, both the selection filter and the “Swap Candidates” feature (explained below) can be hidden by selecting the upward arrow icon to the right of the table title and reopened using the downward arrow icon. \r\n\r\nSwap Candidates: The candidates for whom reliability is available are selected at random by the database. However, in the case that a particular candidate lacks adequate data for reliability (e.g. poor quality video), another candidate can be manually selected using the ”Swap Candidates” feature. Upon clicking the “Swap Candidates” button next to the Selection Filter, users can input the information of the “Original Candidate” with insufficient data for reliability, and input a desired “Replacement Candidate”. The user can indicate the instrument in question and proceed to clicking “Swap Candidates”. \r\n\r\nOnce the user has completed a search within the Reliability Module, the user can click on the PSCID of the candidate for the instrument in question. The “Reliable” column shows the user whether the reliability score surpasses the established threshold for reliability by being marked as “Yes” in green if the candidate is reliable or “No” in red if the candidate did not pass reliability. If the candidate had been flagged as invalid, the user will see a note in red text beside the PSCID.\r\n \r\nFor each instrument configured under the module, the user will see a table listing the reliability status of each rater (e.g. “Yes” or “In progress”), as well as the date at which reliability was established, date at which the tape was sent, date at which Feedback was received, whether the rater is outside the research group and Administration status (e.g., “Current” or “No”). The criteria required for a candidate to be considered reliable is outlined below the heading of each instrument.\r\n\r\n<b>Entering Reliability Data</b>\r\nAfter clicking on a PSCID, a data entry screen will appear for second raters to enter data for the selected candidate and time point. The database will automatically compare the newly entered data to that entered by the first rater and calculate a reliability score. This score can then be viewed on the main reliability page under the “Reliability Score” Column.\r\n\r\n<b>After saving Reliability form</b>\r\nThis page displays all data that was previously entered in the reliability form. These are static and cannot be altered from this page. Users can directly access the initial data entry form through the Comment ID link in blue text under “Scoring”. Please use the Clinical Menu to navigate back to the Reliability Coding page.','2014-09-01 00:00:00',NULL),(16,-1,md5('conflict_resolver'), 'Conflict Resolver','The Conflict Resolver tool allows users to view and keep track of any discrepancies that may arise between initial data entry and double data entry forms. Unresolved and Resolved conflicts are found on two separate tabs of the module. The Unresolved conflicts are displayed first upon accessing the Conflict Resolver module. The Conflict Resolver has a selection filter function to allow users to search for a particular subject and/or instrument. By clicking the button “Show Data” after selecting certain search options, the search results will be updated to reflect the selection filter criteria. The search results table is organized by the blue headers “Instrument”, “DCCID”, “PSCID”, “Visit Label”, “Question”, and “Correct Answer”. \r\nIf the user is confident that the data for the particular question of interest is consistent across the two data entry forms, the user can select the appropriate answer from the drop-down menu under the “Correct Answer” column and then click “Save” at the bottom of the table to resolve the issue. After refreshing the page, this newly resolved conflict will no longer appear under the Unresolved Conflicts tab, and will appear among the list of resolved conflicts on the second tab of the module. Similar to other pages of the database, the selection filter can be hidden by selecting upward arrow icon and reopened using the downward arrow icon.','2014-09-01 00:00:00',NULL),(17,-1,md5('certification'), 'Certification','The Certification module allows the user to access and input information regarding examiners’ credentials. To view existing credentials, the user must select the examiner’s name outlined in navy text. \r\nThe Certification module also has a selection filter to allow users to search for a particular examiner or measure. The user may also create new credentials first by clicking “Add Certification”. Similar to other pages of the database, the selection filter can be hidden by selecting upward arrow icon and reopened using the downward arrow icon.','2014-09-01 00:00:00',NULL),(18,17,md5('edit_event'), 'Add Certification','To add certification, the user must select an examiner from the drop down menu. The status of his/her training for various instruments must be selected as “Not Certified”, “In Training” or “Certified” and the date that the certification has been updated must be input. In order to store changes in certification the user must click “Save” after updating the examiner’s information. Note that certification updates for each examiner are recorded in a “Change Log”, just below the “Edit Certification Event” box.','2014-09-01 00:00:00',NULL),(19,-1,md5('document_repository'), 'Document Repository', 'The Document Repository is a useful tool that provides multiple users with a centralized location for important documents relevant to the project. Files may be uploaded and organized under any user-defined category. Subcategories can also be defined by the user to be nested under parent categories. To view the previously uploaded files, the user must click on the appropriate category title to reveal a complete list of subcategories, and subsequently its files. Clicking on the file name outlined in blue will open these files. Various metadata at the file level may also be edited by selecting the corresponding “Edit” link and files can be deleted with the “Delete” link to the right of the desired file. Categories and uploaded files can have comments attached to them to provide additional information. To edit the comments of a specific category, hover over the ellipsis beside the title and click the text to make any necessary changes.\r\n\r\nSimilar to other modules in the LORIS database, the Document Repository has a Selection Filter with which the user may input search criteria, and select “Show Data” to locate specific documents. Clicking on the column headers serves to sort the data, consistent with other pages of the LORIS database. Clicking “Upload File” in the Selection Filter window enables the user to upload new and/or revised documents. Clicking \"Add Category\" allows a user to create a new category or subcategory to an existing parent category.','2014-09-01 00:00:00',NULL),(20,-1,md5('final_radiological_review'), 'Radiological Review','The user can view the radiological review status for each candidate and corresponding visit label through the Radiological Review module.\r\n\r\n<b>To Access Reviews:</b>\r\nSet appropriate filters in the Selection Filter box and click the “Show Data” button to retrieve a list of the search results. The results are categorized by column by the candidate’s IDs, date of birth, visit label, review completion status, results (e.g., normal, atypical), exclusionary status and custom fields such as subarachnoid spaces (SAS) status (e.g., none, mild, minimal), perivascular spaces (PVS) and any further comments. This filter can be hidden by selecting the upward arrow icon and reopened using the downward arrow icon. In a narrow browser window or mobile device the table of search results will be displayed below the selection filter. \r\nIn the data table there is a column addressing whether any conflict exists between final and extra reviews, which can be found under the blue heading “Conflict”. Next to this column, the user will find whether the review was finalized. The user will see that hovering over each of the blue headings displays a click icon; if selected, the columns will sort in ascending or descending order. Note that clicking several times will reverse/change the sorting pattern. In addition, the table will fit to the browser size, and display a slide bar at the bottom as well as arrows flanking the table to ease data viewing. By clicking on a PSCID, the candidate’s file will be opened and the user can access the radiological review. \r\n<b>Within a Radiological Review</b> \r\nIf a conflict exists between the original and final review, a warning will appear at the top of the screen in red text. General Information, such as PSCID, DCCID, Visit Label, and DICOM folder can be easily viewed from the Final Radiological Review page. The user can directly access this candidate’s Imaging Browser page or Final Radiological Review by following the links next to “Go to:” under the General Information section. Details of the candidate’s radiological review at that particular time-point can be viewed in the box under the navy blue heading “Review Values”. Any changes made to the record will be documented in the table following the heading “Change Log”.','2014-09-01 00:00:00',NULL),(22,-1,md5('dicom_archive'),'Dicom Archive','The user can access all DICOM files through the DICOM Archive under the “Imaging” menu. By default, all fields in the Selection Filter will appear to be null and no search results will be listed. Users can click “Submit” to view all imaging data. A more detailed search can be executed using selected fields from the Selection Filter. This includes filtering by “Patient ID”, “Patient Name”, “Gender”, “Date of Birth”, “Acquisition” date, and/or “Archive Location”. This Selection Filter can be hidden using the upward arrow icon and re-opened by selecting the downward arrow icon. After submitting a search, the user will be able to see how many results their search has retrieved. The user can organize the results in ascending or descending order by clicking on any of the blue headers of the table, consistent with other pages on the LORIS database.\r\n\r\nLinks to a particular patient’s DICOM archive can be accessed through the Metadata column by clicking “View Details”. Direct links to neuroimaging data can also be accessed through the Imaging Browser column.','2014-09-01 00:00:00',NULL),(23,22,md5('viewDetails'),'Dicom Archive - View Details','Within a particular candidate’s DICOM archive, specific information about the patient can be found, as well as details about imaging data acquisition. Specifics of the DICOM Series can be found in the table, located near the bottom of the DICOM archive page, and can provide information as to whether there was a protocol violation.Under the specifics of the Series, two links to “Show/Hide files” and “Show/Hide metadata” can be clicked to expand the table and reveal additional information. \r\n\r\nNote the DICOM archive for a particular candidate can also be accessed directly from their corresponding Imaging Browser page.','2014-09-01 00:00:00',NULL),(24,-1,md5('imaging_browser'),'Imaging Browser ','By default, all fields in the Selection Filter will appear to be null and no search results will be listed. Users can click “Submit” to view all imaging data. A more detailed search can be executed using selected fields from the Selection Filter. After submitting a search, the Imaging browser will organize the results by time-point and the user will be able to see how many results their search has retrieved. \r\nThe user can organize the results in ascending or descending order by clicking on any of the blue headers of the table. The date of first acquisition for the imaging dataset is indicated under “First Acq Date” column. The date on which the data was last QC’ed can be found under “Last QC”. Any data that was recently inserted will be indicated via the label “NEW” under “New Data”. \r\n\r\nTo view the imaging datasets for a specific candidate\'s timepoint, select a dataset type from under the 3 \"Links\" columns: “native”, “selected”, and “all types”. “Native” will show only raw imaging datasets, “Selected” displays only scans on which QC has flagged as optimal, and “all types” displays all data, including analyzed outputs. By clicking on any of these links, the user will be able to see details for that specific subject’s dataset from a given scanning session. \r\n\r\nNote that the Imaging Browser may also be accessed from the DICOM Archive module.','2014-09-01 00:00:00',NULL),(25,24,md5('viewSession'),'Imaging Browser: View Session','At the top of the page is a box with grey headings, listing general information about the candidate, including subject IDs, demographic information, key parameters (e.g. scannerID) and QC status. \r\n\r\nIn the left side panel, QC status flags can be set at the bottom under \"Visit QC\", and detailed QC information can be entered for the entire timepoint dataset via “Visit-level feedback”, under “Visit Controls”. Clicking on “Visit-level feedback” will open a new window with the candidate’s information (e.g.CandID, PSCID, Visit Label and Subproject ID), as well as any additional QC comments and/or existing Mantis bug reports.\r\n\r\nThe files for the selected candidate’s dataset are displayed below the general information box. Horizontal, sagittal and coronal views of each scan volume are grouped together. Each set of images for each file also has a list of scan parameters listed on the right, including protocol, the date at which the image was acquired, the date the images were put on the database, and other details regarding scan acquisition. \r\n\r\nTo the left of the images, there is a panel displaying the QC status of the scan, and if any “caveat emptor” flags exist. If a specific acquisition has been \"selected\" as the optimal scan of its type or modality (e.g. t1) for this dataset, the modality will be displayed as the selected option in the \"Selected\" dropdown box found within the left-hand panel of each scan. Detailed QC information about a specific scan can be entered by clicking “Link to comments”, which will open a separate smaller window with a summary of the candidate’s information and the filename, followed by comments, if any exist, regarding intensity, movement artifacts, coverage and overall feedback on the selected scan. After saving any changes, the user can either close the pop-up window or use the link at the top: “Click here to close this window”.\r\n\r\n<b>Visualization</b>\r\nTo use visualization tools BrainBrowser and the JIV viewer. The user can also access 3D images through the navy blue links “3D+Overlay” and “3D Only” for both the JIV Panel and BrainBrowser in the left sidebar. \r\n\r\nIn the left sidebar, Links are also displayed to direct the user to the MRI parameter form, Radiological Review, DICOM Archive module, and Mantis issue-tracking tool. \r\nAt the top of the left sidebar, the user can click on \"Next\" to move to the next time-point for the candidate of interest.','2014-09-01 00:00:00',NULL),(26,-1,md5('mri_upload'), 'Imaging Uploader', 'The Imaging Uploader allows users to upload imaging files, typically for an entire imaging session at a time. Please note that files should be in a compressed format (.tgz, .tar.gz, or .zip) and must be labeled properly in order to be uploaded successfully into the database. \r\n\r\nAfter choosing the file to upload, users must input the CandID, PSCID, and Visit Label for this dataset, and then click the “Upload” button. The newly uploaded file will be displayed in the table below. \r\n\r\nUsers will be able to search for datasets uploaded in the past, by entering the ID or Visit Label and then clicking “Show Data”. Results from the upload logs will be displayed in the table below, which can be sorted by columns “CandID”, “Visit Label”, “Source Location”, “Upload Date” and “Uploaded By”, as well as by number of Minc files inserted, and number of Minc files created.\r\n\r\nNote that the “Tarchive Info” column contains links to the corresponding DICOM header information for a given imaging dataset, via the DICOM Archive module.','2014-09-01 00:00:00',NULL),(27,-1,md5('statistics'), 'Database Statistics', 'The Database statistics module calculates and displays statistics related to data acquisition, data processing, and data entry for both behavioural and imaging data collections. A brief description of “Demographic”, “Imaging”, and “Behavioural Statistics” can be found under the “General Description” tab. In addition to these tabs, the user can also view “Reliability Statistics”. These statistics categories will condense into a drop-down menu in a narrow browser view or mobile device, but can be opened using the downward arrow icon and hidden using the upward arrow icon.\r\n\r\n<b>Demographic Statistics</b>\r\nGeneral statistics can be retrieved from each site by using the drop-down select box under the first smaller heading “General Statistics” and clicking on the button “Submit Query”. Under General Statistics, the user will find the heading “Breakdown of Registered Candidates”, where a table outlines gender breakdowns per site, time-point and subproject ID. Data Entry Completion Status can be viewed for each instrument by selecting from the dropdown menu under “Breakdown of Registered Candidates”. Click “Submit Query” to view statistics specific to the selected instrument. \r\n\r\n<b>Behavioural Statistics</b>\r\nThe user will first see a table labeled “Data Entry Statistics”, where each site is listed in blue headers horizontally and includes the headings “Completed”, “Created”, and “% Completion”. “Completed” refers to the total number of instruments that have been marked “Data Entry= Complete” and “Administration= None/Partial/All”. This column has its percentage counterpart under “% Completion”. “Created” refers to the total number of instruments that have been populated requiring data entry. Another feature allows all site information to be reversibly hidden except “% Completion” by a single click on the Site Name (i.e. AAA, DCC etc.). The “Double Data Entry Statistics” table underneath rests on a similar premise as the “Data Entry Statistics” Table, but with regards to double data entry. In both of these tables, the visits are listed in rows with the data sorted by site. Depending on the study and number of sites involved, the user will need to navigate horizontally through the table using the slider or the arrows flanking the table. When using a desktop the user must hover the mouse over the arrows, whereas on a mobile device the user must click on the arrows. The user also has the option of viewing “Per Instrument Stats” at the bottom of each site’s column, by following the “Please Click Here” link. The user can then view which candidates have not completed data entry in each site. \r\n\r\n<b>Reliability Statistics</b>\r\nThe Reliability Statistics module currently sorts each instrument by visit label and shows the number of flagged, completed, and reliable cases, in addition to expressing reliability and completion in terms of percentages. “Total Flagged” cases refer to the number of candidates with levels consistently falling below a given threshold, thus they have been ‘flagged’ for reliability review. The “Total Complete” column contains the number of candidates for whom a reliability review has been completed. The “Total Reliable” column adds to the information in “Total Complete”, but includes only those candidates whose information is now reliable. The Reliability Statistics Table also includes “Percent Complete” and “Percent Reliable” columns. Under the smaller navy heading “Reliability Statistics”, the user can search for specific statistics for their site of interest by using the dropdown menu and clicking the button “Submit Query”.\r\n\r\n<b>Imaging Statistics</b>\r\nThe first table under “Imaging Integrity Statistics for” displays information regarding missing imaging data, as indicated by data entry on the MRI parameter form, and scan insertions based on records in the Imaging Browser and DICOM archive. Specific candidates with missing imaging data can be easily identified through the link “Click here for breakdown per participant” under the “Breakdown of Problems” column.\r\n\r\nThe second table within the Imaging Statistics module allows the user to get a breakdown of statistics for candidates by time-point, based on the scan selected. Depending on the project, the user can choose from T1, T2, T1 & T2, DTI, BOLD, and Spectroscopy scans, and other possible options at the top left of the second table, to show the relative number of candidates with scans marked as “Complete”, “Partial”, or “No Scan”. Under the column “% Complete”, the user can view the percentage of candidates for the scan of interest that have completed scans. The record of scans has the subprojects listed across the top of the table horizontally, with each site encompassing all of its time points listed in rows. A breakdown of the total imaging data is also available at the bottom of the table.','2014-09-01 00:00:00',NULL),(28,27,md5('statistics_site'), 'Per Instrument Statistics', 'Completion Statistics for each site are displayed, and are organized by instrument and visit label. The “Completion Count” column displays the number of completed entries per instrument. Each PSCID that appears in the “Incomplete Candidates” list was designed to be a link itself to that particular candidate’s page for the selected instrument.','2014-09-01 00:00:00',NULL),(29,27,md5('statistics_mri_site'), 'Imaging Integrity Statistics Breakdown', 'This page contains a table listing various Scan Insertion Issues in the left-most column. In the “Incomplete Entries” column, clicking on the candidate IDs will redirect the user to the appropriate Imaging form or dataset for that candidate.','2014-09-01 00:00:00',NULL),(30,-1,md5('datadict'), 'Data Dictionary', 'As the title suggests, the Data Dictionary houses definitions or descriptions for various instrument fields. In addition, like many other modules in LORIS, the Data Dictionary features a Selection Filter where the user may select from a number of drop-down select boxes and click “Show Data” to quickly locate desired information. The selection filter can be hidden using the upward arrow icon, and reopened using the downward arrow icon.','2014-09-01 00:00:00',NULL),(31,-1,md5('data_team_helper'), 'Data Team Helper', 'The “Data Team Helper” aids users in pinpointing which fields for specific forms have been completed and if there is any behavioural feedback that has been entered. The Selection Filter allows users to search by Visit Label and by Instrument. After choosing the desired options from the drop-down select boxes and clicking “Show Data”, a completion percentage will be calculated and will appear directly below the Selection Filter. \r\n\r\nThe results table will contain all fields from the selected instrument (or All Instruments if this feature was chosen) for the specified visit. Under the column “Names (Instrument_Fieldname)”, links to field names are provided, containing downloadable .csv files. These .csv files provide information for every candidate about data entry for that particular field at the specified visit (i.e. whether the data for this field is “Complete”, “In Progress” or Null). The “Link to Bvl Feedback” column contains links to pop-up feedback windows, where feedback for a particular field and candidate was previously entered. If such information was never entered, users will see “N/A”. For existing links to behavioural feedback, the corresponding status for this field will be listed under the column “Feedback Status”. \r\n\r\nAny candidates with conflicts between initial and double data entry will be listed under the “Conflicts” column. Clicking on the candidate’s link will open up a new tab, directing the user to the Conflict Resolver for the corresponding field and visit label for that candidate. A list of candidates for which data entry is incomplete for that particular instrument and visit label will be listed under “Incomplete Candidates”. The ID of each candidate listed is a link to that candidate’s data entry page.','2014-09-01 00:00:00',NULL),(32,-1,md5('data_integrity_flag'), 'Data Integrity','The Data Integrity module provides a direct way for users to view and update behavioural feedback at-a-glance, without requiring the user to navigate to the individual instrument forms or use the behavioural feedback pop-up window. \r\n\r\nThe Selection Filter allows users to search for existing feedback for a particular Visit Label, Instrument and User. Upon clicking “Show Data”, the user can add a new flag or behavioural feedback comment within the table directly below the Selection Filter. Users can also search through existing behavioural feedback results within the third table on the page. When adding new behavioural feedback, the date on which the flag was created must be indicated, as well as the Flag Status from the dropdown menu, and any additional comments. The “Save” button must be clicked in order to save the new behavioural flag. Click “Show updated data” or refresh the page to see the most recent behavioural flag within the results table.\r\n\r\nWithin the results table (third table on the Data Integrity page), links under the “Instrument” column will redirect the user to a detailed summary of each field for that particular instrument along with links to behavioural feedback and to incomplete candidates. Users can also view the date the flag was submitted, the Flag Status, any comments, data cleaning feedback, and UserID. Note, Flag Status is based on the codes used in the dropdown of the second table, where 1=Ready for Review, 2= Review Completed, 3=Feedbacks Closed, and 4=Finalization.' ,'2014-09-01 00:00:00',NULL),(33,-1,md5('user_accounts'), 'User Accounts', 'This feature of LORIS allows an administrator to create accounts and set the Roles and Permissions for database users. Like many modules in LORIS, User Accounts has a Selection Filter which allows the user to quickly search for desired information. The Selection Filter panel can be hidden using the upward arrow icon , and reopened using the downward arrow icon. Once the appropriate user has been found, the profile can be viewed by selecting the “Username” outlined in navy text.','2014-09-01 00:00:00',NULL),(34,33, md5('edit_user'), 'Add or Edit User Accounts', 'On this page, the user may enter and modify detailed information including address, degree, position and password. By checking a series of boxes under “Roles” and “Permissions” an administrator-level user may add, change or remove a user’s access to areas or functions in the database. After making changes, the administrator must click “Save” to ensure the permissions are updated. Note that permissions may be “Reset” by selecting the appropriate button. The administrator may also return to the list of users by selecting “Back”.' ,'2014-09-01 00:00:00',NULL),(35,-1,md5('instrument_builder'), 'Instrument Builder', 'The Instrument Builder module is designed to create new behavioural forms on the database. Existing instruments that were created using the instrument builder can be added under the “Load Instrument (optional)” heading. Most new instruments will be generated through the “Create Instrument” tab.\r\nThere are a series of buttons that specify the type of information each field in the form conveys.\r\n<b>Field Types, by Category :</b>\r\n<u>Information</u>\r\n• Header :: Used to specify a title for the page or section of the instrument. Text will appear in boldface at the centre of the page.\r\n• Label :: Functions as a subtitle to introduce a subset of questions\r\n• Scored Field :: Specifies any field that will have data entry. The type of scored field should be indicated under the “data entry” section\r\n<u>Data Entry</u>\r\n• Textbox :: Used for fields with free text, preferably short answers\r\n• Textarea :: Used for free text fields with longer inputs such as general comments, etc.\r\n• Dropdown :: Used for forced choice fields. The options for the dropdown menu need to be specified.  Once “Dropdown” is selected, the user will see an added row labeled as “Dropdown option”. Once the option has been entered, press “add option”. This new option should appear in the “preview” menu. The field “not_answered” will be automatically added to each dropdown menu. Once all options have been added, click “add row”. For subsequent dropdown scored fields, previous dropdown options will be preserved. If the user would like to create a new dropdown menu, click “reset”.\r\n• Multiselect :: Used for fields that have a select box where multiple options can be chosen.\r\n• Date :: Used for creating a date field such as Date of Birth\r\n• Numeric :: Used for creating a numeric field such as Height, Weight, etc.\r\n<u>Formatting</u>\r\n• Blank Line :: Can be used to separate sections within the same page of an instrument. The “Question Name” and “Question Text” can be left blank.:w\r\n• Page Break :: Used to add a new page within the instrument. The “Question Text” can be populated with the name of the new page, if desired.\r\n \r\n<b>Note on Question Names: </b>\r\n“Question Name” is the field name as it appears (only) in the back-end of the database. The “Question Text” will be seen by users on the database once the instrument has been uploaded. Users have the option of entering the same content into both the “Question Name” and “Question Text” boxes, but generally the “Question Name” is more brief and is formatted with the question number (ie. q1_*). Question names are unique and should not contain spaces. \r\n\r\nAfter each question entry, click “add row” to add the new field to the instrument code. \r\nThis should appear in table format at the bottom of the page. Each row can also be added to the table simply by pressing the enter key.\r\nIf a mistake was made while creating the instrument, users can directly edit the field names in the table at the bottom of the page. By clicking on the field name, a cursor should appear. The user can then make the appropriate changes and hit enter once finished. It is also possible to rearrange or delete fields using the “Options” column.\r\n \r\nOnce the user is satisfied with their instrument, it can be saved and validated.','2014-09-01 00:00:00',NULL),(36,33,md5('my_preferences'), 'My Preferences', 'This module allows the user to modify first name, last name, email address, and current password, as well as Document Repository preferences. All changes made to the user’s preferences must be saved by clicking “Save” after completion. Information can be reset using the “Reset” button.','2014-09-01 00:00:00',NULL),(37,30,NULL,'Put the topic here','Put the content here','2014-09-01 00:00:00',NULL) ; 
+
+CREATE TABLE `mri_upload` (
+  `UploadID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `UploadedBy` varchar(255) NOT NULL DEFAULT '',
+  `UploadDate` DateTime DEFAULT NULL,
+  `SourceLocation` varchar(255) NOT NULL DEFAULT '',
+  `number_of_mincInserted` int(11) DEFAULT NULL,
+  `number_of_mincCreated` int(11) DEFAULT NULL,
+  `TarchiveID` int(11) DEFAULT NULL,
+  `SessionID` int(10) unsigned DEFAULT NULL,
+  `IsValidated` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`UploadID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `mri_protocol_checks` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Scan_type` int(11) unsigned DEFAULT NULL,
+  `Severity` enum('warning','exclude') DEFAULT NULL,
+  `Header` varchar(255) DEFAULT NULL,
+  `ValidRange` varchar(255) DEFAULT NULL,
+  `ValidRegex` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `MRICandidateErrors` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `TimeRun` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `SeriesUID` varchar(64) DEFAULT NULL,
+  `TarchiveID` int(11) DEFAULT NULL,
+  `MincFile` varchar(255) DEFAULT NULL,
+  `PatientName` varchar(255) DEFAULT NULL,
+  `Reason` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `mri_violations_log` (
+  `LogID` int(11) NOT NULL AUTO_INCREMENT,
+  `TimeRun` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `SeriesUID` varchar(64) DEFAULT NULL,
+  `TarchiveID` int(11) DEFAULT NULL,
+  `MincFile` varchar(255) DEFAULT NULL,
+  `PatientName` varchar(255) DEFAULT NULL,
+  `CandID` int(6) DEFAULT NULL,
+  `Visit_label` varchar(255) DEFAULT NULL,
+  `CheckID` int(11) DEFAULT NULL,
+  `Scan_type` int(11) unsigned DEFAULT NULL,
+  `Severity` enum('warning','exclude') DEFAULT NULL,
+  `Header` varchar(255) DEFAULT NULL,
+  `Value` varchar(255) DEFAULT NULL,
+  `ValidRange` varchar(255) DEFAULT NULL,
+  `ValidRegex` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`LogID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `participant_accounts` (
+    `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `SessionID` int(6) DEFAULT NULL,
+    `Test_name` varchar(255) DEFAULT NULL,
+    `Email` varchar(255) DEFAULT NULL,
+    `Status` enum('Created','Sent','In Progress','Complete') DEFAULT NULL,
+    `OneTimePassword` varchar(8) DEFAULT NULL,
+    `CommentID` varchar(255) DEFAULT NULL,
+    `UserEaseRating` varchar(1) DEFAULT NULL,
+    `UserComments` text,
+    PRIMARY KEY (`ID`)
+);
+
+CREATE TABLE participant_emails(
+    Test_name varchar(255) NOT NULL PRIMARY KEY REFERENCES test_names(Test_name),
+    DefaultEmail TEXT NULL
+);
+CREATE TABLE `family` (
+        `ID` int(10) NOT NULL AUTO_INCREMENT,
+        `FamilyID` int(6) NOT NULL,
+        `CandID` int(6) NOT NULL,
+        `Relationship_type` enum('half_sibling','full_sibling','1st_cousin') DEFAULT NULL,
+        PRIMARY KEY (`ID`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE `participant_status_history` (
+        `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+        `CandID` int(6) NOT NULL DEFAULT 0,
+        `entry_staff` varchar(255) DEFAULT NULL,
+        `data_entry_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        `participant_status` int(11) DEFAULT NULL,
+        `reason_specify` varchar(255),
+        `reason_specify_status` enum('not_answered') DEFAULT NULL,
+        `participant_subOptions` int(11) DEFAULT NULL,
+        PRIMARY KEY (`ID`),
+        UNIQUE KEY `ID` (`ID`)
+        );
+CREATE TABLE `consent_info_history` (
+        `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+        `CandID` int(6) NOT NULL DEFAULT 0,
+        `entry_staff` varchar(255) DEFAULT NULL,
+        `data_entry_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        `study_consent` enum('yes','no','not_answered') DEFAULT NULL,
+        `study_consent_date` date DEFAULT NULL,
+        `study_consent_withdrawal` date DEFAULT NULL,
+        PRIMARY KEY (`ID`),
+        UNIQUE KEY `ID` (`ID`)
+        ) ;
+
+CREATE TABLE `user_login_history` (
+  `loginhistoryID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `userID` varchar(255) NOT NULL DEFAULT '',
+  `Success` enum('Y','N') NOT NULL DEFAULT 'Y',
+  `Failcode` varchar(2) DEFAULT NULL,
+  `Fail_detail` varchar(255) DEFAULT NULL,
+  `Login_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `IP_address` varchar(255) DEFAULT NULL,
+  `Page_requested` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`loginhistoryID`),
+  KEY `FK_user_login_history_1` (`userID`),
+  CONSTRAINT `FK_user_login_history_1` FOREIGN KEY (`userID`) REFERENCES `users` (`UserID`)
+)  ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `reliability` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `CommentID` varchar(255) DEFAULT NULL,
+  `reliability_center_id` int(11) NOT NULL DEFAULT '1',
+  `Instrument` varchar(255) DEFAULT NULL,
+  `Reliability_score` decimal(4,2) DEFAULT NULL,
+  `invalid` enum('no','yes') DEFAULT 'no',
+  `Manual_Swap` enum('no','yes') DEFAULT 'no',
+  `EARLI_Candidate` enum('no','yes') DEFAULT 'no',
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+
+CREATE TABLE LorisMenu (
+    ID integer unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    Parent integer unsigned REFERENCES LorisMenu(ID),
+    Label varchar(255),
+    Link varchar(255),
+    Visible enum('true', 'false'),
+    OrderNumber integer
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO LorisMenu (Label, OrderNumber) VALUES ('Candidate', 1), ('Clinical', 2), ('Imaging', 3), ('Reports', 4), ('Tools', 5), ('Admin', 6);
+
+INSERT INTO LorisMenu (Label, Link, Parent, OrderNumber) VALUES 
+    ('New Profile', 'main.php?test_name=new_profile', 1, 1),
+    ('Access Profile', 'main.php?test_name=candidate_list', 1, 2);
+
+INSERT INTO LorisMenu (Label, Link, Parent, OrderNumber) VALUES 
+    ('Reliability', 'main.php?test_name=reliability', 2, 1),
+    ('Conflicts Resolver', 'main.php?test_name=conflict_resolver', 2, 2),
+    ('Certification', 'main.php?test_name=certification', 2, 3);
+
+INSERT INTO LorisMenu (Label, Link, Parent, OrderNumber) VALUES 
+    ('Radiological Reviews', 'main.php?test_name=final_radiological_review', 3, 1),
+    ('DICOM Archive', 'main.php?test_name=dicom_archive', 3, 2),
+    ('Imaging Browser', 'main.php?test_name=imaging_browser', 3, 3),
+    ('MRI Violated Scans', 'main.php?test_name=mri_violations', 3, 4);
+
+INSERT INTO LorisMenu (Label, Link, Parent, OrderNumber) VALUES 
+    ('Statistics', 'main.php?test_name=statistics', 4, 1),
+    ('Data Query Tool', '/dqt/', 4, 2);
+
+INSERT INTO LorisMenu (Label, Link, Parent, OrderNumber) VALUES
+    ('Data Dictionary', 'main.php?test_name=datadict', 5, 1),
+    ('Document Repository', 'main.php?test_name=document_repository', 5, 2),
+    ('Data Team Helper', 'main.php?test_name=data_team_helper', 5, 3),
+    ('Instrument Builder', 'main.php?test_name=instrument_builder', 5, 4);
+
+INSERT INTO LorisMenu (Label, Link, Parent, OrderNumber) VALUES 
+    ('User Accounts', 'main.php?test_name=user_accounts', 6, 1),
+    ('Survey Module', 'main.php?test_name=survey_accounts', 6,2),
+    ('Help Editor', 'main.php?test_name=help_editor', 6,3);
+
+CREATE TABLE LorisMenuPermissions (
+    MenuID integer unsigned REFERENCES LorisMenu(ID),
+    PermID integer unsigned REFERENCES permissions(ID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT="If a user has ANY of the permissions for a module it will show up in their menu bar";
+
+-- New Profile permission
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 7, PermID FROM permissions WHERE code='data_entry';
+
+-- Access Profile 
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 8, PermID FROM permissions WHERE code='data_entry';
+
+-- Reliability
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 9, PermID FROM permissions WHERE code='user_accounts';
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 9, PermID FROM permissions WHERE code='reliability_edit_all';
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 9, PermID FROM permissions WHERE code='access_all_profiles';
+
+-- Conflicts Resolver
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 10, PermID FROM permissions WHERE code='data_entry';
+
+-- Certification
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 11, PermID FROM permissions WHERE code='certification';
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 11, PermID FROM permissions WHERE code='certification_multisite';
+
+-- Radiological Reviews
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 12, PermID FROM permissions WHERE code='edit_final_radiological_review';
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 12, PermID FROM permissions WHERE code='view_final_radiological_review';
+
+-- DICOM Archive -- Config file currently does not require any permission
+-- Imaging Browser -- Config file currently does not require any permission
+-- Statistics -- Config file currently does not require any permission 
+
+-- Data Query Tool
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 16, PermID FROM permissions WHERE code='data_dict';
+
+-- Data Dictionary
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 17, PermID FROM permissions WHERE code='data_dict';
+-- Document Repository
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 18, PermID FROM permissions WHERE code='file_upload';
+
+-- Data Team Helper -- Config file currently does not require any permission
+-- Instrument Builder -- Config file currently does not require any permission
+
+-- User Accounts
+INSERT INTO LorisMenuPermissions (MenuID, PermID) 
+    SELECT 21, PermID FROM permissions WHERE code='user_accounts';
+INSERT INTO LorisMenuPermissions (MenuID, PermID) SELECT m.ID, p.PermID FROM permissions p CROSS JOIN LorisMenu m WHERE p.code='user_accounts' AND m.Label='Survey Module';
+INSERT INTO LorisMenuPermissions (MenuID, PermID) SELECT m.ID, p.PermID FROM permissions p CROSS JOIN LorisMenu m WHERE p.code='violated_scans' AND m.Label='MRI Violated Scans';
+INSERT INTO LorisMenuPermissions (MenuID, PermID) SELECT m.ID, p.PermID FROM permissions p CROSS JOIN LorisMenu m WHERE p.code='context_help' AND m.Label='Help Editor';
+
+
+CREATE TABLE `ConfigSettings` (
+    `ID` int(11) NOT NULL AUTO_INCREMENT,
+    `Name` varchar(255) NOT NULL,
+    `Description` varchar(255) DEFAULT NULL,
+    `Visible` tinyint(1) DEFAULT '0',
+    `AllowMultiple` tinyint(1) DEFAULT '0',
+    `Parent` int(11) DEFAULT NULL,
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `Name` (`Name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `Config` (
+    `ID` int(11) NOT NULL AUTO_INCREMENT,
+    `ConfigID` int(11) DEFAULT NULL,
+    `Value` text DEFAULT NULL,
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

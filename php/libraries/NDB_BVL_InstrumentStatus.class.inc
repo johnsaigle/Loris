@@ -61,19 +61,13 @@ class NDB_BVL_InstrumentStatus
         // set the _commentID property
         $this->_commentID = $commentID;
 
-        // make sure a Database object exists
-        if(!isset($GLOBALS['DB'])) {
-            return PEAR::raiseError("No Database object found!");
-        }
-        
-        // make a local reference to the Database object
-        $db =& $GLOBALS['DB'];
+        $db = Database::singleton();
 
         // get candidate data from database
-        $query = "SELECT SessionID, Data_entry, Administration, Validity, Exclusion FROM flag WHERE CommentID='$this->_commentID'";
-        $db->selectRow($query, $row);
+        $query = "SELECT SessionID, Data_entry, Administration, Validity, Exclusion FROM flag WHERE CommentID=:CID";
+        $row = $db->pselectRow($query, array('CID' => $this->_commentID));
         
-        if(PEAR::isError($row)) {
+        if(Utility::isErrorX($row)) {
             print $row->getMessage();
             return PEAR::raiseError("Could not retrieve instrument status data from database");
         }
@@ -151,7 +145,7 @@ class NDB_BVL_InstrumentStatus
 
         $GLOBALS['DB']->update('flag', array('Data_entry'=>$status), array('CommentID'=>$this->_commentID));
         $updateResult = $this->select($this->_commentID);
-        if(PEAR::isError($updateResult)) {
+        if(Utility::isErrorX($updateResult)) {
             return PEAR::raiseError("Could not reload object data");
         }
 
@@ -184,7 +178,7 @@ class NDB_BVL_InstrumentStatus
 
         $GLOBALS['DB']->update('flag', array('Administration'=>$status), array('CommentID'=>$this->_commentID));
         $updateResult = $this->select($this->_commentID);
-        if(PEAR::isError($updateResult)) {
+        if(Utility::isErrorX($updateResult)) {
             return PEAR::raiseError("Could not reload object data");
         }
     }
@@ -208,7 +202,7 @@ class NDB_BVL_InstrumentStatus
 
         $GLOBALS['DB']->update('flag', array('Validity'=>$status), array('CommentID'=>$this->_commentID));
         $updateResult = $this->select($this->_commentID);
-        if(PEAR::isError($updateResult)) {
+        if(Utility::isErrorX($updateResult)) {
             return PEAR::raiseError("Could not reload object data");
         }
     }
@@ -232,7 +226,7 @@ class NDB_BVL_InstrumentStatus
 
         $GLOBALS['DB']->update('flag', array('Exclusion'=>$status), array('CommentID'=>$this->_commentID));
         $updateResult = $this->select($this->_commentID);
-        if(PEAR::isError($updateResult)) {
+        if(Utility::isErrorX($updateResult)) {
             return PEAR::raiseError("Could not reload object data");
         }
     }

@@ -6,7 +6,8 @@
  */
 require_once "MRIFile.class.inc";
 
-class FeedbackMRI {
+class FeedbackMRI
+{
     /**
      * FileID from files table
      */
@@ -25,10 +26,10 @@ class FeedbackMRI {
     /**
      * constructor sets object parameters
      *
-     * @param     int     $fileID
-     * @param     int     $sessionID
-     * @access    private
-     * @return    none
+     * @param  int $fileID
+     * @param  int $sessionID
+     * @access private
+     * @return none
      */
     function FeedbackMRI($fileID='', $sessionID='')
     {
@@ -47,8 +48,8 @@ class FeedbackMRI {
     /**
      * clears all predefined comments from the object (used prior to re-setting the list of predefined comments)
      *
-     * @return    bool    if operation succeeded
-     * @access    public
+     * @return bool    if operation succeeded
+     * @access public
      */
     function clearPredefinedComments()
     {
@@ -68,20 +69,20 @@ class FeedbackMRI {
     /**
      * clears all comments from the object
      *
-     * @return    void
-     * @throws    PEAR_Error
-     * @access    public
+     * @return void
+     * @throws PEAR_Error
+     * @access public
      */
     function clearAllComments()
     {
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
         $success = $DB->delete('feedback_mri_comments', $this->_buildWhereAssoc());
-        if (PEAR::isError($success)) {
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("DB Error: ".$success->getMessage());
         }
         
@@ -91,9 +92,9 @@ class FeedbackMRI {
     /**
      * sets (or adds) predefined comments to an object - does NOT clear predefined comments internally
      *
-     * @param     array   $predefinedCommentIDs   an array of integers which are PredefinedCommentID from feedback_mri_predefined_comments table
-     * @return    bool    $success                if operation succeeded
-     * @access    public
+     * @param  array $predefinedCommentIDs an array of integers which are PredefinedCommentID from feedback_mri_predefined_comments table
+     * @return bool    $success                if operation succeeded
+     * @access public
      */
     function setPredefinedComments($predefinedCommentIDs)
     {
@@ -118,10 +119,10 @@ class FeedbackMRI {
     /**
      * adds a text comment to an object
      *
-     * @param     string  $comment                the body of the message to store
-     * @param     int     $commentTypeID          CommentTypeID from feedback_mri_comment_types table
-     * @return    bool    $success                if operation succeeded
-     * @access    public
+     * @param  string $comment       the body of the message to store
+     * @param  int    $commentTypeID CommentTypeID from feedback_mri_comment_types table
+     * @return bool    $success                if operation succeeded
+     * @access public
      */
     function addTextComment($comment, $commentTypeID)
     {
@@ -140,15 +141,15 @@ class FeedbackMRI {
     /**
      * gets the comments stored for the object
      *
-     * @return    array   $comments               tree: $cA[$typeID]['predefined'] is an array with integer keys (PredefinedCommentID) and boolean values (true) and $cA[$typeID]['text'] is an array of strings (free-form comments) where $typeID is always the CommentTypeID from feedback_mri_comment_types table
-     * @throws    PEAR_Error
-     * @access    public
+     * @return array   $comments               tree: $cA[$typeID]['predefined'] is an array with integer keys (PredefinedCommentID) and boolean values (true) and $cA[$typeID]['text'] is an array of strings (free-form comments) where $typeID is always the CommentTypeID from feedback_mri_comment_types table
+     * @throws PEAR_Error
+     * @access public
      */
     function getComments()
     {
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
@@ -156,7 +157,7 @@ class FeedbackMRI {
         $query = "SELECT CommentTypeID, PredefinedCommentID, Comment FROM feedback_mri_comments WHERE ".$this->_buildWhere();
 
         $DB->select($query, $result);
-        if (PEAR::isError($result)) {
+        if (Utility::isErrorX($result)) {
             return PEAR::raiseError("DB Error: ".$result->getMessage());
         }
 
@@ -178,24 +179,24 @@ class FeedbackMRI {
     /**
      * gets the list of all predefined comments for a given type
      * 
-     * @param     int     $commentTypeID          CommentTypeID from feedback_mri_comment_types table
-     * @return    array   $comments               an array with key (int) PredefinedCommentID and value (string) Comment
-     * @throws    PEAR_Error
-     * @access    public
+     * @param  int $commentTypeID CommentTypeID from feedback_mri_comment_types table
+     * @return array   $comments               an array with key (int) PredefinedCommentID and value (string) Comment
+     * @throws PEAR_Error
+     * @access public
      */
     function getAllPredefinedComments($commentTypeID)
     {
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
         // build the query
-        $query = "SELECT PredefinedCommentID, Comment FROM feedback_mri_predefined_comments WHERE CommentTypeID='$commentTypeID'";
+        $query = "SELECT PredefinedCommentID, Comment FROM feedback_mri_predefined_comments WHERE CommentTypeID=:CTID";
 
-        $DB->select($query, $result);
-        if (PEAR::isError($result)) {
+        $result = $DB->pselect($query, array('CTID' => $commentTypeID));
+        if (Utility::isErrorX($result)) {
             return PEAR::raiseError("DB Error: ".$result->getMessage());
         }
 
@@ -214,10 +215,10 @@ class FeedbackMRI {
     /**
      * gets the value of a single field in the MRI table
      * 
-     * @param     int     $fieldName              field to select from in mri table
-     * @return    string  $value                  value of $fieldName in mri table
-     * @throws    PEAR_Error
-     * @access    public
+     * @param  int $fieldName field to select from in mri table
+     * @return string  $value                  value of $fieldName in mri table
+     * @throws PEAR_Error
+     * @access public
      */
     function getMRIValue($fieldName)
     {
@@ -228,25 +229,25 @@ class FeedbackMRI {
 
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
         // get the parameter type id
-        $query = "SELECT ParameterTypeID FROM parameter_type WHERE Name='$fieldName'";
+        $query = "SELECT ParameterTypeID FROM parameter_type WHERE Name=:FName";
         
-        $parameterTypeID = $DB->selectOne($query);
-        if (PEAR::isError($parameterTypeID)) {
+        $parameterTypeID = $DB->pselectOne($query, array('FName' => $fieldName));
+        if (Utility::isErrorX($parameterTypeID)) {
             return PEAR::raiseError("DB Error: ".$parameterTypeID->getMessage());
         } elseif (empty($parameterTypeID)) {
             return false;
         }
 
         // build the query
-        $query = "SELECT Value FROM parameter_file WHERE ParameterTypeID=$parameterTypeID AND FileID='$this->fileID'";
+        $query = "SELECT Value FROM parameter_file WHERE ParameterTypeID=:PTID AND FileID=:FID";
         
-        $value = $DB->selectOne($query);
-        if (PEAR::isError($value)) {
+        $value = $DB->pselectOne($query, array('PTID' => $parameterTypeID, 'FID' => $this->fileID));
+        if (Utility::isErrorX($value)) {
             return PEAR::raiseError("DB Error: ".$value->getMessage());
         } elseif (empty($value)) {
             return false;
@@ -259,11 +260,11 @@ class FeedbackMRI {
     /**
      * sets the value of a single field in the MRI table
      * 
-     * @param     string  $fieldName              field to set in mri table
-     * @param     string  $value                  value to set in $fieldName
-     * @return    bool    
-     * @throws    PEAR_Error
-     * @access    public
+     * @param  string $fieldName field to set in mri table
+     * @param  string $value     value to set in $fieldName
+     * @return bool    
+     * @throws PEAR_Error
+     * @access public
      */
     function setMRIValue($fieldName, $value)
     {
@@ -274,38 +275,38 @@ class FeedbackMRI {
 
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
         // get the parameter type id
-        $query = "SELECT ParameterTypeID FROM parameter_type WHERE Name='$fieldName'";
+        $query = "SELECT ParameterTypeID FROM parameter_type WHERE Name=:FName";
 
-        $parameterTypeID = $DB->selectOne($query);
-        if (PEAR::isError($parameterTypeID)) {
+        $parameterTypeID = $DB->pselectOne($query, array('FName' => $fieldName));
+        if (Utility::isErrorX($parameterTypeID)) {
             return PEAR::raiseError("DB Error: ".$parameterTypeID->getMessage());
         } elseif (empty($parameterTypeID)) {
             return false;
         }
 
         // determine whether to insert or update
-        $query = "SELECT count(*) AS UpdateNeeded FROM parameter_file WHERE ParameterTypeID=$parameterTypeID AND FileID='$this->fileID'";
+        $query = "SELECT count(*) AS UpdateNeeded FROM parameter_file WHERE ParameterTypeID=:PTID AND FileID=:FID";
 
 
-        $updateNeeded = $DB->selectOne($query);
-        if (PEAR::isError($updateNeeded)) {
+        $updateNeeded = $DB->pselectOne($query, array('PTID' => $parameterTypeID, 'FID' => $this->fileID));
+        if (Utility::isErrorX($updateNeeded)) {
             return PEAR::raiseError("DB Error: ".$updateNeeded->getMessage());
         }
         
         // build the query
         if($updateNeeded) {
             $success = $DB->update('parameter_file', array('Value' => $value), array('ParameterTypeID' => $parameterTypeID, 'FileID' => $this->fileID));
-            if (PEAR::isError($success)) {
+            if (Utility::isErrorX($success)) {
                 return PEAR::raiseError("DB Error: ".$success->getMessage());
             }
         } else {
             $success = $DB->insert('parameter_file', array('Value' => $value, 'ParameterTypeID' => $parameterTypeID, 'FileID' => $this->fileID, 'InsertTime' => time()));
-            if (PEAR::isError($success)) {
+            if (Utility::isErrorX($success)) {
                 return PEAR::raiseError("DB Error: ".$success->getMessage());
             }
         }
@@ -316,27 +317,29 @@ class FeedbackMRI {
     /**
      * gets the list of all comment types
      * 
-     * @return    array   $commentNames           a two-dimensional array of ints (CommentTypeID) and three-element arrays ('name'=>string CommentName, 'field'=>string name of column in mri table for status, 'values'=>array of possible enum values for field)
-     * @access    public
+     * @return array   $commentNames           a two-dimensional array of ints (CommentTypeID) and three-element arrays ('name'=>string CommentName, 'field'=>string name of column in mri table for status, 'values'=>array of possible enum values for field)
+     * @access public
      */
     function getAllCommentTypes()
     {
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
         // build the array
-        $query = "SELECT CommentTypeID, CommentName, CommentStatusField FROM feedback_mri_comment_types WHERE CommentType='$this->objectType'";
+        $query = "SELECT CommentTypeID, CommentName, CommentStatusField FROM feedback_mri_comment_types WHERE CommentType=:CT";
         
-        $DB->select($query, $result);
-        if (PEAR::isError($result)) {
+        $result = $DB->pselect($query, array('CT'=> $this->objectType));
+        if (Utility::isErrorX($result)) {
             return PEAR::raiseError("DB Error: ".$result->getMessage());
         }
 
-        // build the output array
+        // build the output array and keep overall section at the end of the array
         $commentNames = array();
+        $overallType;
+        $overallName  = array();
         if (is_array($result)) {
             foreach ($result as $row) {
                 // deal with CommentStatusField
@@ -344,13 +347,24 @@ class FeedbackMRI {
                     $statusField = unserialize($row['CommentStatusField']);
                 }
 
-                // add a row to the output array
-                $commentNames[$row['CommentTypeID']] = array('name'   => stripslashes($row['CommentName']),
-                                                             'field'  => $statusField['field'],
-                                                             'values' => $statusField['values']);
+                // if CommentName is overall, don't add them yet to commentNames array
+                // we want them only at the end
+                if ($row['CommentName'] == "Overall") {
+                    $overallType = $row['CommentTypeID'];
+                    $overallName = array('name'   => stripslashes($row['CommentName']),
+                                                                 'field'  => $statusField['field'],
+                                                                 'values' => $statusField['values']); 
+                } else {
+                    // add a row to the output array
+                    $commentNames[$row['CommentTypeID']] = array('name'   => stripslashes($row['CommentName']),
+                                                                 'field'  => $statusField['field'],
+                                                                 'values' => $statusField['values']);
+                }
 
                 unset($statusField);
             }
+            // add overall row to the end of the output array 
+            $commentNames[$overallType] = $overallName;
         }
 
         // return the output array
@@ -360,11 +374,11 @@ class FeedbackMRI {
     /**
      * adds a db entry for a comment to an object
      *
-     * @param     string  $comment                the body of the message to store
-     * @param     int     $commentTypeID          CommentTypeID from feedback_mri_comment_types table (optional if using predefinedCommentID)
-     * @param     int     $predefinedCommentID    PredefinedCommentID from feedback_mri_predefined_comments table
-     * @return    bool    $success                if operation succeeded
-     * @access    private
+     * @param  string $comment             the body of the message to store
+     * @param  int    $commentTypeID       CommentTypeID from feedback_mri_comment_types table (optional if using predefinedCommentID)
+     * @param  int    $predefinedCommentID PredefinedCommentID from feedback_mri_predefined_comments table
+     * @return bool    $success                if operation succeeded
+     * @access private
      */
     function _addComment($comment='', $commentTypeID='', $predefinedCommentID='')
     {
@@ -372,13 +386,13 @@ class FeedbackMRI {
         if (empty($comment) && empty($predefinedCommentID)           // no comment of either type
             || (!empty($comment) && !empty($predefinedCommentID))    // both comment types
             || (!empty($comment) && empty($commentTypeID))           // text comment with no typeID
-            ) {
+        ) {
             return false;
         }
 
         // create DB object
         $DB =& Database::singleton();
-        if (PEAR::isError($DB)) {
+        if (Utility::isErrorX($DB)) {
             return PEAR::raiseError("Could not connect to database: ".$DB->getMessage());
         }
 
@@ -397,10 +411,10 @@ class FeedbackMRI {
         // comment type
         if (empty($commentTypeID) && !empty($predefinedCommentID)) {
             // get the commentTypeID for the entered predefinedCommentID
-            $subquery = "SELECT CommentTypeID FROM feedback_mri_predefined_comments WHERE PredefinedCommentID='$predefinedCommentID'";
+            $subquery = "SELECT CommentTypeID FROM feedback_mri_predefined_comments WHERE PredefinedCommentID=:PCID";
 
-            $commentTypeID = $DB->selectOne($subquery, $result);
-            if (PEAR::isError($commentTypeID)) {
+            $commentTypeID = $DB->pselectOne($subquery, array('PCID'=>$predefinedCommentID));
+            if (Utility::isErrorX($commentTypeID)) {
                 return PEAR::raiseError("DB Error: ".$commentTypeID->getMessage());
             } elseif (empty($commentTypeID)) {
                 return false;
@@ -416,7 +430,7 @@ class FeedbackMRI {
         }
 
         $success = $DB->insert('feedback_mri_comments', $set);
-        if (PEAR::isError($success)) {
+        if (Utility::isErrorX($success)) {
             return PEAR::raiseError("DB Error: ".$success->getMessage());
         }
 
@@ -426,8 +440,8 @@ class FeedbackMRI {
     /**
      * constructs an appropriate where expression to limit selects to the current object
      *
-     * @return    string  $where                  where string to limit selects to current object
-     * @access    private
+     * @return string  $where                  where string to limit selects to current object
+     * @access private
      */
     function _buildWhere()
     {
@@ -447,8 +461,8 @@ class FeedbackMRI {
      * argument for the Database class to limit queries to the current
      * object
      *
-     * @return    array  $where                  key=>value pairs
-     * @access    private
+     * @return array  $where                  key=>value pairs
+     * @access private
      */
     function _buildWhereAssoc()
     {

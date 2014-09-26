@@ -28,7 +28,7 @@ Class TimePoint
         if(!isset($timePointList[$sessionID])) {
             $timePointList[$sessionID] = new TimePoint();
             $success = $timePointList[$sessionID]->select($sessionID);
-            if(PEAR::isError($success)){
+            if(Utility::isErrorX($success)) {
                 unset($timePointList[$sessionID]);
                 return PEAR::raiseError("Could not instantiate TimePoint object".$success->getMessage());
             }
@@ -40,25 +40,25 @@ Class TimePoint
     
     function select($sessionID)
     {
-    	$config =& NDB_Config::singleton();
+        $config =& NDB_Config::singleton();
         $useScreening = $config->getSetting('useScreening');
         $screeningIndex = array_search('Screening', $this->_stageOptions);
-        if($useScreening != 'true' && $screeningIndex !== FALSE) {
+        if($useScreening != 'true' && $screeningIndex !== false) {
             unset($this->_stageOptions[$screeningIndex]);
             $this->_stageOptions = array_values($this->_stageOptions);
         }
     	
         // make a local reference to the Database object
         $db =& Database::singleton();
-        if(PEAR::isError($db)) {
+        if(Utility::isErrorX($db)) {
             return PEAR::raiseError ("Could not connect to database: ".$db->getMessage());
         }
 
         // get user data from database
-        $query = "SELECT s.ID AS SessionID, s.CandID, p.Name AS PSC, s.CenterID, s.VisitNo,s.Visit_label,s.SubprojectID,s.Submitted,s.Current_stage,s.Screening,s.Date_screening,s.Visit,s.Date_visit,s.Approval,s.Date_approval,s.Active, s.registeredBy, s.UserID, u.Real_name, s.Hardcopy_request, s.BVLQCStatus, s.BVLQCType, s.BVLQCExclusion, s.Scan_done FROM session as s left join psc as p using (CenterID) left join users as u on (s.registeredBy=u.UserID) WHERE s.ID ='$sessionID' AND s.Active = 'Y'";
-        $db->selectRow($query, $row);
+        $query = "SELECT s.ID AS SessionID, s.CandID, p.Name AS PSC, s.CenterID, s.VisitNo,s.Visit_label,s.SubprojectID,s.Submitted,s.Current_stage,s.Screening,s.Date_screening,s.Visit,s.Date_visit,s.Approval,s.Date_approval,s.Active, s.registeredBy, s.UserID, u.Real_name, s.Hardcopy_request, s.BVLQCStatus, s.BVLQCType, s.BVLQCExclusion, s.Scan_done FROM session as s left join psc as p using (CenterID) left join users as u on (s.registeredBy=u.UserID) WHERE s.ID = :SID AND s.Active = 'Y'";
+        $row = $db->pselectRow($query, array('SID' => $sessionID));
         
-        if(PEAR::isError($row)) {
+        if(Utility::isErrorX($row)) {
             return PEAR::raiseError("Could not retrieve candidate data from database");
         }
 
@@ -84,9 +84,11 @@ Class TimePoint
                 }
                 $this->_timePointInfo['status'][$row['Name']] = $row['Value'];
             }
-            $this->_timePointInfo['WindowInfo'] = $db->pSelectRow("
+            $this->_timePointInfo['WindowInfo'] = $db->pSelectRow(
+                "
            SELECT DATEDIFF(s.Date_visit, c.DoB) as AgeDays, DATEDIFF(s.Date_visit, c.DoB) BETWEEN w.OptimumMinDays AND w.OptimumMaxDays as Optimum, (DATEDIFF(s.Date_visit, c.DoB) BETWEEN w.WindowMinDays AND w.WindowMaxDays) as Permitted FROM session s JOIN candidate c USING (CandID) JOIN Visit_Windows w ON (lower(w.Visit_label)=lower(s.Visit_label)) WHERE s.ID=:sessionID",
-                array(":sessionID" => $sessionID));
+                array(":sessionID" => $sessionID)
+            );
 
         }
 
@@ -94,6 +96,7 @@ Class TimePoint
 
     /**
      * registers a new timepoint into the session table - ONLY CALL STATICALLY
+     *
      * @static
      */
     function createNew($candID, $SubprojectID, $nextVisitLabel=null)
@@ -105,9 +108,9 @@ Class TimePoint
         $db =& Database::singleton();
 
         // select the candidate data
-        $query = "SELECT c.PSCID, c.CenterID, IFNULL(max(s.VisitNo)+1, 1) AS nextVisitNo FROM candidate AS c LEFT OUTER JOIN session AS s USING (CandID) WHERE c.CandID=$candID AND (s.Active='Y' OR s.Active is null) GROUP BY c.CandID";
-        $db->selectRow($query, $row);
-        if(PEAR::isError($row)) {
+        $query = "SELECT c.PSCID, c.CenterID, IFNULL(max(s.VisitNo)+1, 1) AS nextVisitNo FROM candidate AS c LEFT OUTER JOIN session AS s USING (CandID) WHERE c.CandID=:CaID AND (s.Active='Y' OR s.Active is null) GROUP BY c.CandID";
+        $row = $db->pselectRow($query, array('CaID' => $candID));
+        if(Utility::isErrorX($row)) {
             return PEAR::raiseError("Could not retrieve existing data for candidate".$row->getMessage());
         }
 
@@ -139,7 +142,7 @@ Class TimePoint
 
         // insert the data
         $success = $db->insert('session', $insertData);
-        if(PEAR::isError($success)) {
+        if(Utility::isErrorX($success)) {
             return PEAR::raiseError("Could not register new timepoint record".$success->getMessage());
         }
     }
@@ -148,10 +151,11 @@ Class TimePoint
     {
         if (is_null($var)) {
             return $this->_timePointInfo;
-        }
-        else {
+        } elseif(isset($this->_timePointInfo[$var])) {
+
             return $this->_timePointInfo[$var];
         }
+        return null;
     }
     
     function setData($var, $value=null)
@@ -292,17 +296,17 @@ Class TimePoint
     function getCurrentStatus()
     {
          $method = 'get'.$this->getCurrentStage().'Status';
-         if(method_exists($this, $method)){
-             return $this->$method();
-         } else {
-             return null;
-         }
+        if(method_exists($this, $method)) {
+            return $this->$method();
+        } else {
+            return null;
+        }
     }
 
     function getCurrentDate()
     {
         $getDateMethod = "getDateOf".$this->getCurrentStage();
-        if(method_exists($this, $getDateMethod)){
+        if(method_exists($this, $getDateMethod)) {
             return $this->$getDateMethod();
         } else {
             return false;
@@ -354,7 +358,7 @@ Class TimePoint
     function isCurrentStageDynamic()
     {
         $isStageDynamic = $this->isStudyStageDynamic($this->getCurrentStage());
-        if (PEAR::isError($isStageDynamic)) {
+        if (Utility::isErrorX($isStageDynamic)) {
             // pass the error
             return PEAR::raiseError($isStageDynamic->getMessage());
         }
@@ -380,7 +384,9 @@ Class TimePoint
         $db =& Database::singleton();
 
         // this class does not handle Subject & Recycling Bin stage at the moment
-        if (in_array($this->getCurrentStage(), array('Subject', 'Recycling Bin'))) return;
+        if (in_array($this->getCurrentStage(), array('Subject', 'Recycling Bin'))) {
+            return;
+        }
         
         // if sent to DCC then it either Approval, Subject or Recycling Bin
         if ($this->isSubmitted() && $this->getApprovalStatus() != 'NULL') {
@@ -395,9 +401,9 @@ Class TimePoint
         } else {
 
             // of not sent to DCC get the latest stage
-            if($this->getVisitStatus() != NULL) {
+            if($this->getVisitStatus() != null) {
                 $newCurrentStage = 'Visit';
-            } elseif($this->getScreeningStatus() != NULL) {
+            } elseif($this->getScreeningStatus() != null) {
                 $newCurrentStage = 'Screening';
             } else {
                 $newCurrentStage = 'Not Started';
@@ -413,13 +419,13 @@ Class TimePoint
 
         
         $dbErrors = $db->update('session', $update_columns, array('ID'=>$this->getSessionID()));
-        if(PEAR::isError($dbErrors)) {
+        if(Utility::isErrorX($dbErrors)) {
             return PEAR::raiseError("DB Error: ".$dbErrors->getMessage());
         }
                                            
         // reload TimePoint object
         $success = $this->select($this->getSessionID());
-        if(PEAR::isError($success)) {
+        if(Utility::isErrorX($success)) {
             return PEAR::raiseError("DB Error: ".$success->getMessage());
         }
     }
@@ -437,11 +443,13 @@ Class TimePoint
     {
         $setArray = array('Current_stage'=>$stage, 'Date_stage_change'=>date('Y-m-d'));
         
-        if(in_array($stage, $this->_dynamicStageOptions) && $this->getData($stage) == NULL) {
+        if(in_array($stage, $this->_dynamicStageOptions) && $this->getData($stage) == null) {
             $setArray[$stage] = 'In Progress';
         }
 
-	if($setArray['Current_stage'] == 'Approval') $setArray['Date_approval'] = date('Y-m-d');
+        if($setArray['Current_stage'] == 'Approval') {
+            $setArray['Date_approval'] = date('Y-m-d');
+        }
         
         $this->setData($setArray);
     }
@@ -468,13 +476,13 @@ Class TimePoint
         // update session table
         $dbErrors = $db->update('session', $setArray, array('ID'=>$this->getSessionID()));
 
-        if(PEAR::isError($dbErrors)) {
+        if(Utility::isErrorX($dbErrors)) {
             return PEAR::raiseError("DB Error: ".$dbErrors->getMessage());
         }
 
         // reload TimePoint object
         $success = $this->select($this->getSessionID());
-        if (PEAR::isError($success)) {
+        if (Utility::isErrorX($success)) {
             //throw PEAR error
             return PEAR::raiseError($success->getMessage());
         }
@@ -488,8 +496,8 @@ Class TimePoint
             return PEAR::raiseError("You need to specify a valid BVL QC Type");
         }
 
-    	// get the current bvlqc type
-    	$qcType = $this->getBVLQCType();
+        // get the current bvlqc type
+        $qcType = $this->getBVLQCType();
     	
         // can't set the status to Complete unless the type is set
         if ($status == 'Complete' && empty($qcType)) {
@@ -501,13 +509,13 @@ Class TimePoint
         // update session table
         $dbErrors = $db->update('session', $setArray, array('ID'=>$this->getSessionID()));
 
-        if(PEAR::isError($dbErrors)) {
+        if(Utility::isErrorX($dbErrors)) {
             return PEAR::raiseError("DB Error: ".$dbErrors->getMessage());
         }
 
         // reload TimePoint object
         $success = $this->select($this->getSessionID());
-        if (PEAR::isError($success)) {
+        if (Utility::isErrorX($success)) {
             //throw PEAR error
             return PEAR::raiseError($success->getMessage());
         }
@@ -528,13 +536,13 @@ Class TimePoint
         // update session table
         $dbErrors = $db->update('session', $setArray, array('ID'=>$this->getSessionID()));
 
-        if(PEAR::isError($dbErrors)) {
+        if(Utility::isErrorX($dbErrors)) {
             return PEAR::raiseError("DB Error: ".$dbErrors->getMessage());
         }
 
         // reload TimePoint object
         $success = $this->select($this->getSessionID());
-        if (PEAR::isError($success)) {
+        if (Utility::isErrorX($success)) {
             //throw PEAR error
             return PEAR::raiseError($success->getMessage());
         }
@@ -550,44 +558,45 @@ Class TimePoint
      *
      * @return boolean
      */
-    function isStartable(){
-    	$config =& NDB_Config::singleton();
+    function isStartable()
+    {
+        $config =& NDB_Config::singleton();
         $onlyOneOpenTimepoint = $config->getSetting('onlyOneOpenTimepoint');
-        
-    	$currentStage = $this->getData('Current_stage');
 
-    	// if we have not yet started, and at least one timepoint is in screening or visit, do not allow the user to start another timepoint
-    	if ($currentStage == 'Not Started') {
-    		$candidate =& Candidate::singleton($this->getCandID());
-    		if (PEAR::isError($candidate)) {
-    			return PEAR::raiseError("Candidate Error ($candID): ".$candidate->getMessage());
-    		}
+        $currentStage = $this->getData('Current_stage');
 
-    		// when starting screening, make sure that all other started visits were previously submitted to DCC
-    		$listOfTimePoints = $candidate->getListOfTimePoints();
-    		$currentTimePoint=TimePoint::singleton($_REQUEST['sessionID']);
+        // if we have not yet started, and at least one timepoint is in screening or visit, do not allow the user to start another timepoint
+        if ($currentStage == 'Not Started') {
+            $candidate =& Candidate::singleton($this->getCandID());
+            if (Utility::isErrorX($candidate)) {
+                return PEAR::raiseError("Candidate Error ($candID): ".$candidate->getMessage());
+            }
 
-    		// if there are any timepoints
-    		if (is_array($listOfTimePoints)) {
-    			foreach ($listOfTimePoints as $sessionID) {
-    				// create timepoint object
-    				$timepoint = TimePoint::singleton($sessionID);
-    				if (PEAR::isError($timepoint)) {
-    					return PEAR::raiseError("TimePoint Error ($sessionID): ".$timepoint->getMessage());
-    				}
+            // when starting screening, make sure that all other started visits were previously submitted to DCC
+            $listOfTimePoints = $candidate->getListOfTimePoints();
+            $currentTimePoint=TimePoint::singleton($_REQUEST['sessionID']);
 
-    				// if a timepoint is started and not submitted, return false
-    				if ($onlyOneOpenTimepoint=="true" && (in_array($timepoint->getData('Current_stage'), array('Screening', 'Visit')) AND $timepoint->getSubprojectID()==$this->getSubprojectID())) {
-    					return false;
-    				}
-    			}
-    		}
+            // if there are any timepoints
+            if (is_array($listOfTimePoints)) {
+                foreach ($listOfTimePoints as $sessionID) {
+                    // create timepoint object
+                    $timepoint = TimePoint::singleton($sessionID);
+                    if (Utility::isErrorX($timepoint)) {
+                        return PEAR::raiseError("TimePoint Error ($sessionID): ".$timepoint->getMessage());
+                    }
 
-    		return true;
-    	} elseif ($currentStage == 'Screening' && in_array($this->getData('Screening'), array('Pass', 'Failure'))) {
-    		return true;
-    	}
-    	return false;
+                    // if a timepoint is started and not submitted, return false
+                    if ($onlyOneOpenTimepoint=="true" && (in_array($timepoint->getData('Current_stage'), array('Screening', 'Visit')) AND $timepoint->getSubprojectID()==$this->getSubprojectID())) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        } elseif ($currentStage == 'Screening' && in_array($this->getData('Screening'), array('Pass', 'Failure'))) {
+            return true;
+        }
+        return false;
     }
     
     /**
@@ -595,16 +604,17 @@ Class TimePoint
      *
      * @return string of the date in YYYY-MM-DD
      */
-    function getEffectiveDateOfBirth(){
-    	$config=NDB_Config::singleton();
-    	$candidate=Candidate::singleton($this->getCandID());
-    	$settings=$config->getSubprojectSettings($this->getSubprojectID());
-    	if($settings['options']['useEDC']=="true"){
-    		return $candidate->getCandidateEDC();
-    	}
-    	
-    	return $candidate->getCandidateDoB();
+    function getEffectiveDateOfBirth()
+    {
+        $config=NDB_Config::singleton();
+        $candidate=Candidate::singleton($this->getCandID());
+        $settings=$config->getSubprojectSettings($this->getSubprojectID());
+        if($settings['options']['useEDC']=="true") {
+            return $candidate->getCandidateEDC();
+        }
+
+        return $candidate->getCandidateDoB();
     }
-    
+
 } // end class
 ?>
