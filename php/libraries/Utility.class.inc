@@ -255,9 +255,6 @@ class Utility extends PEAR
         if ($study_site) {
             $query .= "WHERE Study_site='Y'";
         }
-        else {
-                if (!DCC)
-                $query .= "WHERE Name != 'DCC'";
 
         $result = $DB->pselect($query, array());
         if (Utility::isErrorX($result)) {
