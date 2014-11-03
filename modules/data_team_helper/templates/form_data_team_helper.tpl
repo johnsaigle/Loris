@@ -48,15 +48,15 @@
 
 </form>
 <br>
-
-<table border="1" valign="top" class="std">
-    <tr>
-        <td> Current Data_entry Completion Percentage (for <b>{$visit_label}</b> and instrument: <b>{$test_name}</b>)&nbsp&nbsp  </td>
-        <td> &nbsp&nbsp&nbsp{$percent_completed}%</td>
-    </tr>
-    
-</table>
-
+{if $test_name}
+    <table border="1" valign="top" class="std">
+        <tr>
+            <td> Current Single Data_entry Completion Percentage (for <b>{$visit_label}</b> and instrument: <b>{$test_name}</b>)&nbsp&nbsp  </td>
+            <td> &nbsp&nbsp&nbsp{$percent_completed}%</td>
+        </tr>
+        
+    </table>
+{/if}
 <table>
   <tr>
  		<td>
@@ -133,7 +133,7 @@
             <td nowrap="nowrap" valign="top">
                 {foreach from=$Conflicts item=conflict}
                     {if ($conflict.FieldName eq $elements_array[$element][$visit_label].sourcefield) and $conflict.visit_label eq $visit_label}
-                        <a href="main.php?Question={$conflict.FieldName}&Instruments={$conflict.test_name_display}&Visits={$conflict.visit_label}&PSCID={$conflict.PSCID}&site=all&test_name=conflicts_resolve" target="_blank">{$conflict.PSCID}_{$conflict.visit_label}<BR></a>
+                        <a href="main.php?Question={$conflict.FieldName}&Instruments={$conflict.test_name_display}&Visits={$conflict.visit_label}&PSCID={$conflict.PSCID}&site=all&test_name=conflict_resolver" target="_blank">{$conflict.PSCID}_{$conflict.visit_label}<BR></a>
                     {/if}
                 {/foreach}
             </td>

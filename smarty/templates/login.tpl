@@ -4,7 +4,8 @@
 <meta charset="utf-8"/>
 <!-- shortcut icon that displays on the browser window -->
 <link rel="shortcut icon" href="images/mni_icon.ico" type="image/ico" />
-<link rel="stylesheet" href="bootstrap-3.1.1/css/bootstrap.css">
+<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="bootstrap/css/custom-css.css">
 <!-- page title -->
 <title>{$title}</title>
 
@@ -142,10 +143,10 @@ BrowserDetect.init();
 		  <div class="panel-body">
 		  		<div class="col-xs-12">
 		  			<center>
-		  				<img src="images/LORIS_v2.grey.clear.png" class="img-responsive" alt="Responsive image" align="middle">
+		  				<img src="images/LORIS_logo_141007.svg" class="img-responsive" alt="Responsive image" onerror="this.src='images/LORIS_Logo_141007.png'" align="middle" width="85%"> 
 		  			</center>
+					<br>
 		  		</div>
-		  		<br><br><br><br><br>
 		  		<div class="hidden-xs hidden-sm">
 		  			<br><br><br><br>
 		  		</div>
@@ -195,7 +196,7 @@ BrowserDetect.init();
 					<td align="center" colspan="1" style="color:#808080" >Powered by LORIS &copy; {$currentyear}. All rights reserved.</td>
 					</tr>	
 					<tr>
-					<td align="center" colspan="1"style="color: #808080">Created by <a href="http://cbrain.mcgill.ca" style="color: #064785" target="_blank"> ACElab</a></td>
+					<td align="center" colspan="1"style="color: #808080">Created by <a href="http://mcin-cnim.ca" style="color: #064785" target="_blank">MCIN</a></td>
 					</tr>
 					<tr>
 					<td align="center" colspan="1" style="color: #808080"> Developed at <a href="http://www.mni.mcgill.ca" style="color: #064785" target="_blank">Montreal Neurological Institute and Hospital</a></td>

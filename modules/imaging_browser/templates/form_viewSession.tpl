@@ -13,10 +13,12 @@
     <div class="row">
     {$headerTable}
     </div>
+    <div class="row">
     <table class='table-header-right'>
 	<tr><td>{if $files|@count}{$files|@count} file(s) displayed.</td></tr>
         <tr><td><div id="jivApplet">&nbsp;</div></td></tr>
     </table>
+    </div>
     </td>
 </tr>
 </table>
@@ -77,14 +79,13 @@
             {/if}
 {* LINK TO COMMENTS *}
         <tr>
-            <td>{if $files[file].FileID}<a href="#{$smarty.section.file.index}" 
- onClick='window.open("feedback_mri_popup.php?fileID={$files[file].FileID}", "feedback_mri","width=500,height=800,toolbar=no,location=no,status=yes,scrollbars=yes,resizable=yes")'>Link to comments</a><br>{else}&nbsp;{/if}
+            <td>{if $files[file].FileID}<a href="#noID" onClick='window.open("feedback_mri_popup.php?fileID={$files[file].FileID}", "feedback_mri","width=500,height=800,toolbar=no,location=no,status=yes,scrollbars=yes,resizable=yes")'>Link to comments</a><br>{else}&nbsp;{/if}
             </td>
         </tr>
     </table>  
     </td>
 {* MIDDLE TABLE (PICS) *}
-    <td><a name="{$smarty.section.file.index}">
+    <td>
         <table class="table-mri-right-and-center">
             <thead>
                 <tr>
@@ -98,7 +99,7 @@
             <tbody>
                 <tr>
                     <td colspan="4">
-		    <a href="#{$smarty.section.file.index}" onClick="window.open('minc.html?minc_id={$files[file].FileID}', 'BrainBrowser Volume Viewer', 'location = 0,width = auto, height = auto')">
+		    <a href="#noID" onClick="window.open('minc.html?minc_id={$files[file].FileID}', 'BrainBrowser Volume Viewer', 'location = 0,width = auto, height = auto')">
                     <img class='img-checkpic' src="{$files[file].CheckPic}">
                     </a>
                     </td>
@@ -137,17 +138,17 @@
 		{if $files[file].FileID}
                 <tr>
                     <td>
-                        <a href="#{$smarty.section.file.index}" onClick='javascript:show_jiv(new Array("{$files[file].JivFilename}"), new Array("{$files[file].JivAddress}"), false)' accesskey="{$smarty.section.file.index}">JIV Viewer</a>
+                        <a href="#noID" onClick='javascript:show_jiv(new Array("{$files[file].JivFilename}"), new Array("{$files[file].JivAddress}"), false)' accesskey="{$smarty.section.file.index}">JIV Viewer</a>
                     </td>
                     <td colspan='2'>
-                        <a href="#{$smarty.section.file.index}" onClick="window.open('minc.html?minc_id={$files[file].FileID}', 'BrainBrowser Volume Viewer', 'location=0,width=auto,height=auto')">BrainBrowser Volume Viewer</a>
+                        <a href="#noID" onClick="window.open('minc.html?minc_id={$files[file].FileID}', 'BrainBrowser Volume Viewer', 'location=0,width=auto,height=auto')">BrainBrowser Volume Viewer</a>
                     </td>
                     <td>
                         <a href="mri/jiv/get_file.php?file={$files[file].FullFilename}">Download MINC</a>
 		    </td>
                 </tr>{/if}
             </tfoot> 
-	</table></a>
+	</table>
     </td>
 {* RIGHT SUBTABLE*}
     <td>

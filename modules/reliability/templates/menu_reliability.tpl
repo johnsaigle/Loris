@@ -1,3 +1,4 @@
+<div class="row">
 <div class="col-sm-8">
     <div class="panel panel-primary">
         <div class="panel-heading" onclick="hideFilter();">
@@ -180,13 +181,14 @@
     </table>
 </form>
 {/if}
+</div>
 <!-- <h2><font color="red">Note: Phase 2 reliability forms are unavailable at the moment as the system is being upgraded.</font></h2> -->
 
 <!--  title table with pagination -->
 <table id="LogEntries" border="0" valign="bottom" width="100%">
 <tr>
     <!-- title -->
-    <td class="controlPanelSection">List of Log Entries</td>
+    <td class="controlPanelSection">List of candidates flagged for reliability</td>
 
     <!-- display pagination links -->
     <td align="right">{$page_links}</td>
