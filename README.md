@@ -70,3 +70,6 @@ Make sure that `$yourURL` above contains the "http://" or "https://" and `$yourH
 
 # Community
 Please feel free to subscribe to the [LORIS Developers mailing list](http://www.bic.mni.mcgill.ca/mailman/listinfo/loris-dev) to ask any LORIS-related questions.
+=======
+# Biobanking
+MNI biobanking project
