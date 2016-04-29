@@ -1,19 +1,20 @@
 # Candidate Parameters Test Plan
 
 1. Check Permissions. Try removing each of these permissions/conditions one at a time. You should not be able to access the page
-	* data_entry
-	* unsend_to_dcc
-	* having the same site as the candidate you are accessing	
+* Edit Candidate Parameters
+* data_entry ("Data Entry", in front-end)
+* unsend_to_dcc ("Reverse Send to DCC", in front-end) - may not be necessary
+* having the same site as the candidate you are accessing   
 2. Make sure that the candidate date of birth and gender, shown in the table at the top of the page, match what is stored in the candidate table for this given candidate.
 3. Click on the Return to Timepoint List button and ensure it goes to the correct timepoint list page.
 
 ### Candidate Information Panel
 4. Confirm that all the fields in this panel correspond to what's stored in the candidate table.
-	* PSCID
-	* Caveat Emptor flag for Candidate
-	* Reason for Caveat Emptor flag
-	* Additional Comments for flag
-	* Comment
+* PSCID
+* Caveat Emptor flag for Candidate
+* Reason for Caveat Emptor flag
+* Additional Comments for flag
+* Comment
 5. Click on update Candidate Info and make sure it takes you to the correct form for that candidate
 
 ### Update Candidate Info
@@ -61,8 +62,8 @@ Note: Is there no way to edit/remove a family member from the front-end?
 34. Try editing the Comments field and saving
 
 ### Participation Consent Status Panel
-35. Add a new consent type following the Developer's guide. Does it show up in this panel when you refresh the page?
-36. Does the consent info shown in this table match what is stroed in the participant_status table?
+35. Add a new consent type following [the guide](https://github.com/aces/Loris/wiki/Candidate-Information-Page) on the LORIS Wiki. Does it show up in this panel when you refresh the page?
+36. Does the consent info shown in this table match what is stored in the participant_status table?
 
 ### Update Consent Info
 37. Check that there is a set of form inputs for each type of consent. Does your new type of consent you just added appear here, with form inputs?
@@ -70,3 +71,4 @@ Note: Is there no way to edit/remove a family member from the front-end?
 39. Try entering two different dates for the date of consent. Make sure that an error appears when you try to save.
 40. Try entering two different dates for the date of withdrawal of consent. Make sure that an error appears when you try to save.
 41. For each of the date fields, try entering only one part of the date (eg. the year). Make sure there is an error when you try to save.
+
