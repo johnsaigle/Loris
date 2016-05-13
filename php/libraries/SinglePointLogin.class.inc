@@ -48,6 +48,13 @@ class SinglePointLogin
     var $_passwordExpired = false;
 
     /**
+     * A total number of failed login attempts
+     */
+    var $_numFailedAttempts = 0;
+
+    const LOCKOUT_THRESHOLD = 10;
+
+    /**
      * Dumps the login form
      *
      * @return void
@@ -209,8 +216,7 @@ class SinglePointLogin
             )
         )
         ) {
-            $this->_lastError = 'The password is weak, or'
-               . ' the passwords do not match';
+            $this->_lastError = 'The password is weak, or the passwords do not match';
         }
 
         // Keeping the same password is not allowed
@@ -374,6 +380,26 @@ class SinglePointLogin
         // create DB object
         $factory = NDB_Factory::singleton();
         $DB      =& $factory->database();
+
+        /** _Check to see if this username has been locked out._
+         *  Process:
+         *   If the $time variable is not empty after the query, 
+         *   then the user has been locked out. Compare this value
+         *   against the current time; if more than 20 minutes have 
+         *   passed, we delete the user from the lock out table.
+         */
+        #$query = "SELECT FROM locked_out_users WHERE UserID=:username";
+        #$time_at_lockout = $DB->pselect($query, array('username' => $username));
+        #if (isset($time)) {
+        #    if (round(abs(date() - $time_at_lockout) / 60,2) > 20) {
+        #        // delete user from table because time has expired
+        #        $DB->delete('locked_out_users', array('UserID' => $username));
+        #    } else {
+        #        // the lockout period ahs not expired.
+        #        $this->_lastError = "This account is currently locked out. Try again later.";
+        #        return false;
+        #    }
+        #}
 
         // check users table to see if we have a valid user
         $query = "SELECT COUNT(*) AS User_count,
