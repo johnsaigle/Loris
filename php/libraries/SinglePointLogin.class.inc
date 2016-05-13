@@ -381,25 +381,32 @@ class SinglePointLogin
         $factory = NDB_Factory::singleton();
         $DB      =& $factory->database();
 
-        /** _Check to see if this username has been locked out._
+        /** Check to see if this username has been locked out.
          *  Process:
          *   If the $time variable is not empty after the query, 
          *   then the user has been locked out. Compare this value
          *   against the current time; if more than 20 minutes have 
          *   passed, we delete the user from the lock out table.
          */
-        #$query = "SELECT FROM locked_out_users WHERE UserID=:username";
-        #$time_at_lockout = $DB->pselect($query, array('username' => $username));
-        #if (isset($time)) {
-        #    if (round(abs(date() - $time_at_lockout) / 60,2) > 20) {
-        #        // delete user from table because time has expired
-        #        $DB->delete('locked_out_users', array('UserID' => $username));
-        #    } else {
-        #        // the lockout period ahs not expired.
-        #        $this->_lastError = "This account is currently locked out. Try again later.";
-        #        return false;
-        #    }
-        #}
+        $query = "SELECT lock_out_time FROM locked_out_users WHERE UserID=:username";
+        $row = $DB->pselectRow($query, array('username' => $username));
+        $time_at_lockout = $row['lock_out_time'];
+        if (isset($time_at_lockout)) {
+            $locked_out = false;
+            print_r ($time_at_lockout[0]);
+            if ((abs((time() - strtotime($time_at_lockout)))/60) < 1) {
+                $locked_out = true;
+            }
+
+            if ($locked_out) {
+                // the lockout period has not expired.
+                $this->_lastError = "This account is currently locked out. Try again later.";
+                return false;
+            } else {
+                // delete user from table because time has expired
+                $DB->delete('locked_out_users', array('UserID' => $username));
+            }
+        }
 
         // check users table to see if we have a valid user
         $query = "SELECT COUNT(*) AS User_count,
