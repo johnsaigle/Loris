@@ -12,14 +12,14 @@
 */
 
 /**
- * Implements the candidate_list menu
- *
+* Implements the candidate_list menu
+*
 * @category Main
 * @package  Biobanking
 * @author   Loris Team <loris.mni@bic.mni.mcgill.ca>
 * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
 * @link     https://www.github.com/aces/Loris/
- */
+*/
 class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
 {
     /**
@@ -67,8 +67,10 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
                           'c.Gender',
                           'bs.biospecimen_id',
 			  'bs.sample_type',
-			  'bs.date_collected',
-			  'bs.storage_location'
+			  'bs.diagnosis',
+			  'bs.volume_mls',
+			  'bs.sample_quality',
+			  'bs.num_of_vials_available'
 	       );
        if ($useProjects) {
             $this->columns[] = 'min(c.ProjectID) as Project';
@@ -87,7 +89,8 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
                                'gender'         => 'c.Gender',
 			       'biospecimen_id' => 'bs.biospecimen_id',
 			       'sample_type' => 'bs.sample_type',
-			       'date_collected' => 'bs.date_collected',
+			       'sample_quality' => 'bs.sample_quality',
+			       'diagnosis' => 'bs.diagnosis'
 		);
 
         $this->validFilters = array(
@@ -97,6 +100,8 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
 			       'c.Gender',
 			       'bs.biospecimen_id',
 			       'bs.sample_type',
+			       'bs.sample_quality',
+			       'bs.sample_diagnosis',
 			       'bs.date_collected'
 		);
 
@@ -178,9 +183,10 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
 
         $sample_options = array(
                          null => 'All',
-                         'blood'  => 'blood',
-                         'urine'  => 'urine',
-                         'stool'  => 'stool'
+                         'DNA'  => 'DNA',
+                         'PBMC'  => 'PBMC',
+                         'Plasma'  => 'Plasma',
+                         'Serum'  => 'Serum'
                         );
 
         // add form elements
@@ -189,8 +195,9 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
         $this->addBasicText('DCCID', 'DCCID');
         $this->addSelect('sample_type', 'Sample Type', $sample_options);
         $this->addBasicText('sample_id', 'Sample ID');
+        $this->addBasicText('sample_quality', 'Sample Quality');
         $this->addBasicText('biospecimen_id', 'Biospecimen ID', array('maxlength' => 10));
-        $this->addBasicText('date_collected', 'Date Collected', array('maxlength' => 10));
+        $this->addBasicText('diagnosis', 'Diagnosis', array('maxlength' => 10));
 
         // Project list, if applicable
         if ($config->getSetting("useProjects")==="true") {

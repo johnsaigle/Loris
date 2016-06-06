@@ -62,12 +62,20 @@
                         {$form.biospecimen_id.html}
                     </div>
                 </div>
+                <div class="form-group col-sm-4">
+                    <label class="col-sm-12 col-md-4">
+                        {$form.num_of_vials_available.label}
+                    </label>
+                    <div class="col-sm-12 col-md-8">
+                        {$form.num_of_vials_available.html}
+                    </div>
+                </div>
 		<div class="form-group col-sm-4">
-			<label class="col-sm-12 col-md-4">
-                            {$form.date_collected.label}
+		<label class="col-sm-12 col-md-4">
+                            {$form.diagnosis.label}
                        </label>
                     <div class="col-sm-12 col-md-8">
-                        {$form.date_collected.html}
+                        {$form.diagnosis.html}
                     </div>
                   </div>
             </div>
@@ -216,9 +224,9 @@
     <!-- title -->
     <td class="controlPanelSection">
         {$numCandidates} subject(s) selected. 
-        <a href="{$csvUrl}" download="{$csvFile}.csv">
+        <!-- <a href="{$csvUrl}" download="{$csvFile}.csv">
             Download as CSV
-        </a>
+        </a> -->
     </td>
     <!-- display pagination links -->
     <td align="right">{$page_links}</td>
