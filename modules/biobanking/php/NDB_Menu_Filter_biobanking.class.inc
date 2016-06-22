@@ -58,13 +58,13 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
                           'c.PSCID',
                           'c.Gender',
                           'bs.biospecimen_id',
-			  'bs.sample_type',
-			  'bs.diagnosis',
-			  'bs.sample_quality',
-			  'bs.quantity_on_hand',
-			  'bs.quantity_units',
-			  'bs.storage_status'
-	       );
+                          'bs.sample_type',
+                          'bs.diagnosis',
+                          'bs.sample_quality',
+                          'bs.quantity_on_hand',
+                          'bs.quantity_units',
+                          'bs.storage_status'
+                      );
        if ($useProjects) {
             $this->columns[] = 'min(c.ProjectID) as Project';
         }
@@ -114,7 +114,7 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
 
         $this->group_by = '';#'c.CandID, psc.Name, c.PSCID, c.Gender';
         $this->order_by = 'psc.Name, c.CandID DESC';
-#
+        /* May not be relevant */
 #        if ($useProjects) {
 #            $this->validFilters[] = 'c.ProjectID';
 #        }
@@ -125,12 +125,18 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
 #            )
 #        );
 #
+        # Define filters to be used. May need to add more later.
+        # TODO: Look up filters for numerical ranges, e.g. the `quantity_on_hand` field.
         $this->EqualityFilters    = array(
                                      'c.CenterID',
                                      'c.Gender',
-                                     'bs.sample_type'
+                                     'bs.sample_type',
+                                     'bs.sample_quality',
+                                     'bs.diagnosis',
+                                     'bs.storage_status'
                                     );
 
+        /* TODO: Not sure if any of this commented code is relevant. */
 #        if ($useProjects) {
 #            $this->formToFilter = array_merge(
 #                $this->formToFilter,
@@ -179,27 +185,44 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
         // SubprojectID
         $list_of_subprojects = Utility::getSubprojectList();
 
-	//TODO: Add more options; these are not exhaustive
-        $sample_options = array(
+        /* List applicable menu filter options for 'select' (dropdown) form elements */
+        $sample_type_options = array( // options for `sample_type`
                          null => 'All',
                          'DNA'  => 'DNA',
                          'PBMC'  => 'PBMC',
                          'Plasma'  => 'Plasma',
                          'Serum'  => 'Serum'
-                        );
+                     );
 
-        // add form elements
+        $sample_quality_options = array( // options for `sample_quality`
+                         null => 'All',
+                         'Acceptable'  => 'Acceptable'
+                     );
+
+        $diagnosis_options = array( // options for `diagnosis` 
+                        null => 'All',
+                        'PD' => 'PD',
+                        'HC' => 'HC'
+                    );
+        $storage_status_options = array( // options for `storage_status` 
+                        null => 'All',
+                        'Available' => 'Available',
+                        'For Discard' => 'For Discard',
+                        'Reserved' => 'Reserved'
+                    );
+
+        /* Add form elements to object */
         $this->addSelect('centerID', 'Site', $list_of_sites);
         $this->addBasicText('PSCID', 'PSCID');
         $this->addBasicText('DCCID', 'DCCID');
-        $this->addSelect('sample_type', 'Sample Type', $sample_options);
+        $this->addSelect('sample_type', 'Sample Type', $sample_type_options);
         $this->addBasicText('sample_id', 'Sample ID');
-        $this->addBasicText('sample_quality', 'Sample Quality');
-        $this->addBasicText('biospecimen_id', 'Biospecimen ID', array('maxlength' => 10));
-        $this->addBasicText('diagnosis', 'Diagnosis', array('maxlength' => 10));
-        $this->addBasicText('quantity_on_hand', 'Quantity On Hand', array('maxlength' => 10));
-        $this->addBasicText('quantity_units', 'Units', array('maxlength' => 10));
-        $this->addBasicText('storage_status', 'Storage Status', array('maxlength' => 10));
+        $this->addSelect('sample_quality', 'Sample Quality', $sample_quality_options);
+        $this->addBasicText('biospecimen_id', 'Biospecimen ID', array('maxlength' => 10));     // Note: These max lengths
+        $this->addSelect('diagnosis', 'Diagnosis', $diagnosis_options);                        //       are totally arbitrary
+        $this->addBasicText('quantity_on_hand', 'Quantity On Hand', array('maxlength' => 10)); //       and may need to be updated later.
+        $this->addBasicText('quantity_units', 'Units', array('maxlength' => 10));              //
+        $this->addSelect('storage_status', 'Storage Status', $storage_status_options);         //
 
         // Project list, if applicable
         if ($config->getSetting("useProjects")==="true") {
@@ -210,6 +233,7 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
             }
             $this->addSelect('ProjectID', 'Project', $list_of_projects);
         }
+        // TODO: I don't know what this is, or if it's relevant to the biobank. Lol.
         if ($config->getSetting("useEDC")=="true") {
             $this->addBasicText(
                 'edc',
