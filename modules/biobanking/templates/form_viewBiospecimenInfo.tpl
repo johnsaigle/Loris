@@ -3,6 +3,22 @@
 	{$headerTable}
 </div>
 
+<!-- Tracking view panel -->
+<div class="panel panel-default">
+	<div class="panel-heading" id="panel-main-heading">
+		<p>Tracking Information</p>
+	</div> <!-- closing panel-heading div-->
+	<div class="panel-body">
+			<table class="table table-hover table-bordered header-info col-xs-12 dynamictable">
+			<tr>
+				<th class="col-xs-2 info">Storage Address</th><td class="col-xs-2">{$info[0].storage_address}</td>
+				<th class="col-xs-2 info">Inventory Status</th><td class="col-xs-2">{$info[0].inventory_status}</td>
+				</tr>
+			</table>
+	</div> <!--closing panel-body -->
+</div> <!--panel panel-default -->
+
+<!-- Details view panel -->
 <div class="panel panel-default">
 	<div class="panel-heading" id="panel-main-heading">
 		<p>Detailed Biospecimen Properties</p>
@@ -43,20 +59,6 @@
 				<th class="col-xs-2 info">Concentration</th><td class="col-xs-2">{$info[0].concentration}</td>
 				<th class="col-xs-2 info">DNA Ratio</th><td class="col-xs-2">{$info[0].ratio}</td>
 			</tr>
-			</table>
-	</div> <!--closing panel-body -->
-</div> <!--panel panel-default -->
-<!--Tracking view panel-->
-<div class="panel panel-default">
-	<div class="panel-heading" id="panel-main-heading">
-		<p>Tracking Information</p>
-	</div> <!-- closing panel-heading div-->
-	<div class="panel-body">
-			<table class="table table-hover table-bordered header-info col-xs-12 dynamictable">
-			<tr>
-				<th class="col-xs-2 info">Storage Address</th><td class="col-xs-2">{$info[0].storage_address}</td>
-				<th class="col-xs-2 info">Inventory Status</th><td class="col-xs-2">{$info[0].inventory_status}</td>
-				</tr>
 			</table>
 	</div> <!--closing panel-body -->
 </div> <!--panel panel-default -->
