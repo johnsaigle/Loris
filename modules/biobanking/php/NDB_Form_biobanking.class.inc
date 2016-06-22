@@ -23,7 +23,7 @@ require_once 'NDB_Form.class.inc';
  * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link       https://github.com/aces/Loris
  */
-class NDB_Form_Biobanking extends NDB_Form
+class NDB_Form_biobanking extends NDB_Form
 {
     var $candID;
     var $sessionID;

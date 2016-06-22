@@ -11,16 +11,7 @@
 * @link     https://www.github.com/aces/Loris/
 */
 
-/**
-* Implements the candidate_list menu
-*
-* @category Main
-* @package  Biobanking
-* @author   Loris Team <loris.mni@bic.mni.mcgill.ca>
-* @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
-* @link     https://www.github.com/aces/Loris/
-*/
-class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
+class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
 {
     /**
      * Overloading this method to allow access to site users (their own site only)
@@ -60,6 +51,7 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
         }
 
        // set the class variables
+       // this is everything that will appear in the 'Snapshot' view
        $this->columns = array(
                           'psc.Name AS Site',
                           'c.CandID AS DCCID',
@@ -68,9 +60,10 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
                           'bs.biospecimen_id',
 			  'bs.sample_type',
 			  'bs.diagnosis',
-			  'bs.volume_mls',
 			  'bs.sample_quality',
-			  'bs.num_of_vials_available'
+			  'bs.quantity_on_hand',
+			  'bs.quantity_units',
+			  'bs.storage_status'
 	       );
        if ($useProjects) {
             $this->columns[] = 'min(c.ProjectID) as Project';
@@ -82,28 +75,33 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
        #     )
        # );
 
-        $this->formToFilter = array(
-                               'centerID'     => 'c.CenterID',
-                               'DCCID'        => 'c.CandID',
-			       'PSCID'        => 'c.PSCID',
-                               'gender'         => 'c.Gender',
-			       'biospecimen_id' => 'bs.biospecimen_id',
-			       'sample_type' => 'bs.sample_type',
-			       'sample_quality' => 'bs.sample_quality',
-			       'diagnosis' => 'bs.diagnosis'
-		);
+       $this->formToFilter = array(
+	       'centerID'     => 'c.CenterID',
+	       'DCCID'        => 'c.CandID',
+	       'PSCID'        => 'c.PSCID',
+	       'gender'         => 'c.Gender',
+	       'biospecimen_id' => 'bs.biospecimen_id',
+	       'sample_type' => 'bs.sample_type',
+	       'sample_quality' => 'bs.sample_quality',
+	       'diagnosis' => 'bs.diagnosis',
+	       'quantity_on_hand' => 'bs.quantity_on_hand',
+	       'quantity_units' => 'bs.quantity_units',
+	       'storage_status' =>'bs.storage_status'
+	       );
 
-        $this->validFilters = array(
-                               'c.CenterID',
-                               'c.CandID',
-                               'c.PSCID',
-			       'c.Gender',
-			       'bs.biospecimen_id',
-			       'bs.sample_type',
-			       'bs.sample_quality',
-			       'bs.sample_diagnosis',
-			       'bs.date_collected'
-		);
+       $this->validFilters = array(
+	       'c.CenterID',
+	       'c.CandID',
+	       'c.PSCID',
+	       'c.Gender',
+	       'bs.biospecimen_id',
+	       'bs.sample_type',
+	       'bs.diagnosis',
+	       'bs.sample_quality',
+	       'bs.quantity_on_hand',
+	       'bs.quantity_units',
+	       'bs.storage_status'
+	       );
 
         $this->query = " FROM candidate c
             LEFT JOIN psc ON (c.CenterID=psc.CenterID)
@@ -181,6 +179,7 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
         // SubprojectID
         $list_of_subprojects = Utility::getSubprojectList();
 
+	//TODO: Add more options; these are not exhaustive
         $sample_options = array(
                          null => 'All',
                          'DNA'  => 'DNA',
@@ -198,6 +197,9 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
         $this->addBasicText('sample_quality', 'Sample Quality');
         $this->addBasicText('biospecimen_id', 'Biospecimen ID', array('maxlength' => 10));
         $this->addBasicText('diagnosis', 'Diagnosis', array('maxlength' => 10));
+        $this->addBasicText('quantity_on_hand', 'Quantity On Hand', array('maxlength' => 10));
+        $this->addBasicText('quantity_units', 'Units', array('maxlength' => 10));
+        $this->addBasicText('storage_status', 'Storage Status', array('maxlength' => 10));
 
         // Project list, if applicable
         if ($config->getSetting("useProjects")==="true") {
@@ -249,6 +251,7 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
                 $itemi =& $this->tpl_data['items'][$x][$i];
                 // if it's a non-PSC user show the URL to the timepoint list on
                 // PSCID field
+		//TODO: add biobank specific file permissions
                 if ($key == 'PSCID' && $user->hasPermission('data_integrity_flag')) {
                     $itemi['DCCID'] = $item['DCCID'];
                 }

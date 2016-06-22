@@ -62,14 +62,6 @@
                         {$form.biospecimen_id.html}
                     </div>
                 </div>
-                <div class="form-group col-sm-4">
-                    <label class="col-sm-12 col-md-4">
-                        {$form.num_of_vials_available.label}
-                    </label>
-                    <div class="col-sm-12 col-md-8">
-                        {$form.num_of_vials_available.html}
-                    </div>
-                </div>
 		<div class="form-group col-sm-4">
 		<label class="col-sm-12 col-md-4">
                             {$form.diagnosis.label}

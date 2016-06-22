@@ -33,6 +33,9 @@ function checkBiobankingForm() {
     return false;
 }
 
+function displayMouseOverText() {
+}
+
 function hideFilter(obj) {
     'use strict';
 
