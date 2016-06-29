@@ -20,3 +20,4 @@ docs/var/
 tools/ip_output.txt.back
 logs/*.log
 tools/logs/*.log
+modules/document_repository/user_uploads/
