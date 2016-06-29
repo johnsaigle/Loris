@@ -23,7 +23,7 @@ require_once 'NDB_Form.class.inc';
  * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link       https://github.com/aces/Loris
  */
-class NDB_Form_Biobanking extends NDB_Form
+class NDB_Form_biobanking extends NDB_Form
 {
     var $candID;
     var $sessionID;
@@ -46,22 +46,22 @@ class NDB_Form_Biobanking extends NDB_Form
         );
     }
     /**
-     * Sets up main parameters given one GenomicFileID
+     * Function to view detailed information on a specific biospecimen
      * Visit Label or SessionID not required
      *
      * @return NULL
      */
-    function viewBiospecimenInfo()
-    {
-	$this->DB = Database::singleton();
-	$this->biospecimen_id = $_REQUEST['biospecimen_id'];
-	// add check? if (!empty($this->genomic_file_ID) &&
-	// is_numeric($this->genomic_file_ID)) {
-	if (!empty($this->biospecimen_id) ) {
-	    $this->_setSpecimenData($this->biospecimen_id);
-	}
-	$this->tpl_data['has_permission'] = true;#($this->_hasAccess()) ? true : false;
+    function viewBiospecimenInfo() {
+        $this->DB = Database::singleton();
+        $this->biospecimen_id = $_REQUEST['biospecimen_id'];
+        // add check? if (!empty($this->genomic_file_ID) &&
+        // is_numeric($this->genomic_file_ID)) {
+        if (!empty($this->biospecimen_id) ) {
+            $this->_setSpecimenData($this->biospecimen_id);
+        }
+        $this->tpl_data['has_permission'] = true;#($this->_hasAccess()) ? true : false;
     }
+
     /**
      * Sets values for Genomic data files
      *
@@ -69,14 +69,13 @@ class NDB_Form_Biobanking extends NDB_Form
      *
      * @return NULL
      */
-    function _setSpecimenData($biospecimen_id)
-    {
-	$info = $this->DB->pselect(
-		"SELECT *
-		FROM biospecimen WHERE biospecimen_id=:bid", 
-		$params = array('bid' => $this->biospecimen_id)
-		);
-	$this->tpl_data['info'] = $info;
+    function _setSpecimenData($biospecimen_id) {
+        $info = $this->DB->pselect(
+                "SELECT *
+                FROM biospecimen WHERE biospecimen_id=:bid", 
+                $params = array('bid' => $this->biospecimen_id)
+                );
+        $this->tpl_data['info'] = $info;
     }
 }
 ?>

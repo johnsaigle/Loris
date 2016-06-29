@@ -11,16 +11,7 @@
 * @link     https://www.github.com/aces/Loris/
 */
 
-/**
-* Implements the candidate_list menu
-*
-* @category Main
-* @package  Biobanking
-* @author   Loris Team <loris.mni@bic.mni.mcgill.ca>
-* @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
-* @link     https://www.github.com/aces/Loris/
-*/
-class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
+class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
 {
     /**
      * Overloading this method to allow access to site users (their own site only)
@@ -60,18 +51,20 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
         }
 
        // set the class variables
+       // this is everything that will appear in the 'Snapshot' view
        $this->columns = array(
                           'psc.Name AS Site',
                           'c.CandID AS DCCID',
                           'c.PSCID',
                           'c.Gender',
                           'bs.biospecimen_id',
-			  'bs.sample_type',
-			  'bs.diagnosis',
-			  'bs.volume_mls',
-			  'bs.sample_quality',
-			  'bs.num_of_vials_available'
-	       );
+                          'bs.sample_type',
+                          'bs.diagnosis',
+                          'bs.sample_quality',
+                          'bs.quantity_on_hand',
+                          'bs.quantity_units',
+                          'bs.storage_status'
+                      );
        if ($useProjects) {
             $this->columns[] = 'min(c.ProjectID) as Project';
         }
@@ -82,28 +75,33 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
        #     )
        # );
 
-        $this->formToFilter = array(
-                               'centerID'     => 'c.CenterID',
-                               'DCCID'        => 'c.CandID',
-			       'PSCID'        => 'c.PSCID',
-                               'gender'         => 'c.Gender',
-			       'biospecimen_id' => 'bs.biospecimen_id',
-			       'sample_type' => 'bs.sample_type',
-			       'sample_quality' => 'bs.sample_quality',
-			       'diagnosis' => 'bs.diagnosis'
-		);
+       $this->formToFilter = array(
+	       'centerID'     => 'c.CenterID',
+	       'DCCID'        => 'c.CandID',
+	       'PSCID'        => 'c.PSCID',
+	       'gender'         => 'c.Gender',
+	       'biospecimen_id' => 'bs.biospecimen_id',
+	       'sample_type' => 'bs.sample_type',
+	       'sample_quality' => 'bs.sample_quality',
+	       'diagnosis' => 'bs.diagnosis',
+	       'quantity_on_hand' => 'bs.quantity_on_hand',
+	       'quantity_units' => 'bs.quantity_units',
+	       'storage_status' =>'bs.storage_status'
+	       );
 
-        $this->validFilters = array(
-                               'c.CenterID',
-                               'c.CandID',
-                               'c.PSCID',
-			       'c.Gender',
-			       'bs.biospecimen_id',
-			       'bs.sample_type',
-			       'bs.sample_quality',
-			       'bs.sample_diagnosis',
-			       'bs.date_collected'
-		);
+       $this->validFilters = array(
+	       'c.CenterID',
+	       'c.CandID',
+	       'c.PSCID',
+	       'c.Gender',
+	       'bs.biospecimen_id',
+	       'bs.sample_type',
+	       'bs.diagnosis',
+	       'bs.sample_quality',
+	       'bs.quantity_on_hand',
+	       'bs.quantity_units',
+	       'bs.storage_status'
+	       );
 
         $this->query = " FROM candidate c
             LEFT JOIN psc ON (c.CenterID=psc.CenterID)
@@ -116,7 +114,7 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
 
         $this->group_by = '';#'c.CandID, psc.Name, c.PSCID, c.Gender';
         $this->order_by = 'psc.Name, c.CandID DESC';
-#
+        /* May not be relevant */
 #        if ($useProjects) {
 #            $this->validFilters[] = 'c.ProjectID';
 #        }
@@ -127,12 +125,18 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
 #            )
 #        );
 #
+        # Define filters to be used. May need to add more later.
+        # TODO: Look up filters for numerical ranges, e.g. the `quantity_on_hand` field.
         $this->EqualityFilters    = array(
                                      'c.CenterID',
                                      'c.Gender',
-                                     'bs.sample_type'
+                                     'bs.sample_type',
+                                     'bs.sample_quality',
+                                     'bs.diagnosis',
+                                     'bs.storage_status'
                                     );
 
+        /* TODO: Not sure if any of this commented code is relevant. */
 #        if ($useProjects) {
 #            $this->formToFilter = array_merge(
 #                $this->formToFilter,
@@ -181,23 +185,44 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
         // SubprojectID
         $list_of_subprojects = Utility::getSubprojectList();
 
-        $sample_options = array(
+        /* List applicable menu filter options for 'select' (dropdown) form elements */
+        $sample_type_options = array( // options for `sample_type`
                          null => 'All',
                          'DNA'  => 'DNA',
                          'PBMC'  => 'PBMC',
                          'Plasma'  => 'Plasma',
                          'Serum'  => 'Serum'
-                        );
+                     );
 
-        // add form elements
+        $sample_quality_options = array( // options for `sample_quality`
+                         null => 'All',
+                         'Acceptable'  => 'Acceptable'
+                     );
+
+        $diagnosis_options = array( // options for `diagnosis` 
+                        null => 'All',
+                        'PD' => 'PD',
+                        'HC' => 'HC'
+                    );
+        $storage_status_options = array( // options for `storage_status` 
+                        null => 'All',
+                        'Available' => 'Available',
+                        'For Discard' => 'For Discard',
+                        'Reserved' => 'Reserved'
+                    );
+
+        /* Add form elements to object */
         $this->addSelect('centerID', 'Site', $list_of_sites);
         $this->addBasicText('PSCID', 'PSCID');
         $this->addBasicText('DCCID', 'DCCID');
-        $this->addSelect('sample_type', 'Sample Type', $sample_options);
+        $this->addSelect('sample_type', 'Sample Type', $sample_type_options);
         $this->addBasicText('sample_id', 'Sample ID');
-        $this->addBasicText('sample_quality', 'Sample Quality');
-        $this->addBasicText('biospecimen_id', 'Biospecimen ID', array('maxlength' => 10));
-        $this->addBasicText('diagnosis', 'Diagnosis', array('maxlength' => 10));
+        $this->addSelect('sample_quality', 'Sample Quality', $sample_quality_options);
+        $this->addBasicText('biospecimen_id', 'Biospecimen ID', array('maxlength' => 10));     // Note: These max lengths
+        $this->addSelect('diagnosis', 'Diagnosis', $diagnosis_options);                        //       are totally arbitrary
+        $this->addBasicText('quantity_on_hand', 'Quantity On Hand', array('maxlength' => 10)); //       and may need to be updated later.
+        $this->addBasicText('quantity_units', 'Units', array('maxlength' => 10));              //
+        $this->addSelect('storage_status', 'Storage Status', $storage_status_options);         //
 
         // Project list, if applicable
         if ($config->getSetting("useProjects")==="true") {
@@ -208,6 +233,7 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
             }
             $this->addSelect('ProjectID', 'Project', $list_of_projects);
         }
+        // TODO: I don't know what this is, or if it's relevant to the biobank. Lol.
         if ($config->getSetting("useEDC")=="true") {
             $this->addBasicText(
                 'edc',
@@ -249,6 +275,7 @@ class NDB_Menu_Filter_Biobanking extends NDB_Menu_Filter
                 $itemi =& $this->tpl_data['items'][$x][$i];
                 // if it's a non-PSC user show the URL to the timepoint list on
                 // PSCID field
+		//TODO: add biobank specific file permissions
                 if ($key == 'PSCID' && $user->hasPermission('data_integrity_flag')) {
                     $itemi['DCCID'] = $item['DCCID'];
                 }

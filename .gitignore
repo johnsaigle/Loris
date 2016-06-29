@@ -18,6 +18,7 @@ docs/js/
 docs/usr/
 docs/var/
 tools/ip_output.txt.back
+tools/*.csv
 logs/*.log
 tools/logs/*.log
 modules/document_repository/user_uploads/
