@@ -13,8 +13,7 @@
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
-require_once "NDB_Form.class.inc";
-
+require_once "NDB_BVL_Instrument.class.inc";
 /**
  * The class that implements base functionality for Reliability checking.
  *
@@ -28,6 +27,7 @@ class NDB_Reliability extends NDB_Form
 {
     /**
      * Class name
+     *
      * @var    string
      * @access private
      */
@@ -69,8 +69,12 @@ class NDB_Reliability extends NDB_Form
      *
      * @return void
      */
-    static function &factory($name, $page, $identifier, $reliability_center_id)
-    {
+    static function &reliabilityfactory(
+        $name,
+        $page,
+        $identifier,
+        $reliability_center_id
+    ) {
         // check that the form class exists
         if (class_exists("NDB_Reliability_$name")) {
             $class = "NDB_Reliability_$name";
@@ -418,11 +422,6 @@ class NDB_Reliability extends NDB_Form
                 ORDER BY full_name",
             array('CentID' => $centerID)
         );
-        if ($db->isError($results)) {
-            return $this->raiseError(
-                "Could not get examiner names: ".$results->getMessage()
-            );
-        }
 
         $examiners = array('' => '');
 

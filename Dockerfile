@@ -15,6 +15,10 @@ WORKDIR /var/www/loris
 RUN mkdir project
 RUN sed -e "s#%LORISROOT%#/var/www/loris/#g" \
         -e "s#%PROJECTNAME%#loris#g" \
+<<<<<<< HEAD
+=======
+        -e "s#%LOGDIRECTORY%#/var/log/apache2/#g" \
+>>>>>>> aces/16.04-dev
         < docs/config/apache2-site > /etc/apache2/sites-available/loris.conf
 RUN a2dissite 000-default
 RUN ls /etc/apache2/sites-available
@@ -23,6 +27,15 @@ RUN a2ensite loris
 RUN mkdir smarty/templates_c
 RUN chmod 777 smarty/templates_c
 
+<<<<<<< HEAD
+=======
+ENV LORIS_SQL_DB=LorisDB
+ENV LORIS_SQL_HOST=mysql
+ENV LORIS_SQL_USER=loris
+ENV LORIS_SQL_PASSWORD=
+ENV LORIS_BASEURL=
+
+>>>>>>> aces/16.04-dev
 EXPOSE 80
 VOLUME ["/var/www/loris/project", "/var/log/apache2", "/var/lib/php5"]
 

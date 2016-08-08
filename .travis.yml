@@ -5,6 +5,7 @@ cache:
         - vendor
 
 php:
+<<<<<<< HEAD
     - 5.4
     - 5.6
     - '7'
@@ -15,6 +16,16 @@ matrix:
 
 sudo: false
 
+=======
+    - 5.6
+    - '7'
+
+sudo: false
+
+addons:
+    firefox: "44.0"
+
+>>>>>>> aces/16.04-dev
 before_install:
     # Start Xvfb in a desktop screen size,
     # otherwise some tests will fail because the links
@@ -25,21 +36,40 @@ before_install:
 
 install:
     # Install composer modules
+<<<<<<< HEAD
     - composer install --dev
+=======
+    - composer install
+>>>>>>> aces/16.04-dev
     - phpenv rehash
 
     # Install jslint
     - npm install -g jslint
 
       # Download a Selenium Web Driver release
+<<<<<<< HEAD
     - wget "http://selenium-release.storage.googleapis.com/2.45/selenium-server-standalone-2.45.0.jar"
 
     - php -S localhost:8000 -t htdocs 2>1 > /dev/null &
+=======
+    - wget "http://selenium-release.storage.googleapis.com/2.52/selenium-server-standalone-2.52.0.jar"
+
+    - PHP_INI_SCAN_DIR=":test/" php -S localhost:8000 -t htdocs htdocs/router.php 2>1 > /dev/null & 
+
+    # Extracting firefox and setting PATH variable...
+    - tar -xjf /tmp/firefox-44.0.tar.bz2 --directory /tmp
+    - export PATH="/tmp/firefox:$PATH"
+    - echo "Using firefox version `firefox --version`"
+>>>>>>> aces/16.04-dev
 
     # Start Selenium and redirect Selenium WebDriver
     # output to /dev/null so that it doesn't flood the
     # screen in the middle of our other tests
+<<<<<<< HEAD
     - DISPLAY=:99.0 java -jar selenium-server-standalone-2.45.0.jar  2>1 > /dev/null &
+=======
+    - DISPLAY=:99.0 java -jar selenium-server-standalone-2.52.0.jar  2>1 > /dev/null &
+>>>>>>> aces/16.04-dev
 
 before_script:
     # Set up the Loris environment
@@ -50,6 +80,7 @@ before_script:
     # for the config file, and reset the Loris user's password for testing
     - mysql -e 'CREATE DATABASE LorisTest'
     - mysql LorisTest < SQL/0000-00-00-schema.sql
+<<<<<<< HEAD
     - mysql LorisTest -u root -e "GRANT UPDATE,INSERT,SELECT,DELETE,DROP,CREATE TEMPORARY TABLES ON LorisTest.* TO 'SQLTestUser'@'localhost' IDENTIFIED BY 'TestPassword' WITH GRANT OPTION"
     - mysql LorisTest -e "UPDATE users SET Password_MD5=CONCAT('aa', MD5('aatestpass')), Pending_approval='N', Password_expiry='2100-01-01' WHERE ID=1"
     - sed -e "s/%HOSTNAME%/localhost/g"
@@ -57,6 +88,17 @@ before_script:
           -e "s/%PASSWORD%/TestPassword/g"
           -e "s/%DATABASE%/LorisTest/g"
           < docs/config/config.xml > project/config.xml
+=======
+    - mysql LorisTest < SQL/0000-00-01-Permission.sql
+    - mysql LorisTest < SQL/0000-00-02-Menus.sql
+    - mysql LorisTest < SQL/0000-00-03-ConfigTables.sql
+    - mysql LorisTest < SQL/0000-00-04-Help.sql
+    - mysql LorisTest -u root -e "GRANT UPDATE,INSERT,SELECT,DELETE,DROP,CREATE TEMPORARY TABLES ON LorisTest.* TO 'SQLTestUser'@'localhost' IDENTIFIED BY 'TestPassword' WITH GRANT OPTION"
+    - mysql LorisTest -e "UPDATE users SET Password_MD5=CONCAT('aa', MD5('aatestpass')), Pending_approval='N', Password_expiry='2100-01-01' WHERE ID=1"
+    - cp test/config.xml project/config.xml
+    - sed -i -e "s/%HOSTNAME%/127.0.0.1/g" -e "s/%USERNAME%/SQLTestUser/g" -e "s/%PASSWORD%/TestPassword/g" -e "s/%DATABASE%/LorisTest/g" project/config.xml
+    - sed -i -e "s/%HOSTNAME%/127.0.0.1/g" -e "s/%USERNAME%/SQLTestUser/g" -e "s/%PASSWORD%/TestPassword/g" -e "s/%DATABASE%/LorisTest/g" test/config.xml
+>>>>>>> aces/16.04-dev
     - mysql LorisTest -e "UPDATE Config SET Value='$(pwd)/' WHERE ConfigID=(SELECT ID FROM ConfigSettings WHERE Name='base')"
     - mysql LorisTest -e "UPDATE Config SET Value='http://localhost:8000' WHERE ConfigID=(SELECT ID FROM ConfigSettings WHERE Name='url')"
 
@@ -70,6 +112,7 @@ script:
       do
         php -l $i || exit $?;
       done
+<<<<<<< HEAD
     # Run unit tests to make sure functions still do what they should.
     - vendor/bin/phpunit --configuration test/phpunit.xml --testsuite 'LorisUnitTests for php/libraries'
 
@@ -80,6 +123,8 @@ script:
 
     # Run integration tests for specific modules
     - vendor/bin/phpunit --configuration test/phpunit.xml --testsuite 'Loris Module Integration Tests'
+=======
+>>>>>>> aces/16.04-dev
 
     # Run PHPCS on the entire libraries directory.
     - vendor/bin/phpcs --standard=docs/LorisCS.xml php/libraries php/exceptions
@@ -102,6 +147,20 @@ script:
     - vendor/bin/phpcs --standard=docs/LorisCS.xml --extensions=php/php,inc/php modules/training
     - vendor/bin/phpcs --standard=docs/LorisCS.xml --extensions=php/php,inc/php modules/brainbrowser
     - vendor/bin/phpcs --standard=docs/LorisCS.xml --extensions=php/php,inc/php modules/configuration
+<<<<<<< HEAD
 
     # Run JSLINT on specific scripts
     - jslint htdocs/js/jquery.dynamictable.js
+=======
+    - vendor/bin/phpcs --standard=docs/LorisCS.xml --extensions=php/php,inc/php modules/acknowledgements
+    - vendor/bin/phpcs --standard=docs/LorisCS.xml --extensions=php/php,inc/php modules/data_release
+
+    # Run JSLINT on specific scripts
+    - jslint htdocs/js/jquery.dynamictable.js
+
+    # Run unit tests to make sure functions still do what they should.
+    - vendor/bin/phpunit --configuration test/phpunit.xml --coverage-clover=coverage.xml
+
+after_success:
+    - bash <(curl -s https://codecov.io/bash)
+>>>>>>> aces/16.04-dev

@@ -1,5 +1,4 @@
 <?php
-require_once "NDB_Form.class.inc";
 
 /**
  * The forms for the new profile menu
@@ -16,14 +15,8 @@ class NDB_Form_create_timepoint extends NDB_Form
     {
         // create user object
         $user =& User::singleton();
-        if(Utility::isErrorX($user)) {
-            return PEAR::raiseError("User Error: ".$user->getMessage());
-        }
 
         $candidate =& Candidate::singleton($this->identifier);
-        if (Utility::isErrorX($candidate)) {
-            return PEAR::raiseError("Candidate Error ($this->identifier): ".$candidate->getMessage());
-        }
 
         // check user permissions
     	return ($user->hasPermission('data_entry') && $user->getData('CenterID') == $candidate->getData('CenterID'));
@@ -32,23 +25,14 @@ class NDB_Form_create_timepoint extends NDB_Form
     function _getDefaults()
     {
         $candidate =& Candidate::singleton($this->identifier);
-        if (Utility::isErrorX($candidate)) {
-            return PEAR::raiseError("Candidate Error ($this->identifier): ".$candidate->getMessage());
-        }
 
         $defaults['visitLabel'] = $candidate->getNextVisitLabel();
-        if (Utility::isErrorX($defaults['visitLabel'])) {
-            return PEAR::raiseError("create_timepoint::_getDefaults(): ".$defaults['visitLabel']->getMessage());
-        }
         return $defaults;
     }
 
     function _process($values)
     {
         $success = TimePoint::createNew($this->identifier, $values['subprojectID'], $values['visitLabel']);
-        if(Utility::isErrorX($success)) {
-            return PEAR::raiseError("create_timepoint::_process(): ".$success->getMessage());
-        }
 
         $this->tpl_data['success'] = true;
 
@@ -59,7 +43,6 @@ class NDB_Form_create_timepoint extends NDB_Form
     function create_timepoint()
     {
         $config =& NDB_Config::singleton();
-              
         if(!empty($_GET['subprojectID']) && is_numeric($_GET['subprojectID'])){
             $this->subprojectID=$_GET['subprojectID'];
         }
@@ -68,9 +51,6 @@ class NDB_Form_create_timepoint extends NDB_Form
         $this->tpl_data['candID'] = $this->identifier;
         $this->addHidden('candID', $this->identifier);
         $candidate =& Candidate::singleton($this->identifier);
-        if (Utility::isErrorX($candidate)) {
-            return PEAR::raiseError("Candidate Error ($this->identifier): ".$candidate->getMessage());
-        }
         $subprojList = null; 
         //List of valid subprojects for a given project
         if($config->getSetting('useProjects') === 'true') {
@@ -93,7 +73,7 @@ class NDB_Form_create_timepoint extends NDB_Form
             }
         }
         
-        $attributes=array("onchange"=>"location.href='main.php?test_name=create_timepoint&candID=".$this->identifier."&identifier=".$this->identifier."&subprojectID='+this[this.selectedIndex].value;");
+        $attributes=array("onchange"=>"location.href='?test_name=create_timepoint&candID=".$this->identifier."&identifier=".$this->identifier."&subprojectID='+this[this.selectedIndex].value;");
         $this->addSelect('subprojectID', 'Subproject', $sp_labelOptions, $attributes);
         $this->_setDefaults(array("subprojectID"=>$this->subprojectID));
         
@@ -155,14 +135,8 @@ class NDB_Form_create_timepoint extends NDB_Form
         }
 
         $candidate =& Candidate::singleton($this->identifier);
-        if (Utility::isErrorX($candidate)) {
-            return PEAR::raiseError("Candidate Error ($this->identifier): ".$candidate->getMessage());
-        }
 
         $timePointArray = $candidate->getListOfVisitLabels();
-        if (Utility::isErrorX($timePointArray)) {
-            return PEAR::raiseError("create_timepoint::_validate(): ".$timePointArray->getMessage());
-        }
 
         //If the visitLabel is already in use then let the user pick another
         foreach($timePointArray AS $used_label) {

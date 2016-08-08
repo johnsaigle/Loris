@@ -11,9 +11,6 @@
  * @link     https://www.github.com/aces/Loris-Trunk/
  */
 
-require_once "NDB_Form.class.inc";
-require_once "Utility.class.inc";
-
 /**
  * A class for holding a set of functions to update candidate 
  * info page.
@@ -42,25 +39,18 @@ class NDB_Form_candidate_parameters extends NDB_Form
     {
         // create user object
         $user =& User::singleton();
-        if (Utility::isErrorX($user)) {
-            return PEAR::raiseError("User Error: ".$user->getMessage());
-        }
 
         // check that the $candID is passed b/c the profile needs to be opened
         if ($this->identifier != $_REQUEST['candID']) {
-            return PEAR::raiseError("NDB_Form_candidate_parameters::_access: 
+            throw new LorisException("NDB_Form_candidate_parameters::_access: 
                        Candidate Profile Error (".$_REQUEST['candID']."): ");
         }
 
         $candidate =& Candidate::singleton($this->identifier);
-        if (Utility::isErrorX($candidate)) {
-            return PEAR::raiseError("Candidate Error 
-                           ($this->identifier): ".$candidate->getMessage());
-        }
 
         // check user permissions
-	return ($user->hasPermission('candidate_parameter_edit')  
-                && $user->getData('CenterID') == $candidate->getData('CenterID'));  
+        return ($user->hasPermission('candidate_parameter_edit')  
+            && $user->getData('CenterID') == $candidate->getData('CenterID'));  
     }
      /**
       * Returns default values for all candidate parameters
@@ -106,16 +96,12 @@ class NDB_Form_candidate_parameters extends NDB_Form
         $familyid = $DB->pselectOne("SELECT FamilyID from family WHERE 
                                     CandID=:CandidateID",
                                     array('CandidateID'=>$this->identifier));
-        if (Utility::isErrorX($familyid)) {
-            return PEAR::raiseError("Error: ".$familyid->getMessage());
-        } else {
-            $this->tpl_data['familyID'] = $familyid;
-            $relations                  = $DB->pselect("SELECT CandID, Relationship_type 
-                                          FROM family WHERE FamilyID=:fam_id AND 
-                                          CandID <> '$this->identifier'",
-                                          array('fam_id'=> $familyid));
+        $this->tpl_data['familyID'] = $familyid;
+        $relations                  = $DB->pselect("SELECT CandID, Relationship_type 
+            FROM family WHERE FamilyID=:fam_id AND 
+            CandID <> '$this->identifier'",
+            array('fam_id'=> $familyid));
 
-        }
         $this->tpl_data['sibling_list'] = array();
         foreach ($relations as $relation) {
             $relation['Relationship_type']    = $this->relationType[$relation['Relationship_type']];
@@ -282,48 +268,48 @@ class NDB_Form_candidate_parameters extends NDB_Form
 
        if (isset($values['FamilyMemberID'])) { 
            $fid = $DB->pselectOne("SELECT FamilyID FROM family WHERE CandID=:CaID", array('CaID' => $this->identifier));
-           if (Utility::isErrorX($fid)) {
-               return PEAR::raiseError("Could not family id: ".$fid->getMessage());
-           }
            if (empty($fid)) {
                $famID = $DB->pselectOne("SELECT max(FamilyID) from family");
-               if (Utility::isErrorX($famID)) {
-                   return PEAR::raiseError("Could not family id: ".$famID->getMessage());
-               }
                if (empty($famID)) {
                    $famID = 0;
                }
                $fid = $famID+1;
                $success = $DB->insert('family', array('CandID'=>$this->identifier, 'FamilyID'=>$fid,
                            'Relationship_type'=>$values['relation_type']));
-               if (Utility::isErrorX($success)) {
-                   return PEAR::raiseError("DB Error: ".$success->getMessage());
-               }
 
            }
 
            $value   = $values['FamilyMemberID'];
            $success = $DB->insert('family', array('CandID'=>$value,'FamilyID'=>$fid,
                                   'Relationship_type'=>$values['relation_type']));
-           if (Utility::isErrorX($success)) {
-               return PEAR::raiseError("DB Error: ".$success->getMessage());
-           }
           
        }
        // updating participant status
-       if (isset($values['participant_status']) || isset($values['reason_specify'])
-          || isset($values['reason_specify_status']) || isset($values['participant_suboptions'])) {
-           $participant_vals                       = array();
-           $participant_vals['participant_status'] = $values['participant_status'];
-           $sub_reasonID                           = $DB->pselectOne("SELECT ID FROM participant_status_options 
-                                                     WHERE Description=:sub_desc", 
-                                                     array('sub_desc' =>$values['participant_suboptions']));
-           if (empty($sub_reasonID)) {
-               $participant_vals['participant_suboptions'] = NULL;
-           } else {
-               $participant_vals['participant_suboptions'] = $sub_reasonID;
-           }
-           $participant_vals['participant_suboptions']= $values['participant_suboptions']; 
+        if (isset($values['participant_status']) || isset($values['reason_specify'])
+            || isset($values['reason_specify_status']) || isset($values['participant_suboptions'])) {
+            $participant_vals                       = array();
+            $participant_vals['participant_status'] = $values['participant_status'];
+
+            //Due to the AJAX call for dydnamic suboptions dropdown generation,
+            //the vavlue of $values['participant_suboptions'] could be either
+            //numeric (if coming from a previously "inactive" option or a string
+            //this if statement deals with the case
+
+            if (!is_numeric($values['participant_suboptions']))
+            {
+                $values['participant_suboptions']  = $DB->pselectOne("
+                                  SELECT ID
+                                  FROM participant_status_options
+                                  WHERE Description=:sub_desc",
+                    array('sub_desc' =>$values['participant_suboptions']));
+            }
+            /*if (empty($sub_reasonID)) {
+                $participant_vals['participant_suboptions'] = NULL;
+            } else {
+                $participant_vals['participant_suboptions'] = $sub_reasonID;
+            }
+             */
+           $participant_vals['participant_suboptions']= $values['participant_suboptions'];
            $participant_vals['entry_staff']           = $id;
            $participant_vals['reason_specify']        = $values['reason_specify'];
            $participant_vals['reason_specify_status'] = $values['reason_specify_status'];
@@ -345,29 +331,21 @@ class NDB_Form_candidate_parameters extends NDB_Form
                $success = $DB->insert("participant_status",$participant_vals);
            }
 
-           if (Utility::isErrorX($success)) {
-               return PEAR::raiseError(
-                       "NDB_Form_candidate_parameters::_process: ".$success->getMessage()
-                       );
-           }
-
-           $current_status = $DB->pselectOne("SELECT participant_status FROM participant_status_history
+           $current_status = $DB->pselectRow("SELECT * FROM participant_status_history
                                               WHERE CandID = :cid ORDER BY data_entry_date DESC", 
                                               array("cid"=>$values['CandID']) );
-           if($current_status != $participant_vals['participant_status']) {
+
+           if($current_status['participant_status'] != $participant_vals['participant_status'] ||
+               $current_status['entry_staff'] != $participant_vals['entry_staff'] ||
+               $current_status['reason_specify'] != $participant_vals['reason_specify'] ||
+               $current_status['participant_subOptions'] != $sub_reasonID) {
                $success = $DB->insert("participant_status_history", 
                           array('participant_status'=>$participant_vals['participant_status'], 
-                                'participant_suboptions'=>$participant_vals['participant_suboptions'],
+                                'participant_subOptions'=>$participant_vals['participant_suboptions'],
                                 'entry_staff'=>$participant_vals['entry_staff'],
                                 'CandID' => $participant_vals['CandID'],
                                 'reason_specify'=>$participant_vals['reason_specify'],
                                 'reason_specify_status'=>$participant_vals['reason_specify_status']));
-               if (Utility::isErrorX($success)) {
-                   return PEAR::raiseError(
-                           "NDB_Form_candidate_parameters::_process: ".$success->getMessage()
-                           );
-               }
-
            }
           
        }
@@ -444,9 +422,6 @@ class NDB_Form_candidate_parameters extends NDB_Form
         $config =& NDB_Config::singleton();
         
         $candidate =& Candidate::singleton($this->identifier);
-        if (Utility::isErrorX($candidate)) {
-            return PEAR::raiseError("Candidate Error ($this->identifier): ".$candidate->getMessage());
-        }
 
         // candID
         $this->tpl_data['candID'] = $candidate->getData('CandID');
@@ -778,7 +753,11 @@ class NDB_Form_candidate_parameters extends NDB_Form
             $active_family[] = $relative['CandID'];    
         }
         if (in_array($cand, $active_family)){
-            $errors['FamilyMemberID'] = 'CandID already entered as Sibling';    
+            $errors['FamilyMemberID'] = 'CandID already entered as sibling';
+        }
+        $CandID = $this->identifier;
+        if ($CandID == $cand) {
+            $errors['FamilyMemberID'] = 'Cannot enter candidate as own sibling';
         }
         if (empty($values['relation_type'])) {
             $errors['relation_type'] = 'Please specify relationship type';    

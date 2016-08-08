@@ -12,12 +12,6 @@
  * @link     https://www.github.com/aces/Loris-Trunk/
  */
 
-$user =& User::singleton();
-if (!$user->hasPermission('context_help')) {
-    header("HTTP/1.1 403 Forbidden");
-    exit;
-}
-
 set_include_path(get_include_path().":../project/libraries:../php/libraries:");
 ini_set('default_charset', 'utf-8');
 
@@ -30,10 +24,6 @@ require_once "HelpFile.class.inc";
 
 // create DB object
 $DB =& Database::singleton();
-if (Utility::isErrorX($DB)) {
-    return PEAR::raiseError("Could not connect to database: ".
-                             $DB->getMessage());
-}
 
 // store some request information
 if (!empty($_REQUEST['helpID'])) {

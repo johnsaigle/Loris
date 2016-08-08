@@ -37,6 +37,7 @@ class NDB_Page
 
     /**
      * Reference to the HTML QuickForm
+     *
      * @var LorisForm
      */
     var $form;
@@ -80,18 +81,20 @@ class NDB_Page
     /**
      * Wrapper to create a file element and add it to the current page
      *
-     * @param string $name  The name of this file element
-     * @param string $label The label to attach to this element
+     * @param string $name    The name of this file element
+     * @param string $label   The label to attach to this element
+     * @param array  $options Options to pass to the form for this
+     *                        file chooser.
      *
      * @return none
      */
-    function addFile($name, $label)
+    function addFile($name, $label, $options=array())
     {
         $this->form->addElement(
             'file',
             $name,
             $label,
-            array('class' => 'fileUpload')
+            array_merge(array('class' => 'fileUpload'), $options)
         );
     }
 
@@ -534,6 +537,54 @@ class NDB_Page
         $this->defaults = $defaults;
         $this->form->setDefaults($defaults);
         return $defaults;
+    }
+
+    /**
+     * Returns an ordered list of javascript dependencies that this page depends
+     * on.  These will get loaded into the template in order, so that
+     * interdependent files can be included in the correct order.
+     *
+     * @return array of strings with URLs to retrieve JS resources
+     */
+    function getJSDependencies()
+    {
+        $factory = NDB_Factory::singleton();
+        $config  = $factory->config();
+
+        $www     = $config->getSetting('www');
+        $baseurl = $www['url'];
+
+        $paths = $config->getSetting("paths");
+
+        $TestName = $this->name;
+
+        $files = array(
+                  $baseurl . '/js/jquery/jquery-1.11.0.min.js',
+                  $baseurl . '/js/helpHandler.js',
+                  $baseurl . '/js/modernizr.min.js',
+                  $baseurl . '/js/react-with-addons-0.13.3.min.js',
+                  $baseurl . '/js/jquery/jquery-ui-1.10.4.custom.min.js',
+                  $baseurl . '/js/jquery.dynamictable.js',
+                  $baseurl . '/js/jquery.fileupload.js',
+                  $baseurl . '/js/polyfiller.js',
+                  $baseurl . '/bootstrap/js/bootstrap.min.js',
+                  $baseurl . '/js/components/react.breadcrumb.js',
+                 );
+        if (file_exists($paths['base'] . "modules/$TestName/js/$TestName.js")) {
+            error_log(
+                "WARNING: Relying on $TestName.js getting automatically loaded will"
+                . " soon be removed. "
+                . "Override getJSDependencies() instead"
+            );
+
+            if (strpos($_SERVER['REQUEST_URI'], "main.php") === false
+            ) {
+                $files[] = $baseurl . "/$TestName/js/$TestName.js";
+            } else {
+                $files[] = $baseurl . "/GetJS.php?Module=$TestName";
+            }
+        }
+        return $files;
     }
 }
 ?>

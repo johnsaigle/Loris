@@ -11,8 +11,6 @@
  * @link     https://www.github.com/aces/Loris-Trunk/
  */
 
-require_once 'BVL_Feedback_Panel.class.inc';
-
 /**
  * Base class for all NeuroDB behavioural instruments
  *
@@ -72,18 +70,21 @@ class NDB_BVL_Instrument extends NDB_Page
 
     /**
      * String to separate the group elements
+     *
      * @access private
      */
     var $_GUIDelimiter = "</td>\n<td>";
 
     /**
      * Commonly used level of indentation
+     *
      * @access private
      */
     var $indent = "&nbsp;&nbsp;&nbsp;&nbsp;";
 
     /**
      * Array of required fields to check
+     *
      * @access private
      */
     var $_requiredElements = array();
@@ -120,6 +121,7 @@ class NDB_BVL_Instrument extends NDB_Page
     /**
      * Whether the "Validity" field is shown as a flag for an instrument
      * or not.
+     *
      * @access private
      */
     var $ValidityEnabled = true;
@@ -127,10 +129,18 @@ class NDB_BVL_Instrument extends NDB_Page
     /**
      * Whether the "Validity" field is required before flagging an instrument
      * as complete or not.
+     *
      * @access private
      */
     var $ValidityRequired = true;
 
+    /**
+     * True if the instrument page is being loaded by a script
+     * such as the quickform_parser where all elements should be added to form,
+     * ignoring age-dependent or other conditional display logic in the form.
+     * To be called from within individual instrument forms.
+     */
+    var $displayAllFields = false;
 
     /**
      * True if the page is being previewed from the instrument builder,
@@ -202,6 +212,11 @@ class NDB_BVL_Instrument extends NDB_Page
             // Now go ahead and instantiate it
             $obj = new $class;
             // Now go ahead and instantiate it
+        }
+
+        // if a script is loading this form without a commentID, display all fields
+        if (!isset($commentID)) {
+            $obj->displayAllFields = true;
         }
 
         // Sets up page variables such as $this->commentID and $this->form
@@ -542,17 +557,9 @@ class NDB_BVL_Instrument extends NDB_Page
             // the database
             $dataEntryCompletionStatus
                 = $this->_determineDataEntryCompletionStatus();
-            if (Utility::isErrorX($dataEntryCompletionStatus)) {
-                print "Could not determine DECS: "
-                    .  $dataEntryCompletionStatus->getMessage()
-                    ."<br>\n";
-            }
             $success = $this->_setDataEntryCompletionStatus(
                 $dataEntryCompletionStatus
             );
-            if (Utility::isErrorX($success)) {
-                print "Could not set DECS: ".$success->getMessage()."<br>\n";
-            }
         } else {
             $submittedData = $this->form->getSubmitValues();
 
@@ -607,60 +614,61 @@ class NDB_BVL_Instrument extends NDB_Page
         if (!empty($values['Date_taken'])) {
             $DB  = Database::singleton();
             $age = $this->getCandidateAge($values['Date_taken']);
-            if (!Utility::isErrorX($age)) {
-                $agedays   = $age['year']*365 + $age['mon']*30 + $age['day'];
-                $agemonths = $age['year']*12 + $age['mon'] + ($age['day']/30);
-                // 1 Decimal.
-                $agemonths = (round($agemonths*10) / 10.0);
-                if (!empty($age)) {
-                    $query_params = array(
-                                     'TN'  => $this->testName,
-                                     'CID' => $this->getCommentID(),
-                                    );
+            if (empty($age)) {
+                throw new LorisException("Candidate age could not be found.");
+            }
+            $agedays   = $age['year']*365 + $age['mon']*30 + $age['day'];
+            $agemonths = $age['year']*12 + $age['mon'] + ($age['day']/30);
+            // 1 Decimal.
+            $agemonths = (round($agemonths*10) / 10.0);
+            if (!empty($age)) {
+                $query_params = array(
+                                 'TN'  => $this->testName,
+                                 'CID' => $this->getCommentID(),
+                                );
 
-                    $validage = $DB->pselectOne(
-                        "SELECT MAX($agedays BETWEEN AgeMinDays AND AgeMaxDays)
-                            FROM test_battery tb
-                                JOIN flag f USING(Test_name)
-                                JOIN session s ON (s.ID=f.SessionID)
-                            WHERE tb.Active='Y'
-                                AND tb.Test_name=:TN
-                                AND tb.SubprojectID=s.SubprojectID
-                                AND f.CommentID=:CID",
+                $validage = $DB->pselectOne(
+                    "SELECT MAX($agedays BETWEEN AgeMinDays AND AgeMaxDays)
+                        FROM test_battery tb
+                            JOIN flag f USING(Test_name)
+                            JOIN session s ON (s.ID=f.SessionID)
+                        WHERE tb.Active='Y'
+                            AND tb.Test_name=:TN
+                            AND tb.SubprojectID=s.SubprojectID
+                            AND f.CommentID=:CID",
+                    $query_params
+                );
+                $values['Candidate_Age']     = $agemonths;
+                $values['Window_Difference'] = 0;
+
+                // Age isn't valid, so find out how far out it is
+
+                if ($validage == 0) {
+                    $Windows = $DB->pselect(
+                        "SELECT AgeMinDays, AgeMaxDays
+                        FROM test_battery tb
+                            JOIN flag f USING(Test_name)
+                            JOIN session s ON (s.ID=f.SessionID)
+                        WHERE tb.Active='Y' AND tb.Test_name=:TN
+                            AND tb.SubprojectID=s.SubprojectID
+                            AND f.CommentID=:CID",
                         $query_params
                     );
-                    $values['Candidate_Age']     = $agemonths;
-                    $values['Window_Difference'] = 0;
-
-                    // Age isn't valid, so find out how far out it is
-
-                    if ($validage == 0) {
-                        $Windows = $DB->pselect(
-                            "SELECT AgeMinDays, AgeMaxDays
-                            FROM test_battery tb
-                                JOIN flag f USING(Test_name)
-                                JOIN session s ON (s.ID=f.SessionID)
-                            WHERE tb.Active='Y' AND tb.Test_name=:TN
-                                AND tb.SubprojectID=s.SubprojectID
-                                AND f.CommentID=:CID",
-                            $query_params
-                        );
-                        foreach ($Windows as $window) {
-                            if ($agedays < $window['AgeMinDays']) {
-                                $delta = $window['AgeMinDays'] - $agedays;
-                                if (abs($delta) < abs($values['Window_Difference'])
-                                    || $values['Window_Difference'] == 0
-                                ) {
-                                    $values['Window_Difference'] = 0-abs($delta);
-                                }
+                    foreach ($Windows as $window) {
+                        if ($agedays < $window['AgeMinDays']) {
+                            $delta = $window['AgeMinDays'] - $agedays;
+                            if (abs($delta) < abs($values['Window_Difference'])
+                                || $values['Window_Difference'] == 0
+                            ) {
+                                $values['Window_Difference'] = 0-abs($delta);
                             }
-                            if ($agedays > $window['AgeMaxDays']) {
-                                $delta = $agedays - $window['AgeMaxDays'];
-                                if (abs($delta) < abs($values['Window_Difference'])
-                                    || $values['Window_Difference'] == 0
-                                ) {
-                                    $values['Window_Difference'] = abs($delta);
-                                }
+                        }
+                        if ($agedays > $window['AgeMaxDays']) {
+                            $delta = $agedays - $window['AgeMaxDays'];
+                            if (abs($delta) < abs($values['Window_Difference'])
+                                || $values['Window_Difference'] == 0
+                            ) {
+                                $values['Window_Difference'] = abs($delta);
                             }
                         }
                     }
@@ -1042,9 +1050,6 @@ class NDB_BVL_Instrument extends NDB_Page
     {
         // get a database connection
         $db =& Database::singleton();
-        if (Utility::isErrorX($db)) {
-            return $db;
-        }
 
         $query = "SELECT Subtest_name AS Name, Description
             FROM instrument_subtests
@@ -1052,9 +1057,6 @@ class NDB_BVL_Instrument extends NDB_Page
                 ORDER BY Order_number";
 
         $results = $db->pselect($query, array('TN' => $this->testName));
-        if (Utility::isErrorX($results)) {
-            return $results;
-        }
 
         return $results;
     }
@@ -2131,27 +2133,20 @@ class NDB_BVL_Instrument extends NDB_Page
             $controlPanel = new NDB_BVL_InstrumentStatus_ControlPanel;
             $success      = $controlPanel->select($_REQUEST['commentID']);
 
-            if (Utility::isErrorX($success)) {
-                $tpl_data['error_message'][] = $success->getMessage();
-            } else {
-                $config = NDB_Config::singleton();
-                $paths  = $config->getSetting('paths');
-                if (empty($subtest)) {
-                    // check if the file/class exists
-                    $BasePath = $paths['base'] . 'project/instruments/';
-                    $TestName = $this->testName;
-                    if (file_exists(
-                        $BasePath
-                        . "NDB_BVL_Instrument_$TestName.class.inc"
-                    )
-                        || file_exists($BasePath . "$TestName.linst")
-                    ) {
-                        // save possible changes from the control panel...
-                        $success = $controlPanel->save();
-                        if (Utility::isErrorX($success)) {
-                            $tpl_data['error_message'][] = $success->getMessage();
-                        }
-                    }
+            $config = NDB_Config::singleton();
+            $paths  = $config->getSetting('paths');
+            if (empty($subtest)) {
+                // check if the file/class exists
+                $BasePath = $paths['base'] . 'project/instruments/';
+                $TestName = $this->testName;
+                if (file_exists(
+                    $BasePath
+                    . "NDB_BVL_Instrument_$TestName.class.inc"
+                )
+                    || file_exists($BasePath . "$TestName.linst")
+                ) {
+                    // save possible changes from the control panel...
+                    $success = $controlPanel->save();
                 }
 
                 // display the control panel
@@ -2443,8 +2438,8 @@ class NDB_BVL_Instrument extends NDB_Page
      */
     function toJSON()
     {
-        $smarty   = new Smarty_neurodb;
-        $renderer = new HTML_QuickForm_Renderer_Array($smarty);
+        $smarty = new Smarty_neurodb;
+        //$renderer = new HTML_QuickForm_Renderer_Array($smarty);
 
         $subtests = $this->getSubtestList();
         foreach ($subtests as $subtest) {

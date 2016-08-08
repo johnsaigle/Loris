@@ -114,7 +114,7 @@
                                 <input type="submit" name="filter" id="filter" value="Show Data" class="btn btn-sm btn-primary col-xs-12 submit-button" />
                             </div>
                             <div class="col-sm-4">
-                                <input type="button" name="reset" value="Clear Form" class="btn btn-sm btn-primary col-xs-12" onclick="location.href='{$baseurl}/main.php?test_name=imaging_uploader&reset=true'" />
+                                <input type="button" name="reset" value="Clear Form" class="btn btn-sm btn-primary col-xs-12" onclick="location.href='{$baseurl}/imaging_uploader/?reset=true'" />
                             </div>
                         </div>
                     </div>
@@ -144,16 +144,42 @@
 </table>
 *}
 
+<div class="row">
+    <div class="col-sm-10 col-md-8">
+        <div class="panel panel-primary">
+            <div class="panel-heading" onclick="hideFilter();">
+                Log viewer
+            </div>
+            <div class="panel-body" id="panel-body">
+
+                    <div class="row">
+                        <div class="form-group col-sm-5">
+                            <label class="col-sm-4 col-md-4">
+                                Logs to display:
+                            </label>
+                            <div class="col-sm-4 col-md-4">
+                                {$form.LogType.html}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        {$form.UploadLogs.html}
+                    </div>
+             </div>
+        </div>
+   </div>
+</div>
+        
 <!--  title table with pagination -->
 <table border="0" valign="bottom" width="100%">
 <tr>
     <!-- display pagination links -->
-    <td align="right">{$page_links}</td>
+    <td align="right" id="pageLinks"></td>
 </tr>
 </table>
 
 <div class="row">
-    <table class ="dynamictable table table-hover table-primary table-bordered" border="0" width="100%">
+    <table id="mri_upload_table" class ="dynamictable table table-hover table-primary table-bordered" border="0" width="100%">
         <thead>
             <tr class="info">
                 <th nowrap="nowrap">
@@ -161,7 +187,7 @@
                 </th>
                 {section name=header loop=$headers}
                     <th nowrap="nowrap">
-                        <a href="main.php?test_name=imaging_uploader&filter[order][field]={$headers[header].name}&filter[order][fieldOrder]={$headers[header].fieldOrder}">
+                        <a href="{$baseurl}/imaging_uploader/?filter[order][field]={$headers[header].name}&filter[order][fieldOrder]={$headers[header].fieldOrder}">
                             {$headers[header].displayName}
                         </a>
                     </th>
@@ -173,10 +199,22 @@
                 <tr>
                     <!-- print out data rows -->
                     {section name=piece loop=$items[item]}
-                        {if $items[item][piece].name eq 'Tarchive_Info'}
+                        {if $items[item][piece].name eq 'Progress'}
                             {if $items[item][piece].value}
                                 <td nowrap="nowrap">
-                                    <a href="main.php?test_name=dicom_archive&subtest=viewDetails&tarchiveID={$items[item][piece].value}">
+                                        {if {$items[item][piece].value} eq 'Success'}
+                                            {$items[item][piece].value} ({$items[item][10].value} out of {$items[item][11].value})
+                                        {else}
+                                            {$items[item][piece].value}
+                                        {/if}
+                                </td>
+                            {else}
+                                <td nowrap="nowrap"> </td>
+                            {/if}
+                        {elseif $items[item][piece].name eq 'Tarchive_Info'}
+                            {if $items[item][piece].value}
+                                <td nowrap="nowrap">
+                                    <a href="{$baseurl}/dicom_archive/viewDetails/?tarchiveID={$items[item][piece].value}">
                                         View Details
                                     </a>
                                 </td>
@@ -186,7 +224,7 @@
                         {elseif $items[item][piece].name eq 'number_of_mincInserted'}
                             {if (!empty($items[item][piece].value)) and $items[item][piece].value >0}
                                 <td nowrap="nowrap">
-                                    <a href="main.php?test_name=imaging_browser&DCCID={$items[item][2].value}&filter=true">
+                                    <a href="{$baseurl}/imaging_browser/?DCCID={$items[item][3].value}&filter=true">
                                         {$items[item][piece].value}
                                     </a>
                                 </td>
@@ -208,3 +246,15 @@
         </tbody>
     </table>
 </div>
+<script>
+var pageLinks = RPaginationLinks(
+{
+    RowsPerPage : {$rowsPerPage},
+    Total: {$numUploads},
+    onChangePage: function(pageNum) {
+        location.href="{$baseurl}/imaging_uploader/?filter[order][field]={$filterfield}&filter[order][fieldOrder]={$filterfieldOrder}&pageID=" + pageNum
+    },
+    Active: {$pageID}
+});
+React.render(pageLinks, document.getElementById("pageLinks"));
+</script>

@@ -11,9 +11,6 @@
  * @link     https://www.github.com/aces/Loris
  */
 
-require_once 'NDB_Menu_Filter.class.inc';
-require_once 'NDB_Form.class.inc';
-
 /**
  * Examiner module menu filter form
  *
@@ -301,7 +298,7 @@ class NDB_Menu_Filter_Form_Examiner extends NDB_Menu_Filter_Form
              'radiologist' => $radiologist,
             )
         );
-        header("Location: main.php?test_name=examiner", true, 303);
+        header("Location: {$baseurl}/examiner/", true, 303);
     }
 
     /**

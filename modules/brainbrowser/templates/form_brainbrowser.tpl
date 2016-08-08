@@ -1,29 +1,21 @@
+<link rel="stylesheet" type="text/css" href="{$baseURL}/GetCSS.php?Module=brainbrowser&file=volume-viewer-demo.css">
+
 {literal}
-
-    <script type="text/javascript" src="GetJS.php?Module=brainbrowser&file=jquery.mousewheel.min.js"></script>
-    <script type="text/javascript" src="GetJS.php?Module=brainbrowser&file=three.min.js"></script>
-
-    <script type="text/javascript" src="GetJS.php?Module=brainbrowser&file=brainbrowser.volume-viewer.min.js"></script>
-    <script type="text/javascript" src="GetJS.php?Module=brainbrowser&file=brainbrowser.config.js"></script>
-
-
     <script id="overlay-ui-template" type="x-volume-ui-template">
         <div class="row">
             <div class="overlay-viewer-display" id="panel-size"></div>
-            <div class="form-group col-sm-3">
+            <div class="form-group col-sm-3 col-xs-12">
                 <div class="panel panel-default">
                     <div class="panel-heading">
 
-                        <div class="filename clickable"></div>
-                        <h3 class="panel-title filename clickable">Overlay</h3>
-
-                        <span class="arrow glyphicon glyphicon-chevron-down clickable"></span>
+                        <div class="filename"></div>
+                        <h3 class="panel-title filename">Overlay</h3>
 
                     </div>
                 </div>
             
                 <div class="volume-viewer-controls volume-controls">
-                    <div class="filename-overlay clickable"  style="display: block; margin:auto;"></div>
+                    <div class="filename-overlay"  style="display: block; margin:auto;"></div>
 
 
                     <div class="blend-div" data-volume-id="{{VOLID}}">
@@ -67,7 +59,7 @@
     <script id="volume-ui-template4d" type="x-volume-ui-template">
         <div class="row">
         <div class="volume-viewer-display"></div>
-            <div class="form-group col-sm-3">
+            <div class="form-group col-sm-3 col-xs-12">
                 <div class="panel panel-default" id="subpanel-filename-{{VOLID}}">
                     <div class="panel-heading" id="mri-panel-filename-{{VOLID}}">
 
@@ -120,30 +112,40 @@
                                 Voxel Coordinates
                             </div>
                             <div class="voxel-coords" data-volume-id="{{VOLID}}">
-                                X<input id="voxel-x-{{VOLID}}" class="control-inputs">
-                                Y<input id="voxel-y-{{VOLID}}" class="control-inputs">
-                                Z<input id="voxel-z-{{VOLID}}" class="control-inputs">
+                                X<input id="voxel-i-{{VOLID}}" class="control-inputs">
+                                Y<input id="voxel-j-{{VOLID}}" class="control-inputs">
+                                Z<input id="voxel-k-{{VOLID}}" class="control-inputs">
                             </div>
 
                             <hr />
 
                             <div id="intensity-value-div-{{VOLID}}">
-                                <span class="control-heading" data-volume-id="{{VOLID}}">
-                                Intensity Value
-                                </span>
-                                <span id="intensity-value-{{VOLID}}" class="intensity-value control-inputs"></span>
-                                <span id="intensity-value-bg-{{VOLID}}" class="intensity-value control-inputs" style="height:20px"></span>
+                              <span class="control-heading intensity-heading" data-volume-id="{{VOLID}}">
+                                Intensity Value:
+                              </span>
+                              <span id="intensity-value-{{VOLID}}" class="control-inputs intensity-value"></span>
                             </div>
 
-                            <div id="time-{{VOLID}}" class="time-div" data-volume-id="{{VOLID}}" style="display: none">
-                                <span class="control-heading">Time</span>
+                            <div id="time-{{VOLID}}" class="time-div" data-volume-id="{{VOLID}}" style="display:none">
+                                <span class="control-heading">Time:</span>
                                 <input class="control-inputs time-inputs" value="0" id="time-val-{{VOLID}}"/>
                                 <span class="btn btn-sm btn-primary play-btn">
                                     <input type="checkbox" class="button ui-helper-hidden-accessible" id="play-{{VOLID}}">
                                     <label for="play-{{VOLID}}">Play</label>
                                 </span>
+                                <div class="slider volume-viewer-threshold" id="time-slider-{{VOLID}}"></div>
+                            </div>
 
-                                <div class="slider volume-viewer-threshold" id="threshold-time-slider-{{VOLID}}"></div>
+                            <div class="contrast-div" data-volume-id="{{VOLID}}">
+                              <span class="control-heading" id="contrast-heading{{VOLID}}">Contrast (0.0 to 2.0):
+                              <input class="control-inputs intensity-value" value="1.0" id="contrast-val"/></span>
+                              <div id="contrast-slider" class="slider volume-viewer-contrast"></div>
+                            </div>
+
+                            <div class="brightness-div" data-volume-id="{{VOLID}}">
+                              <span class="control-heading" id="brightness-heading{{VOLID}}">Brightness (-1 to 1):
+                              <input class="control-inputs intensity-value" value="0" id="brightness-val"/></span>
+                              <div id="brightness-slider" class="slider volume-viewer-brightness"></div>
                             </div>
 
                             <hr />
@@ -174,6 +176,11 @@
                 <label for="sync-volumes" id="sync-volumes" class="clickable btn btn-sm btn-primary">Sync Volumes</label>
             </span>
 
+            <span id="reset-wrapper" class="clickable">
+                <input type="button" class="button ui-helper-hidden-accessible" id="reset-view">
+                <label for="reset-view" id="reset-view" class="clickable btn btn-sm btn-primary">Reset View</label>
+            </span>
+
             <div class="btn-group">
                 <select id="panel-size" class="form-control panel-size clickable">
                     <option value="256" SELECTED>Choose Panel Size</option>
@@ -198,7 +205,4 @@
     <div id="brainbrowser"></div>
 
     <div id="loading" style="display: block; color: #064785; font-size: 40px; font-weight: bold; text-align: center; margin: auto;">LOADING...</div>
-
-    <script type="text/javascript" src="GetJS.php?Module=brainbrowser&file=brainbrowser.loris.js"></script>
-
 {/literal}

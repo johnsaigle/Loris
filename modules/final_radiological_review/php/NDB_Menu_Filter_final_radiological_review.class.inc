@@ -19,9 +19,6 @@
  *  @link       https://www.github.com/aces/Loris-Trunk/
  */
 
-require_once 'NDB_Menu_Filter.class.inc';
-require_once 'Candidate.class.inc';
-
 /**
  * Utility function to make things more human readable.
  *
@@ -106,9 +103,6 @@ class NDB_Menu_Filter_final_radiological_review extends NDB_Menu_Filter
     function _hasAccess()
     {
         $user =& User::singleton();
-        if (Utility::isErrorX($user)) {
-            return PEAR::raiseError("User Error: " .$user->getMessage());
-        }
         return $user->hasPermission('view_final_radiological_review');
     }
 
@@ -128,7 +122,7 @@ class NDB_Menu_Filter_final_radiological_review extends NDB_Menu_Filter
 
         $conflict_condition1 = "(CASE
             WHEN orig.review_results <> r.final_review_results THEN 'true'
-            WHEN orig.abnormal_atypical_exculsionary <> r.final_exclusionary
+            WHEN orig.abnormal_atypical_exclusionary <> r.final_exclusionary
                THEN 'true'
             WHEN r.Final_Review_Results <> r.Final_Review_Results2 THEN 'true'
             WHEN r.Final_Exclusionary <> r.Final_Exclusionary2 THEN 'true'
@@ -266,9 +260,6 @@ class NDB_Menu_Filter_final_radiological_review extends NDB_Menu_Filter
         }
         $list_of_sites = array(null =>'All');
         $sitesList = Utility::getSiteList(false);
-        if (Utility::isErrorX($sitesList)) {
-            return PEAR::raiseError("DB Error: ".$sitesList->getMessage());
-        }
         foreach ($sitesList as $key=>$value) {
             $list_of_sites[$key]= $value;
         } 

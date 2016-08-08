@@ -174,7 +174,7 @@ if [ ! -f ../SQL/0000-00-00-schema.sql ] ; then
 fi
 
 # Create some subdirectories, if needed.
-mkdir -p ../project ../project/data ../project/libraries ../project/instruments ../project/templates ../project/tables_sql ../smarty/templates_c
+mkdir -p ../project ../project/data ../project/libraries ../project/instruments ../project/templates ../project/tables_sql ../project/modules ../smarty/templates_c
 
 # Setting 777 permissions for templates_c
 chmod 777 ../smarty/templates_c
@@ -190,11 +190,11 @@ else
 fi
 
 if [ $os_distro = "Ubuntu" ]; then
-    chown www-data.www-data ../modules/document_repository/user_uploads
+    sudo chown www-data.www-data ../modules/document_repository/user_uploads
 elif [ $os_distro = "CentOS" ]; then
-    chown apache.apache ../modules/document_repository/user_uploads
+    sudo chown apache.apache ../modules/document_repository/user_uploads
 else
-    echo "$os_distro Linux distribution detected. We currently do not support this. Please manually set the permissions for user_uploads directory in ../modules/document_repository"
+    echo "$os_distro Linux distribution detected. We currently do not support this. Please manually chown/chgrp the user_uploads directory in ../modules/document_repository to the web server"
 fi
 
 
@@ -203,9 +203,9 @@ if [ -d logs ]; then
     chmod 770 logs
     # Set the group to 'www-data' or 'apache' for tools/logs directory:
     if [ $os_distro = "Ubuntu" ]; then
-        chgrp www-data logs
+        sudo chgrp www-data logs
     elif [ $os_distro = "CentOS" ]; then
-        chgrp apache logs
+        sudo chgrp apache logs
     else
         echo "$os_distro Linux distribution detected. We currently do not support this. Please manually set the permissions for user_uploads directory in ../modules/document_repository"
     fi
@@ -372,7 +372,7 @@ while true; do
         [Yy]* )
             echo ""
             echo "Attempting to create and grant privileges to MySQL user '$mysqluser'@'$mysqluserhost' ..."
-            echo "GRANT UPDATE,INSERT,SELECT,DELETE ON $mysqldb.* TO '$mysqluser'@'$mysqluserhost' IDENTIFIED BY '$mysqlpass' WITH GRANT OPTION" | mysql $mysqldb -h$mysqlhost --user=$mysqlrootuser --password="$mysqlrootpass" -A > /dev/null 2>&1
+            echo "GRANT UPDATE,INSERT,SELECT,DELETE,CREATE TEMPORARY TABLES ON $mysqldb.* TO '$mysqluser'@'$mysqluserhost' IDENTIFIED BY '$mysqlpass' WITH GRANT OPTION" | mysql $mysqldb -h$mysqlhost --user=$mysqlrootuser --password="$mysqlrootpass" -A > /dev/null 2>&1
             MySQLError=$?;
             if [ $MySQLError -ne 0 ] ; then
                 echo "Could not connect to database with $mysqlrootuser user provided.";
@@ -396,6 +396,11 @@ while true; do
             echo "Creating/populating database tables from schema."
             echo ""
             mysql $mysqldb -h$mysqlhost --user=$mysqlrootuser --password="$mysqlrootpass" -A 2>&1 < ../SQL/0000-00-00-schema.sql
+            mysql $mysqldb -h$mysqlhost --user=$mysqlrootuser --password="$mysqlrootpass" -A 2>&1 < ../SQL/0000-00-01-Permission.sql
+            mysql $mysqldb -h$mysqlhost --user=$mysqlrootuser --password="$mysqlrootpass" -A 2>&1 < ../SQL/0000-00-02-Menus.sql
+            mysql $mysqldb -h$mysqlhost --user=$mysqlrootuser --password="$mysqlrootpass" -A 2>&1 < ../SQL/0000-00-03-ConfigTables.sql
+            mysql $mysqldb -h$mysqlhost --user=$mysqlrootuser --password="$mysqlrootpass" -A 2>&1 < ../SQL/0000-00-04-Help.sql
+            mysql $mysqldb -h$mysqlhost --user=$mysqlrootuser --password="$mysqlrootpass" -A 2>&1 < ../SQL/0000-00-99-indexes.sql
             echo "Updating Loris admin user's password."
             pw_expiry=$(date --date="6 month" +%Y-%m-%d)
             echo "Updating admin password reset date to be $pw_expiry"
@@ -464,10 +469,10 @@ echo "Ubuntu distribution detected."
                 sed -e "s#%LORISROOT%#$RootDir#g" \
                     -e "s#%PROJECTNAME%#$projectname#g" \
       	            -e "s#%LOGDIRECTORY%#$logdirectory#g" \
-                    < ../docs/config/apache2-site | tee /etc/apache2/sites-available/$projectname.conf > /dev/null
-                ln -s /etc/apache2/sites-available/$projectname.conf /etc/apache2/sites-enabled/$projectname.conf
-                a2dissite 000-default
-                a2ensite $projectname.conf
+                    < ../docs/config/apache2-site | sudo tee /etc/apache2/sites-available/$projectname.conf > /dev/null
+                sudo ln -s /etc/apache2/sites-available/$projectname.conf /etc/apache2/sites-enabled/$projectname.conf
+                sudo a2dissite 000-default
+                sudo a2ensite $projectname.conf
                 break;;
             [Nn]* )
                 echo "Not configuring apache."
@@ -493,9 +498,9 @@ while true; do
             sed -e "s#%LORISROOT%#$RootDir#g" \
                 -e "s#%PROJECTNAME%#$projectname#g" \
                 -e "s#%LOGDIRECTORY%#$logdirectory#g" \
-                < ../docs/config/apache2-site | tee /etc/httpd/conf.d/$projectname.conf > /dev/null
+                < ../docs/config/apache2-site | sudo tee /etc/httpd/conf.d/$projectname.conf > /dev/null
             
-            service httpd restart
+            sudo service httpd restart
             break;;
         [Nn]* )
             echo "Not configuring apache."

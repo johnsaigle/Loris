@@ -11,7 +11,6 @@
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
-require_once 'NDB_Page.class.inc';
 
 /**
  * Base Menu class
@@ -26,6 +25,7 @@ class NDB_Menu extends NDB_Page
 {
     /**
      * The menu's name
+     *
      * @var    string
      * @access private
      */
@@ -33,6 +33,7 @@ class NDB_Menu extends NDB_Page
 
     /**
      * The menu's mode
+     *
      * @var    string
      * @access private
      */
@@ -40,6 +41,7 @@ class NDB_Menu extends NDB_Page
 
     /**
      * The template data for Smarty
+     *
      * @var    array
      * @access private
      */
@@ -86,9 +88,10 @@ class NDB_Menu extends NDB_Page
         }
 
         //set the baseurl of the tpl_data
-        $config =& NDB_Config::singleton();
-        $www    = $config->getSetting('www');
-        $obj->tpl_data['baseurl'] = $www['url'];
+        $factory  = NDB_Factory::singleton();
+        $settings = $factory->settings();
+
+        $obj->tpl_data['baseurl'] = $settings->getBaseURL();
 
         return $obj;
     }
