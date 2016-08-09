@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="{$baseurl}/css/c3.css">
-
 <div class="row">
     <div class="col-lg-8">
+
 
         <!-- Welcome panel -->
         <div class="panel panel-default">
@@ -22,6 +22,21 @@
             {/if}
         </div>
 
+<!-- The overlay -->
+<div id="myNav" class="overlay">
+
+<!-- Button to close the overlay navigation -->
+<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+
+<!-- Overlay content -->
+<div class="overlay-content">
+<p>Welcome to the <span class="logo">CBIGR</span> repository.</p>
+<a href="#" onClick="closeNav()">QPN</a>
+<a href="#" onClick="closeNav()">QC</a>
+<a href="#" onClick="closeNav()">CSF</a>
+</div>
+
+</div>
         <!-- Recruitment -->
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -255,3 +270,4 @@
 
     </div>
 </div>
+

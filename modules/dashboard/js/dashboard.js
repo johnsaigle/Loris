@@ -76,6 +76,7 @@ $(document).ready(function () {
     });
 });
 
+
 function applyFilter(test_name, filters) {
     var form = $('<form />', {
         "action" : loris.BaseURL + "/" + test_name + "/",
@@ -270,3 +271,15 @@ $.ajax({
     }
 });
 });
+
+/* Open */
+function openNav() {
+        document.getElementById("myNav").style.height = "100%";
+        document.getElementById("myNav").style.width = "100%";
+}
+
+/* Close */
+function closeNav() {
+        document.getElementById("myNav").style.height = "0%";
+        document.getElementById("myNav").style.width = "0%";
+}
