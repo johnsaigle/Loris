@@ -55,7 +55,6 @@ LEFT JOIN genome_loc
     ON (genome_loc.GenomeLocID = gca.location_id)
 WHERE 
 candidate.Entity_type = 'Human' AND
-candidate.Active = 'Y' AND
 genome_loc.chromosome LIKE :v_cpgchromosome AND
 genome_loc.StartLoc BETWEEN :v_cpgstartloc AND :v_cpgendloc
 ";
