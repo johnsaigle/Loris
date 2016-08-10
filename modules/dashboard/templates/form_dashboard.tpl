@@ -32,8 +32,8 @@
 <div class="overlay-content">
 <p>Welcome to the <span class="logo">C-BIG</span> Repository.</p>
 <p>Active projects:</p>
-<a href="#" onClick="closeNav()">QPN</a>
 <a href="#" onClick="closeNav()">QC</a>
+<a href="#" onClick="closeNav()">QPN</a>
 <a href="#" onClick="closeNav()">CSF</a>
 </div>
 
