@@ -10,7 +10,7 @@
 // Tissue Metrix dates are in the format n-M-Y, e.g. 6-Jan-2010. MySQL is Y-m-d, e.g. 2010-01-06
 function convert_date($csv_date) {
     if (!$csv_date) return;
-    $dateTime = DateTime::createFromFormat('n-M-Y', $csv_date);
+    $dateTime = DateTime::createFromFormat('j-M-Y', $csv_date);
     $date = date_format($dateTime, 'Y-m-d');
     return $date;
 }
