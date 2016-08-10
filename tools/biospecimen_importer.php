@@ -10,6 +10,7 @@ function print_usage_and_quit() {
     echo 'Usage: php biospecimen_import.php data_file.csv $CandID' . "\n";
     exit(1);
 }
+
 # Display help if used incorrectly
 // case of empty arguments
 if (!isset($argv[1]) || !isset($argv[2])){
@@ -24,6 +25,18 @@ if (!preg_match("/[A-Za-z0-9]*\.csv$/",$argv[1])) {
 // set vars base don command line arguments
 $data_file = $argv[1];
 $CandID = $argv[2];
+
+$answer = readline("Did you normalize the data?\t(Y/n) ");
+if ($answer != 'Y') {
+    echo "Normalizing data...";
+    $file_name = str_replace(".csv", "", $data_file);
+    exec ("tail -n +2 $data_file | perl rep.pl > $file_name" . "_processed.csv");
+    $data_file = $file_name . "_processed.csv";
+    echo " done.\n";
+    echo "Now using the new file $data_file as input.\n";
+    exit(1);
+}
+
 # include useful LORIS classes
 require_once __DIR__ . "/../vendor/autoload.php";
 require_once 'generic_includes.php';
