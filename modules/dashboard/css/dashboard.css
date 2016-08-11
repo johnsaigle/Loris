@@ -35,6 +35,9 @@
 .progress-bar-male {
     background-color: #1C70B6;
 }
+.progress-bar-male {
+    text-color: white;
+}
 .progress-bar-female {
     background-color: #2FA4E7;
 }
@@ -127,4 +130,9 @@
         top: 15px;
         right: 35px;
     }
+}
+
+a.biobank-links {
+    text-decoration: none;
+    color: white;
 }
