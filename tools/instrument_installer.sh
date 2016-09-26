@@ -100,6 +100,8 @@ do
                 then
                     echo -e "\tTable created!"
                     echo -e "\tThe new patch is located at ../project/tables_sql/$INSTRUMENT.sql."
+                    echo -e "=Contents"
+                    cat ../project/tables_sql/$INSTRUMENT.sql
                 fi
                 # Choose next action
                 echo -e "\n==Database Connection"
