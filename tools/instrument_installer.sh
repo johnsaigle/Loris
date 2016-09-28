@@ -18,6 +18,18 @@
 #   GNUv3 Licence.
 
 
+# Input: name of patch
+# Cat the contents of a patch to the command line
+print_patch_prompt() {
+    echo -en "Would you like to view the patch? (Y/n)\t"
+    read ANSWER
+    if [ "$ANSWER" == "Y" ] 
+    then
+        echo -e "\n=Contents"
+        cat ../project/tables_sql/$1.sql
+    fi
+}
+
 print_menu() {
     # Display menu
     echo -e "==== INSTRUMENT INSTALLER ===="
@@ -29,6 +41,7 @@ print_menu() {
 }
 
 get_mysql_credentials() {
+    echo -e "\n=Database credentials"
     echo -ne "\tEnter hostname:\t"
     read HOST
     echo -ne "\tEnter username (admin privileges required):\t"
@@ -38,6 +51,7 @@ get_mysql_credentials() {
     echo "Thank you."
 }
 
+### BEGIN SCRIPT ###
 
 # Check that we're in tools/ dir or die
 if [ $PWD != "/var/www/loris/tools" ]
@@ -55,14 +69,14 @@ do
     case $ANSWER in 
         # Begin case statement based on menu choice
         "1") 
-            INSTRUMENTS=()
-            INSTRUMENTS=($(ls ../project/instruments/{*.linst,*.class.inc}))
+            FILES=()
+            FILES=($(ls ../project/instruments/{*.linst,*.class.inc}))
             COUNT=0
 
             # Print instrument filepaths and convert them to filenames as we go
             echo -e "\n== Instrument Selection"
             echo "Please enter the number of the instrument you're interested in: "
-            for i in "${INSTRUMENTS[@]}" 
+            for i in "${FILES[@]}" 
             do
                 FILENAME=$(basename "$i")
                 echo -e "\t* [$COUNT] $FILENAME"
@@ -71,7 +85,7 @@ do
 
             # Get instrument choice from user
             ANSWER=1000
-            while [ "$ANSWER" -lt 0 -o "$ANSWER" -gt "${#INSTRUMENTS[@]}" ]
+            while [ "$ANSWER" -lt 0 -o "$ANSWER" -gt "${#FILES[@]}" ]
             do
                 echo -n "(Number?)     "
                 read ANSWER 
@@ -85,7 +99,7 @@ do
 
             # check file type -- stolen from StackOverflow at <http://stackoverflow.com/questions/965053/extract-filename-and-extension-in-bash>
             #TODO: Make this work better for double file extensions i.e. '.class.inc'
-            FILENAME=$(basename ${INSTRUMENTS[$ANSWER]})
+            FILENAME=$(basename ${FILES[$ANSWER]})
             EXTENSION="${FILENAME##*.}"
             INSTRUMENT="${FILENAME%.*}"
 
@@ -100,8 +114,7 @@ do
                 then
                     echo -e "\tTable created!"
                     echo -e "\tThe new patch is located at ../project/tables_sql/$INSTRUMENT.sql."
-                    echo -e "=Contents"
-                    cat ../project/tables_sql/$INSTRUMENT.sql
+                    print_patch_prompt $INSTRUMENT
                 fi
                 # Choose next action
                 echo -e "\n==Database Connection"
@@ -125,15 +138,14 @@ do
             fi
             ;; # end of 'patch creation' choice
         "2") 
-            echo "Selected 2."
-            PATCHES=()
-            PATCHES=($(ls ../project/tables_sql/*.sql))
+            FILES=()
+            FILES=($(ls ../project/tables_sql/*.sql))
 
             # Print patch filepaths and convert them to filenames as we go
             echo -e "\n== Instrument Selection"
             echo "Please select a patch:"
             count=0
-            for i in "${PATCHES[@]}" 
+            for i in "${FILES[@]}" 
             do
                 FILENAME=$(basename "$i")
                 echo -e "\t* [$count] $FILENAME"
@@ -142,7 +154,7 @@ do
 
             # Get instrument choice from user
             ANSWER=1000
-            while [ "$ANSWER" -lt 0 -o "$ANSWER" -gt "${#PATCHES[@]}" ]
+            while [ "$ANSWER" -lt 0 -o "$ANSWER" -gt "${#FILES[@]}" ]
             do
                 echo -en "(Number?)\t"
                 read ANSWER 
@@ -154,18 +166,19 @@ do
                 fi
             done
             echo "You chose $ANSWER"
-            FILENAME=$(basename ${PATCHES[$ANSWER]})
+            FILENAME=$(basename ${FILES[$ANSWER]})
             EXTENSION="${FILENAME##*.}"
             PATCH="${FILENAME%.*}"
             echo "Patch is $PATCH"
+            print_patch_prompt $PATCH
             get_mysql_credentials # function that prompts for and stores DB credentials
-            echo "Run the following? --> mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$INSTRUMENT.sql"
+            echo "Run the following? --> mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$PATCH.sql"
             echo -e "\t(Y/n)\t"
             read ANSWER
             if [ "$ANSWER" == "Y" ] 
             then
                 echo "Applying patch..."
-                mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$INSTRUMENT.sql
+                mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$PATCH.sql
             fi
             ;;
         "0")
