@@ -128,7 +128,7 @@ do
                     # TODO: use history, grep, and awk to suggest credentials to the user 
                     get_mysql_credentials
                     echo "Run the following? --> mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$INSTRUMENT.sql"
-                    echo -e "\t(Y/n)\t"
+                    echo -ne "\t(Y/n)\t"
                     read ANSWER
                     if [ "$ANSWER" == "Y" ] 
                     then
@@ -166,7 +166,6 @@ do
                     ANSWER=1000
                 fi
             done
-            echo "You chose $ANSWER"
             FILENAME=$(basename ${FILES[$ANSWER]})
             EXTENSION="${FILENAME##*.}"
             PATCH="${FILENAME%.*}"
@@ -181,6 +180,7 @@ do
                 echo "Applying patch..."
                 mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$PATCH.sql
             fi
+            echo "Patch applied!"
             ;;
         "3")
             echo -e "Please enter the MySQL table name of the instrument you would like to remove: \t"
