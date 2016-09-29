@@ -135,6 +135,7 @@ do
                         echo "Applying patch..."
                         mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$INSTRUMENT.sql
                     fi
+                    echo "Finished. Note that the test battery table must be updated manually."
                 fi
             fi
             ;; # end of 'patch creation' choice
