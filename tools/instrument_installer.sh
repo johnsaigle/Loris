@@ -173,7 +173,7 @@ do
             print_patch_prompt $PATCH
             get_mysql_credentials # function that prompts for and stores DB credentials
             echo "Run the following? --> mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$PATCH.sql"
-            echo -e "\t(Y/n)\t"
+            echo -ne "\t(Y/n)\t"
             read ANSWER
             if [ "$ANSWER" == "Y" ] 
             then
