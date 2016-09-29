@@ -43,11 +43,11 @@ print_menu() {
 
 get_mysql_credentials() {
     echo -e "\n=Database credentials"
-    echo -ne "\tEnter hostname:\t"
+    echo -ne "\tEnter hostname (-h flag):\t"
     read HOST
-    echo -ne "\tEnter username (admin privileges required):\t"
+    echo -ne "\tEnter username (-u flag; admin privileges required):\t"
     read USER
-    echo -ne "\tEnter name of database:\t"
+    echo -ne "\tEnter name of database (-A flag):\t"
     read DATABASE
     echo "Thank you."
 }
@@ -186,7 +186,6 @@ do
             echo -e "Please enter the MySQL table name of the instrument you would like to remove: \t"
             read TABLE
             echo -e "Generating deletion script..."
-            #TODO: create a patch to delete instruments: remove from test name, drop table, test subgroups, ...?
             FILEPATH="../project/tables_sql/uninstall_$TABLE.sql"
             if [ -e "$FILEPATH" ]
             then
@@ -201,7 +200,7 @@ do
             echo "Patch created. Contents:"
             cat $FILEPATH
             echo "Do you want to execute this patch now? (Maybe make a backup first...)"
-            echo -e "(Y/n)\t"
+            echo -en "(Y/n)\t"
             read ANSWER
             if [ "$ANSWER" == "Y" ] 
             then
@@ -209,7 +208,8 @@ do
                 echo "Uninstalling instrument..."
                 mysql -h $HOST -u $USER -p $DATABASE < $FILEPATH
             fi
-            echo "$TABLE is now uninstalled."
+            echo "$TABLE is now uninstalled. Patch will be deleted."
+            rm $FILEPATH
             ;;
         "0")
             exit;;
