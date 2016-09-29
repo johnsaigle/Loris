@@ -36,6 +36,7 @@ print_menu() {
     echo "Please select one of the following options."
     echo -e "\t[1] Create new patch file using generate_tables_sql_and_testnames.php"
     echo -e "\t[2] Run a MySQL patch"
+    echo -e "\t[3] Uninstall an instrument"
     echo -e "\t[0] Quit"
     echo -en "Make your choice:\t"
 }
@@ -181,6 +182,35 @@ do
                 mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$PATCH.sql
             fi
             ;;
+        "3")
+            echo -e "Please enter the MySQL table name of the instrument you would like to remove: \t"
+            read TABLE
+            echo -e "Generating deletion script..."
+            #TODO: create a patch to delete instruments: remove from test name, drop table, test subgroups, ...?
+            FILEPATH="../project/tables_sql/uninstall_$TABLE.sql"
+            if [ -e "$FILEPATH" ]
+            then
+                rm $FILEPATH # If already exists, delete and start fresh
+            fi
+            touch $FILEPATH
+            echo -e "DELETE FROM flag WHERE Test_name=\"$TABLE\";" >> $FILEPATH
+            echo -e "DELETE FROM instrument_subtests WHERE Test_name=\"$TABLE\";" >> $FILEPATH
+            echo -e "DELETE FROM test_battery WHERE Test_name=\"$TABLE\";" >> $FILEPATH
+            echo -e "DELETE FROM test_names WHERE Test_name=\"$TABLE\";" >> $FILEPATH
+            echo -e "DROP TABLE IF EXISTS $TABLE;" >> $FILEPATH
+            echo "Patch created. Contents:"
+            cat $FILEPATH
+            echo "Do you want to execute this patch now? (Maybe make a backup first...)"
+            echo -e "(Y/n)\t"
+            read ANSWER
+            if [ "$ANSWER" == "Y" ] 
+            then
+                get_mysql_credentials
+                echo "Uninstalling instrument..."
+                mysql -h $HOST -u $USER -p $DATABASE < $FILEPATH
+            fi
+            echo "$TABLE is now uninstalled."
+            ;;
         "0")
             exit;;
     esac # end of executable options
@@ -188,23 +218,11 @@ do
 done # while-true loop ends
         #TODO: Else... what? How does this work for manually coded instruments?
 
-
-
         # output intended changes (patch file)
-
-        # auto apply changes?
-        # if yes, get the following:
-        # username
-        # password (hidden)
-        # database name
 
         # Insert into test_names table 
         # Insert into test_subgroups table 
 
-        # else, save patch file (tables_sql)
-
         # run quickform parser and generate tables sql
-
-        # prompt to source tables_sql file (and display it)
 
         # prompt to run assign missing instruments or fix timepoint date
