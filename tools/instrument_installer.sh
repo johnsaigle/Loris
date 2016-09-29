@@ -179,8 +179,8 @@ do
             then
                 echo "Applying patch..."
                 mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$PATCH.sql
+                echo "Patch applied!"
             fi
-            echo "Patch applied!"
             ;;
         "3")
             echo -e "Please enter the MySQL table name of the instrument you would like to remove: \t"
@@ -207,9 +207,9 @@ do
                 get_mysql_credentials
                 echo "Uninstalling instrument..."
                 mysql -h $HOST -u $USER -p $DATABASE < $FILEPATH
+                echo "$TABLE is now uninstalled. Patch will be deleted."
+                rm $FILEPATH
             fi
-            echo "$TABLE is now uninstalled. Patch will be deleted."
-            rm $FILEPATH
             ;;
         "0")
             exit;;
