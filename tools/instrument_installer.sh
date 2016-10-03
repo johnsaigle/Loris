@@ -127,7 +127,7 @@ do
                     # TODO repurpose this into a function
                     # TODO: use history, grep, and awk to suggest credentials to the user 
                     get_mysql_credentials
-                    echo "Run the following? --> mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$INSTRUMENT.sql"
+                    echo "Run the following? --> mysql -h $HOST -u $USER -p -A $DATABASE < ../project/tables_sql/$INSTRUMENT.sql"
                     echo -ne "\t(Y/n)\t"
                     read ANSWER
                     if [ "$ANSWER" == "Y" ] 
@@ -173,7 +173,7 @@ do
             echo "Patch is $PATCH"
             print_patch_prompt $PATCH
             get_mysql_credentials # function that prompts for and stores DB credentials
-            echo "Run the following? --> mysql -h $HOST -u $USER -p $DATABASE < ../project/tables_sql/$PATCH.sql"
+            echo "Run the following? --> mysql -h $HOST -u $USER -p -A $DATABASE < ../project/tables_sql/$PATCH.sql"
             echo -ne "\t(Y/n)\t"
             read ANSWER
             if [ "$ANSWER" == "Y" ] 
