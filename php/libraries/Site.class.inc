@@ -10,9 +10,6 @@
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
-require_once "PEAR.php";
-require_once "Database.class.inc";
-require_once "User.class.inc";
 
 /**
  * A site object represents a site in the PSC table of
@@ -40,12 +37,14 @@ class Site
     {
         static $siteList = array();
         if (!isset($siteList[$centerID])) {
-            $siteList[$centerID] = new Site();
-            $error = $siteList[$centerID]->select($centerID);
-            if (Utility::isErrorX($error)) {
-                $message = $error->getMessage();
+            try {
+                $siteList[$centerID] = new Site();
+                $error = $siteList[$centerID]->select($centerID);
+            } catch(Exception $e) {
+                $message = $e->getMessage();
                 unset($siteList[$centerID]);
-                return PEAR::raiseError("Could not select site: ($message)");
+                throw new Exception("Could not select site ($message)", null, $e);
+
             }
         }
 
@@ -65,22 +64,11 @@ class Site
 
         // make a local reference to the Database object
         $db =& Database::singleton();
-        if (Utility::isErrorX($db)) {
-            return PEAR::raiseError(
-                "Could not connect to database: ".$db->getMessage()
-            );
-        }
 
         $query  = "SELECT Name, PSCArea, Alias, MRI_alias, Account, Study_site
                       FROM psc
                    WHERE CenterID = :CID";
         $result = $db->pselectRow($query, array('CID' => $centerID));
-
-        if (Utility::isErrorX($result)) {
-            return PEAR::raiseError(
-                "Could not retrieve site information form the Database"
-            );
-        }
 
         //store site data in the object property
         if (is_array($result) && count($result) > 0) {
@@ -88,7 +76,7 @@ class Site
                 $this->_siteInfo[$key] = $value;
             }
         } else {
-            return PEAR::raiseError("Invalid site\n");
+            throw new Exception("Invalid site");
         }
     }
 

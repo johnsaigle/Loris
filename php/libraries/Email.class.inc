@@ -17,8 +17,6 @@
  * @link     https://www.github.com/aces/Loris-Trunk/
  */
 
-require_once "PEAR.php";
-
 /**
  * Email class
  *
@@ -28,7 +26,7 @@ require_once "PEAR.php";
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris-Trunk/
  */
-class Email extends PEAR
+class Email
 {
     /**
      * Sends email using templates
@@ -57,7 +55,7 @@ class Email extends PEAR
         $bcc = ''
     ) {
         $config   =& NDB_Config::singleton();
-        $defaults = $config->getSetting('headers');
+        $defaults = $config->getSetting('mail');
 
         // set defaults
         if (empty($from)) {

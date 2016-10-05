@@ -11,7 +11,6 @@
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
-require_once 'PEAR.php';
 
 /**
  * Breadcrumb class
@@ -24,10 +23,11 @@ require_once 'PEAR.php';
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
-class NDB_Breadcrumb extends PEAR
+class NDB_Breadcrumb
 {
     /**
      * The breadcrumb
+     *
      * @var    array
      * @access private
      */
@@ -35,6 +35,7 @@ class NDB_Breadcrumb extends PEAR
 
     /**
      * The index of the last crumb
+     *
      * @var    int
      * @access private
      */
@@ -42,6 +43,7 @@ class NDB_Breadcrumb extends PEAR
 
     /**
      * The available parameters to build into the URL
+     *
      * @var    array
      * @access private
      */
@@ -49,6 +51,7 @@ class NDB_Breadcrumb extends PEAR
 
     /**
      * The user-friendly names for different forms or menus
+     *
      * @var    array
      * @access private
      */
@@ -58,6 +61,7 @@ class NDB_Breadcrumb extends PEAR
                                'instrument_list'  => 'TimePoint Details',
                                'timepoint_list'   => 'Candidate Profile',
                                'candidate_list'   => 'Access Profile',
+                               'datadict'         => 'Data Dictionary',
                               );
 
     /**
@@ -84,14 +88,31 @@ class NDB_Breadcrumb extends PEAR
         // go the the next crumb
         $this->_lastIndex++;
 
+        $tn = $this->_parameters['test_name'];
+        $st = $this->_parameters['subtest'];
+
+        unset($this->_parameters['test_name']);
+        unset($this->_parameters['subtest']);
         // set the query string
         $this->_breadcrumb[$this->_lastIndex]['query']
-            = Utility::unparse_str($this->_parameters);
+            = "/" . $tn. "/";
+        if (!empty($st)) {
+            $this->_breadcrumb[$this->_lastIndex]['query']
+                .= "/" . $st . "/";
+
+        }
+        $this->_breadcrumb[$this->_lastIndex]['query']
+            .= "?" . http_build_query($this->_parameters);
+
+        $this->_parameters['test_name'] = $tn;
+        $this->_parameters['subtest']   = $st;
 
         // set the crumb text
         if (!is_null($text)) {
             $this->_breadcrumb[$this->_lastIndex]['text'] = $text;
-        } elseif (!is_null($parameter)) {
+        } elseif (!is_null($parameter)
+            && !(isset($this->_userFriendlyNames[$this->_parameters[$parameter]]))
+        ) {
             $this->_breadcrumb[$this->_lastIndex]['text']
                 = ucwords(str_replace('_', ' ', $this->_parameters[$parameter]));
             $this->_breadcrumb[$this->_lastIndex]['text']
@@ -137,7 +158,6 @@ class NDB_Breadcrumb extends PEAR
      * Makes a breadcrumb
      *
      * @return array
-     * @throws PEAR_Error
      * @access public
      */
     function getBreadcrumb()
@@ -159,23 +179,10 @@ class NDB_Breadcrumb extends PEAR
 
         // create DB object
         $DB =& Database::singleton();
-        if (Utility::isErrorX($DB)) {
-            return PEAR::raiseError(
-                "Could not connect to database: ".$DB->getMessage()
-            );
-        }
 
         // set the 'instrument list' crumb text
         if (!empty($_REQUEST['sessionID'])) {
             $timePoint =& TimePoint::singleton($_REQUEST['sessionID']);
-            if (Utility::isErrorX($timePoint)) {
-                return PEAR::raiseError(
-                    "TimePoint Error ("
-                    . $_REQUEST['sessionID']
-                    . "): "
-                    . $timePoint->getMessage()
-                );
-            }
             $this->_userFriendlyNames['instrument_list']
                 = 'TimePoint '.$timePoint->getVisitLabel().' Details';
         }
@@ -183,14 +190,6 @@ class NDB_Breadcrumb extends PEAR
         // set the 'timepoint list' crumb text
         if (!empty($_REQUEST['candID'])) {
             $candidate =& Candidate::singleton($_REQUEST['candID']);
-            if (Utility::isErrorX($candidate)) {
-                return PEAR::raiseError(
-                    "Candidate Error ("
-                    . $_REQUEST['candID']
-                    . "): "
-                    . $candidate->getMessage()
-                );
-            }
             $this->_userFriendlyNames['timepoint_list']
                 = 'Candidate Profile '
                     . $candidate->getData('CandID')
@@ -209,9 +208,6 @@ class NDB_Breadcrumb extends PEAR
                 WHERE Test_name = :PTestname AND Subtest_name = :PSubtest",
                 $params
             );
-            if (Utility::isErrorX($result)) {
-                return PEAR::raiseError("DB Error: ".$result->getMessage());
-            }
 
             if (empty($result)) {
                 $this->_addCrumb(null, 'subtest', null, 'subtest');
@@ -229,9 +225,6 @@ class NDB_Breadcrumb extends PEAR
                 "SELECT Full_name FROM test_names WHERE Test_name = :PTestname",
                 $params
             );
-            if (Utility::isErrorX($result)) {
-                return PEAR::raiseError("DB Error: ".$result->getMessage());
-            }
 
             if (empty($result)) {
                 $this->_addCrumb('instrument_list', 'commentID', null, 'test_name');
@@ -261,7 +254,7 @@ class NDB_Breadcrumb extends PEAR
                        'candidate_list'   => array(
                                               'next'  => '',
                                               'unset' => '',
-                                             )
+                                             ),
                       );
 
         // loop through the crumbs according to the order above, or just

@@ -3,8 +3,7 @@
 <table border="0" valign="bottom" width="100%"><td class="controlPanelSection"><strong>Behavioral Battery of Instruments</strong></td></table>
 
 <!-- table with list of instruments and links to open them -->
-<div class="table-responsive">
-<table class="table table-hover table-bordered" cellpadding="2">
+<table class="table table-hover table-bordered dynamictable" cellpadding="2">
 {section name=group loop=$instruments}
     <!-- print the sub group header row -->
     <thead>
@@ -26,7 +25,7 @@
 	<tbody>
 	   	<tr{if $instruments[group][instrument].isDirectEntry} class="directentry"{/if}>
 	    	<td>
-		    	<a href="main.php?test_name={$instruments[group][instrument].testName}&candID={$candID}&sessionID={$sessionID}&commentID={$instruments[group][instrument].commentID}">
+                <a href="{$baseurl}/{$instruments[group][instrument].testName}/?commentID={$instruments[group][instrument].commentID}&sessionID={$sessionID}&candID={$candID}">
 	            {$instruments[group][instrument].fullName}</a></td>
 	    	<td>{$instruments[group][instrument].dataEntryStatus}</td>
 	    	<td>{$instruments[group][instrument].administrationStatus}</td>
@@ -35,7 +34,7 @@
 	        </td>
 			<td>
 				{if $instruments[group][instrument].isDdeEnabled }
-				    	<a href="main.php?test_name={$instruments[group][instrument].testName}&candID={$candID}&sessionID={$sessionID}&commentID={$instruments[group][instrument].ddeCommentID}">Double Data Entry</a>
+				    	<a href="{$baseurl}/{$instruments[group][instrument].testName}/?commentID={$instruments[group][instrument].ddeCommentID}&sessionID={$sessionID}&candID={$candID}">Double Data Entry</a>
 			   {/if}&nbsp;
 			</td>
 			<td>{if $instruments[group][instrument].isDdeEnabled }{$instruments[group][instrument].ddeDataEntryStatus}{/if}&nbsp;</td>
@@ -46,4 +45,9 @@
      <tr><td nowrap="nowrap">The battery has no registered instruments</td></tr>
 {/section}
 </table>
+  <div class="col-xs-12 row">
+  </div>
+  <div class="col-xs-12 row">
+    <button class="btn btn-primary" onclick="location.href='{$baseurl}/imaging_browser/viewSession/?sessionID={$sessionID}'">View Imaging data</button>
+  </div>
 </div>

@@ -1,4 +1,5 @@
 /*global document: false, $: false*/
+$(document).ready(function() {
 
 var scanLineChart, recruitmentPieChart, recruitmentBarChart, recruitmentLineChart;
 
@@ -58,7 +59,46 @@ $(document).ready(function () {
             scanLineChart.resize();
         }
     });
+
+    $(".new-scans").click(function(e) {
+        e.preventDefault();
+        applyFilter('imaging_browser', {"Pending" : "PN"});
+    });
+
+    $(".radiological-review").click(function(e) {
+        e.preventDefault();
+        applyFilter('final_radiological_review', {"Review_done" : "no"});
+    });
+
+    $(".pending-accounts").click(function(e) {
+        e.preventDefault();
+        applyFilter('user_accounts', {"pending" : "Y"});
+    });
 });
+
+function applyFilter(test_name, filters) {
+    var form = $('<form />', {
+        "action" : loris.BaseURL + "/" + test_name + "/",
+        "method" : "post"
+    });
+
+    var values = {
+        "reset" : "true",
+        "filter" : "Show Data"
+    }
+
+    $.extend(values, filters);
+
+    $.each(values, function(name, value) {
+        $("<input />", {
+            type: 'hidden',
+            name: name,
+            value: value
+        }).appendTo(form);
+    });
+
+    form.appendTo('body').submit();
+}
 
 function formatPieData(data) {
     "use strict";
@@ -97,7 +137,7 @@ function formatLineData(data) {
 
 // AJAX to get scan line chart data
 $.ajax({
-    url: 'AjaxHelper.php?Module=dashboard&script=get_scan_line_data.php',
+    url: loris.BaseURL + '/dashboard/ajax/get_scan_line_data.php',
     type: 'post',
     success: function(data) {
         var scanLineData = formatLineData(data);
@@ -105,7 +145,7 @@ $.ajax({
             bindto: '#scanChart',
             data: {
                 x: 'x',
-                x_format: '%m-%Y',
+                xFormat: '%m-%Y',
                 columns: scanLineData,
                 type: 'area-spline'
             },
@@ -136,9 +176,9 @@ $.ajax({
 
 // AJAX to get pie chart data
 $.ajax({
-    url: 'AjaxHelper.php?Module=dashboard&script=get_recruitment_pie_data.php',
+    url: loris.BaseURL + '/dashboard/ajax/get_recruitment_pie_data.php',
     type: 'post',
-    success: function(data) {
+        success: function(data) {
         var jsonData = $.parseJSON(data);
         var recruitmentPieData = formatPieData(jsonData);
         recruitmentPieChart = c3.generate({
@@ -160,7 +200,7 @@ $.ajax({
 
 // AJAX to get bar chart data
 $.ajax({
-    url: 'AjaxHelper.php?Module=dashboard&script=get_recruitment_bar_data.php',
+    url: loris.BaseURL + '/dashboard/ajax/get_recruitment_bar_data.php',
     type: 'post',
     success: function(data) {
         var recruitmentBarData = formatBarData(data);
@@ -193,7 +233,7 @@ $.ajax({
 
 // AJAX to get recruitment line chart data
 $.ajax({
-    url: 'AjaxHelper.php?Module=dashboard&script=get_recruitment_line_data.php',
+    url: loris.BaseURL + '/dashboard/ajax/get_recruitment_line_data.php',
     type: 'post',
     success: function(data) {
         var recruitmentLineData = formatLineData(data);
@@ -201,7 +241,7 @@ $.ajax({
             bindto: '#recruitmentChart',
             data: {
                 x: 'x',
-                x_format: '%m-%Y',
+                xFormat: '%m-%Y',
                 columns: recruitmentLineData,
                 type: 'area-spline'
             },
@@ -228,4 +268,5 @@ $.ajax({
         console.log(xhr);
         console.log("Details: " + desc + "\nError:" + err);
     }
+});
 });

@@ -24,10 +24,6 @@ require_once "HelpFile.class.inc";
 
 // create DB object
 $DB =& Database::singleton();
-if (Utility::isErrorX($DB)) {
-    return PEAR::raiseError("Could not connect to database: ".
-                             $DB->getMessage());
-}
 
 // store some request information
 if (!empty($_REQUEST['helpID'])) {
@@ -43,7 +39,7 @@ if (!empty($_REQUEST['helpID'])) {
 }
 $help_file       = HelpFile::factory($helpID);
 $data            = $help_file->toArray();
-$data['content'] = trim($data['content']);
+$data['content'] = utf8_encode(trim($data['content']));
 if (empty($data['content'])) {
     $data['content'] = 'Under Construction';
 }

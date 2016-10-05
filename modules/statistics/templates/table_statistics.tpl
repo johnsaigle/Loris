@@ -12,7 +12,7 @@
      - Visits (the visits to display)
      - Data (the data that populates the table)
  *}
-<script type="text/javascript" src="GetJS.php?Module=statistics&file=table_statistics.js"></script>
+<script type="text/javascript" src="{$baseurl}/statistics/js/table_statistics.js"></script>
 
 <h2 class="statsH2">{$Header}</h2>
 
@@ -216,15 +216,14 @@
                     {assign var="total" value=$total+$data[$proj][$subcat]}
                     <td class="total" >{$data[$proj][$subcat]|default:"0"}</td>
                 {/foreach}
-                <td class="total">
+                <td class="total" nowrap="nowrap">
                     {assign var="Numerator" value=$data[$proj][$Subcategories.0]}
                     {if $total > 0}
                         {assign var="percent" value={math equation="x*y/z" x=$Numerator y=100 z=$total format="%.0f"}}
                     {else}
                         {assign var="percent" value='0%'}
                     {/if}
-                    {$percent}%
-                (Total: {$total})
+                    {$percent}%<br>(Total: {$total})
                 </td>
             {/foreach}
             {* Totals for grand total *}
@@ -238,9 +237,10 @@
                     {/if}
                 </td>
             {/foreach}
-            <td class="total">
+            <td class="total" nowrap="nowrap">
                 {if $data.total != 0}
                     {math equation="x*y/z" x=$data.{'Cat'|cat: $Subcategories[0]} y=100 z=$data.total format="%.0f"}%
+                    <br>
                 {/if}
                 (Total: {$data.total})
             </td>

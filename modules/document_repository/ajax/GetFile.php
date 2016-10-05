@@ -14,6 +14,11 @@
  *
  */
 
+$user =& User::singleton();
+if (!$user->hasPermission('document_repository_view') && !$user->hasPermission('document_repository_delete')) {
+    header("HTTP/1.1 403 Forbidden");
+    exit;
+}
 
 // Load config file and ensure paths are correct
 set_include_path(
@@ -45,7 +50,7 @@ if (strpos("..", $File) !== false) {
 $FullPath = __DIR__ . "/../user_uploads/$File";
 
 if (!file_exists($FullPath)) {
-    error_log("ERROR: File $File does not exist");
+    error_log("ERROR: File $FullPath does not exist");
     header("HTTP/1.1 404 Not Found");
     exit(5);
 }

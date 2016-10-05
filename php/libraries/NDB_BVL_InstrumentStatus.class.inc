@@ -10,7 +10,6 @@
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
-require_once'ConflictDetector.class.inc';
 
 /**
  * Behavioural instrument status class
@@ -40,30 +39,39 @@ class NDB_BVL_InstrumentStatus
      * The set of valid options for the data entry flag
      */
     var $_dataEntryOptions = array(
-                              null, 'In Progress', 'Complete',
+                              null,
+                              'In Progress',
+                              'Complete',
                              );
 
     /**
      * The set of valid options for the administration flag
      */
     var $_administrationOptions = array(
-                                   null, 'None', 'Partial', 'All',
+                                   null,
+                                   'None',
+                                   'Partial',
+                                   'All',
                                   );
 
     /**
      * The set of valid options for the validity flag
      */
     var $_validityOptions = array(
-                             null, 'Valid', 'Questionable', 'Invalid',
+                             null,
+                             'Valid',
+                             'Questionable',
+                             'Invalid',
                             );
 
     /**
      * The set of valid options for the exclusion flag
      */
     var $_exclusionOptions = array(
-                              null, 'Fail', 'Pass',
+                              null,
+                              'Fail',
+                              'Pass',
                              );
-
 
     /**
      * Loads the object with the current status of the instrument
@@ -85,19 +93,13 @@ class NDB_BVL_InstrumentStatus
             WHERE CommentID=:CID";
         $row   = $db->pselectRow($query, array('CID' => $this->_commentID));
 
-        if (Utility::isErrorX($row)) {
-            print $row->getMessage();
-            return PEAR::raiseError(
-                "Could not retrieve instrument status data from database"
-            );
-        }
-
         // store the statuses into the _status property
         $this->_status = $row;
     } // end function select()
 
     /**
      * Gets the SessionID of the current instrument
+     *
      * @return int
      * @access public
      */
@@ -118,6 +120,7 @@ class NDB_BVL_InstrumentStatus
 
     /**
      * Gets the current administration status of the instrument
+     *
      * @return string
      */
     function getAdministrationStatus()
@@ -156,11 +159,11 @@ class NDB_BVL_InstrumentStatus
     function setDataEntryStatus($status)
     {
         if (!isset($this->_commentID)) {
-            return PEAR::raiseError("No instrument instance selected");
+            throw new Exception("No instrument instance selected");
         }
 
         if (!in_array($status, $this->_dataEntryOptions)) {
-            return PEAR::raiseError('Invalid data entry status');
+            throw new Exception('Invalid data entry status');
         }
 
         $GLOBALS['DB']->update(
@@ -169,9 +172,6 @@ class NDB_BVL_InstrumentStatus
             array('CommentID' => $this->_commentID)
         );
         $updateResult = $this->select($this->_commentID);
-        if (Utility::isErrorX($updateResult)) {
-            return PEAR::raiseError("Could not reload object data");
-        }
 
         // Run the ConflictDetector if the new status is Complete
         if ($status == 'Complete') {
@@ -179,19 +179,48 @@ class NDB_BVL_InstrumentStatus
                 ? $this->_commentID
                 : substr($this->_commentID, 4)
             );
+            $DDECommentId       = 'DDE_' . $principalCommentId;
 
-            $instrumentName = NDB_BVL_Battery::getInstrumentNameForCommentId(
-                $principalCommentId
+            $query = $GLOBALS['DB']->pselect(
+                "SELECT Data_entry FROM flag
+                WHERE CommentID=:PCID OR CommentID=:DDECID",
+                array(
+                 'PCID'   => $principalCommentId,
+                 'DDECID' => $DDECommentId,
+                )
             );
 
-            ConflictDetector::clearConflictsForInstance($principalCommentId);
-            $diff = ConflictDetector::detectConflictsForCommentIds(
-                $instrumentName,
-                $principalCommentId,
-                'DDE_'.$principalCommentId
-            );
-            ConflictDetector::recordUnresolvedConflicts($diff);
+            // Run ConflictDetector if Data_entry of SDE and DDE are both Complete
+            $count = 0;
+            foreach ($query as $key => $dataEntryStatus) {
+                if ($dataEntryStatus['Data_entry'] == 'Complete') {
+                    $count++;
+                }
+                if ($count > 1) {
+                    $instrumentName = NDB_BVL_Battery::getInstrumentNameForCommentId(
+                        $principalCommentId
+                    );
+
+                    ConflictDetector::clearConflictsForInstance($principalCommentId);
+                    $diff = ConflictDetector::detectConflictsForCommentIds(
+                        $instrumentName,
+                        $principalCommentId,
+                        $DDECommentId
+                    );
+                    ConflictDetector::recordUnresolvedConflicts($diff);
+                }
+            }
         }
+
+        // Remove conflicts for SDE & DDE form from the
+        // Conflict Resolver if new status is 'In Progress'
+        if ($this->getDataEntryStatus() != null && $status == 'In Progress') {
+            $deleteWhere1 = array('CommentId1' => $this->_commentID);
+            $deleteWhere2 = array('CommentId2' => $this->_commentID);
+            $GLOBALS['DB']->delete('conflicts_unresolved', $deleteWhere1);
+            $GLOBALS['DB']->delete('conflicts_unresolved', $deleteWhere2);
+        }
+
     }
 
     /**
@@ -205,11 +234,11 @@ class NDB_BVL_InstrumentStatus
     function setAdministrationStatus($status)
     {
         if (!isset($this->_commentID)) {
-            return PEAR::raiseError("No instrument instance selected");
+            throw new Exception("No instrument instance selected");
         }
 
         if (!in_array($status, $this->_administrationOptions)) {
-            return PEAR::raiseError('Invalid administration status');
+            throw new Exception('Invalid administration status');
         }
 
         $GLOBALS['DB']->update(
@@ -218,9 +247,6 @@ class NDB_BVL_InstrumentStatus
             array('CommentID' => $this->_commentID)
         );
         $updateResult = $this->select($this->_commentID);
-        if (Utility::isErrorX($updateResult)) {
-            return PEAR::raiseError("Could not reload object data");
-        }
     }
 
     /**
@@ -234,11 +260,11 @@ class NDB_BVL_InstrumentStatus
     function setValidityStatus($status)
     {
         if (!isset($this->_commentID)) {
-            return PEAR::raiseError("No instrument instance selected");
+            throw new Exception("No instrument instance selected");
         }
 
         if (!in_array($status, $this->_validityOptions)) {
-            return PEAR::raiseError('Invalid administration status');
+            throw new Exception('Invalid administration status');
         }
 
         $GLOBALS['DB']->update(
@@ -247,9 +273,6 @@ class NDB_BVL_InstrumentStatus
             array('CommentID' => $this->_commentID)
         );
         $updateResult = $this->select($this->_commentID);
-        if (Utility::isErrorX($updateResult)) {
-            return PEAR::raiseError("Could not reload object data");
-        }
     }
 
     /**
@@ -262,11 +285,11 @@ class NDB_BVL_InstrumentStatus
     function setExclusionStatus($status)
     {
         if (!isset($this->_commentID)) {
-            return PEAR::raiseError("No instrument instance selected");
+            throw new Exception("No instrument instance selected");
         }
 
         if (!in_array($status, $this->_exclusionOptions)) {
-            return PEAR::raiseError('Invalid exclusion status');
+            throw new Exception('Invalid exclusion status');
         }
 
         $GLOBALS['DB']->update(
@@ -275,9 +298,6 @@ class NDB_BVL_InstrumentStatus
             array('CommentID' => $this->_commentID)
         );
         $updateResult = $this->select($this->_commentID);
-        if (Utility::isErrorX($updateResult)) {
-            return PEAR::raiseError("Could not reload object data");
-        }
     }
 
-} // end class
+} // end of class

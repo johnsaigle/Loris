@@ -27,19 +27,19 @@
         <div class="col-xs-12">
             <label class="col-xs-6">Go to:</label>
             <div class="col-xs-6">
-                <a href="main.php?test_name=imaging_browser&subtest=viewSession&sessionID={$form.SessionID.html}" target="_blank">Imaging Browser</a>
+                <a href="{$baseurl}/imaging_browser/viewSession/?sessionID={$form.SessionID.html}" target="_blank">Imaging Browser</a>
             </div>
             <div class="col-xs-6 col-xs-offset-6">
-                <a href="main.php?test_name=radiology_review&candID={$form.CandID.html}&sessionID={$form.SessionID.html}&commentID={$form.CommentID.html}" target="_blank">Original Radiology Review</a>
+                <a href="{$baseurl}/{$form.CandID.html}/{$form.SessionID.html}/radiology_review/?commentID={$form.CommentID.html}" target="_blank">Original Radiology Review</a>
             </div>
         </div>
     </div>
-
+<div class="row">
     <div class="col-xs-12">
         <h3>Review Values</h3>
     </div>
-    <div class="table-responsive">
-        <table width="80%" class="table table-hover table-primary table-bordered">
+</div>
+        <table width="80%" class="table table-hover table-primary table-bordered dynamictable">
             <thead>
                 <tr class="info">
                     <th>Field</th>
@@ -104,15 +104,15 @@
                 </tr>
             </tbody>
         </table>
-    </div>
     <input type="submit" class="btn btn-sm btn-primary col-xs-4 col-sm-2" name="fire_away" value="Save" />
     {$form.hidden}
-</form>
+<!--/form-->
+<div class="row">
 <div class="col-xs-12">
     <h3>Change Log</h3>
 </div>
-<div class="table-responsive">
-    <table class="table table-hover table-primary table-bordered">
+</div>
+    <table class="table table-hover table-primary table-bordered dynamictable">
         <thead>
             <tr class="info">
                 <th>Time</th>
@@ -126,4 +126,4 @@
             {$form.history.html}
         </tbody>
     </table>
-</div>
+</form>

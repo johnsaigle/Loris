@@ -12,8 +12,6 @@
  * @link     https://github.com/aces/Loris-Trunk
  */
 
-require_once 'NDB_Menu_Filter.class.inc';
-
 /**
  * Menu_Filter_Form Class
  *
@@ -32,27 +30,22 @@ class NDB_Menu_Filter_Form extends NDB_Menu_Filter
 
 
     /**
-        * Saves the form
-        * Attempts to validate the form (using the defined rules) and
-        * saves the validated data into the database
-        *
-        * @return void
-        * @throws PEAR_Error
-        * @access public
-    */
+     * Saves the form
+     *
+     * Attempts to validate the form (using the defined rules) and
+     * saves the validated data into the database
+     *
+     * @return void
+     * @access public
+     */
     function save()
     {
         if (!isset($_REQUEST['filter'])
             && isset($_REQUEST['fire_away'])
             || !empty($_REQUEST['fire_away'])
-) {
+        ) {
             if ($this->form->validate()) {
                 $success = $this->form->process(array(&$this, "_save"), false);
-                if (Utility::isErrorX($success) ) {
-                    return PEAR::raiseError(
-                        "NDB_Form::save(): ". $success->getMessage()
-                    );
-                }
             }
         }
     }
@@ -70,8 +63,12 @@ class NDB_Menu_Filter_Form extends NDB_Menu_Filter
      */
     function _save($values)
     {
-        unset($values['test_name'], $values['subtest'],
-        $values['identifier'], $values['fire_away']);
+        unset(
+            $values['test_name'],
+            $values['subtest'],
+            $values['identifier'],
+            $values['fire_away']
+        );
 
         // clear any fields starting with __
         foreach (array_keys($values) AS $key) {
@@ -81,9 +78,6 @@ class NDB_Menu_Filter_Form extends NDB_Menu_Filter
         }
 
         $success = $this->_process($values);
-        if (Utility::isErrorX($success)) {
-            return PEAR::raiseError("NDB_Form::_save(): ".$success->getMessage());
-        }
     }
 
 
@@ -111,8 +105,7 @@ class NDB_Menu_Filter_Form extends NDB_Menu_Filter
      */
     function _resetForm()
     {
-        $this->form = new HTML_QuickForm('test_form');
+        $this->form = new LorisForm('test_form');
     }
-
 }
 ?>

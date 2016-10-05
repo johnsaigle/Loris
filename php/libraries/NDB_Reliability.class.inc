@@ -13,9 +13,7 @@
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
-require_once "NDB_Form.class.inc";
-require_once'RequiredIf.inc';
-
+require_once "NDB_BVL_Instrument.class.inc";
 /**
  * The class that implements base functionality for Reliability checking.
  *
@@ -29,10 +27,36 @@ class NDB_Reliability extends NDB_Form
 {
     /**
      * Class name
+     *
      * @var    string
      * @access private
      */
     var $reliability_center_id;
+
+
+    /**
+     * Override the default page form to use HTML_QuickForm instead of
+     * LorisForm. Reliability instruments aren't yet ready to use LorisForm,
+     * as they depend on a type of QuickForm renderer that is not implemented
+     * by LorisForm. This should be removed once that is fixed..
+     *
+     * @param string $name       The test name being accessed
+     * @param string $page       The subtest being accessed (may be null)
+     * @param string $identifier The identifier for the data to load on this page
+     * @param string $commentID  The CommentID to load the data for
+     * @param string $formname   The name to give this form
+     *
+     * @return none
+     */
+    function _setupPage($name, $page, $identifier, $commentID, $formname)
+    {
+        $this->form       = new HTML_QuickForm($formname);
+        $this->name       = $name;
+        $this->page       = $page;
+        $this->identifier = $identifier;
+        $this->commentID  = $commentID;
+        $this->defaults   = array();
+    }
 
 
     /**
@@ -45,13 +69,17 @@ class NDB_Reliability extends NDB_Form
      *
      * @return void
      */
-    static function &factory($name, $page, $identifier, $reliability_center_id)
-    {
+    static function &reliabilityfactory(
+        $name,
+        $page,
+        $identifier,
+        $reliability_center_id
+    ) {
         // check that the form class exists
         if (class_exists("NDB_Reliability_$name")) {
             $class = "NDB_Reliability_$name";
         } else {
-            return PEAR::raiseError("The form class ($name) is not defined.");
+            throw new Exception("The form class ($name) is not defined.");
         }
 
         // create a form instance
@@ -63,35 +91,20 @@ class NDB_Reliability extends NDB_Form
         $obj->reliability_center_id = $reliability_center_id;
 
         $access = $obj->_hasAccess();
-        if (Utility::isErrorX($access)) {
-            return PEAR::raiseError(
-                "NDB_Form::factory() access: ".$access->getMessage()
-            );
-        }
 
         // check that user has access
         if ($access == false) {
-            return PEAR::raiseError("You do not have access to this page.");
+            throw new Exception("You do not have access to this page.");
         }
 
         if (method_exists($obj, $page)) {
-            $success = $obj->$page();
-            if (Utility::isErrorX($success)) {
-                return PEAR::raiseError(
-                    "NDB_Form::factory() page: ".$success->getMessage()
-                );
-            }
+            $success       = $obj->$page();
             $obj->template = $page;
         } elseif (method_exists($obj, $name)) {
-            $success = $obj->$name();
-            if (Utility::isErrorX($success)) {
-                return PEAR::raiseError(
-                    "NDB_Form::factory() name: ".$success->getMessage()
-                );
-            }
+            $success       = $obj->$name();
             $obj->template = $name;
         } else {
-            return PEAR::raiseError("Form does not exist: $name $page");
+            throw new Exception("Form does not exist: $name $page");
         }
 
         return $obj;
@@ -119,11 +132,6 @@ class NDB_Reliability extends NDB_Form
 
         // get the defaults
         $localDefaults = $this->_getDefaults();
-        if (Utility::isErrorX($localDefaults)) {
-            return PEAR::raiseError(
-                "NDB_Form::display(): ".$localDefaults->getMessage()
-            );
-        }
         if (!is_array($localDefaults)) {
             $localDefaults = array();
         }
@@ -150,16 +158,12 @@ class NDB_Reliability extends NDB_Form
      * saves the validated data into the database
      *
      * @return void
-     * @throws PEAR_Error
      * @access public
      */
     function save()
     {
         if ($this->form->validate()) {
             $success = $this->form->process(array(&$this, "_save"), false);
-            if (Utility::isErrorX($success)) {
-                return PEAR::raiseError("NDB_Form::save(): ".$success->getMessage());
-            }
         }
     }
 
@@ -190,9 +194,6 @@ class NDB_Reliability extends NDB_Form
         }
 
         $success = $this->_process($values);
-        if (Utility::isErrorX($success)) {
-            return PEAR::raiseError("NDB_Form::_save(): ".$success->getMessage());
-        }
     }
 
     /**
@@ -407,33 +408,29 @@ class NDB_Reliability extends NDB_Form
      */
     function _getExaminerNames()
     {
-         $db       =& Database::singleton();
-         $user     =& User::singleton();
-         $centerID = $user->getCenterID();
+        $db       =& Database::singleton();
+        $user     =& User::singleton();
+        $centerID = $user->getCenterID();
 
-         // UofA is a special case--they never enter their own data.
-         // So the available examiners are either the ones at the logged
-         // in user's site, or UofA
-         $results = $db->pselect(
-             "SELECT examinerID, full_name
-                 FROM examiners
-             WHERE centerID IN (:CentID, 6)
-                 ORDER BY full_name",
-             array('CentID' => $centerID)
-         );
-        if ($db->isError($results)) {
-            return $this->raiseError(
-                "Could not get examiner names: ".$results->getMessage()
-            );
-        }
+        // UofA is a special case--they never enter their own data.
+        // So the available examiners are either the ones at the logged
+        // in user's site, or UofA
+        $results = $db->pselect(
+            "SELECT examinerID, full_name
+                FROM examiners
+            WHERE centerID IN (:CentID, 6)
+                ORDER BY full_name",
+            array('CentID' => $centerID)
+        );
 
-            $examiners = array('' => '');
+        $examiners = array('' => '');
+
         if (is_array($results) && !empty($results)) {
             foreach ($results AS $row) {
                 $examiners[$row['examinerID']] = $row['full_name'];
             }
         }
-            return $examiners;
+        return $examiners;
     }
 
     /**
