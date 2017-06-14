@@ -18,6 +18,37 @@
  *  @license  Loris license
  *  @link     https://github.com/aces/Loris-Trunk
  */
+/**
+ * This function is to replace PHP's extremely buggy realpath().
+ * @param string The original path, can be relative etc.
+ * @return string The resolved path, it might not exist.
+ */
+function truepath( $path )
+{
+    // whether $path is unix or not
+    $unipath = strlen( $path ) == 0 || $path{0} != '/';
+    // attempts to detect if path is relative in which case, add cwd
+    if ( strpos( $path, ':' ) === false && $unipath )
+        $path = getcwd() . DIRECTORY_SEPARATOR . $path;
+    // resolve path parts (single dot, double dot and double delimiters)
+    $path      = str_replace( array( '/', '\\' ), DIRECTORY_SEPARATOR, $path );
+    $parts     = array_filter( explode( DIRECTORY_SEPARATOR, $path ), 'strlen' );
+    $absolutes = array();
+    foreach ( $parts as $part ) {
+        if ( '.' == $part ) continue;
+        if ( '..' == $part ) {
+            array_pop( $absolutes );
+        } else {
+            $absolutes[ ] = $part;
+        }
+    }
+    $path = implode( DIRECTORY_SEPARATOR, $absolutes );
+    // resolve any symlinks
+    if ( file_exists( $path ) && linkinfo( $path ) > 0 ) $path = readlink( $path );
+    // put initial separator that could have been lost
+    $path = !$unipath ? '/' . $path : $path;
+    return $path;
+}
 
 
 // Load config file and ensure paths are correct
@@ -59,7 +90,7 @@ if ($imagePath === '/' || $DownloadPath === '/' || $mincPath === '/') {
 
 // Now get the file and do file validation.
 // Resolve the filename before doing anything.
-$File = realpath($_GET['file']);
+$File = $_GET['file'];
 
 // Extra sanity checks, just in case something went wrong with realpath.
 // File validation
@@ -92,58 +123,68 @@ if (strpos("..", $File) !== false) {
     exit(4);
 }
 
+$PathPrefix = '';
 switch($FileExt) {
 case 'mnc':
-    $FullPath         = $mincPath . '/' . $File;
+    $PathPrefix         = $mincPath;
     $MimeType         = "application/x-minc";
     $DownloadFilename = basename($File);
     break;
 case 'nii':
-    $FullPath         = $mincPath . '/' . $File;
+    $PathPrefix         = $mincPath;
     $MimeType         = "application/x-nifti";
     $DownloadFilename = basename($File);
     break;
 case 'nii.gz':
-    $FullPath         = $mincPath . '/' . $File;
+    $PathPrefix         = $mincPath;
     $MimeType         = "application/x-nifti-gz";
     $DownloadFilename = basename($File);
     break;
 case 'png':
-    $FullPath = $imagePath . '/' . $File;
+    $PathPrefix = $imagePath;
     $MimeType = "image/png";
     break;
 case 'jpg':
-    $FullPath = $imagePath . '/' . $File;
+    $PathPrefix = $imagePath;
     $MimeType = "image/jpeg";
     break;
 case 'header':
 case 'raw_byte.gz':
     // JIVs are relative to imagePath for historical reasons
     // And they don't have a real mime type.
-    $FullPath = $imagePath . '/' . $File;
+    $PathPrefix = $imagePath;
     $MimeType = 'application/octet-stream';
     break;
 case 'xml':
-    $FullPath         = $imagePath . '/' . $File;
+    $PathPrefix         = $imagePath;
     $MimeType         = 'application/xml';
     $DownloadFilename = basename($File);
     break;
 case 'nrrd':
-    $FullPath         = $imagePath . '/' . $File;
+    $PathPrefix         = $imagePath;
     $MimeType         = 'image/vnd.nrrd';
     $DownloadFilename = basename($File);
     break;
 default:
-    $FullPath         = $DownloadPath . '/' . $File;
+    $PathPrefix         = $DownloadPath;
     $MimeType         = 'application/octet-stream';
     $DownloadFilename = basename($File);
     break;
+}
+$FullPath = "$PathPrefix/$File";
+$TruePath = truepath($FullPath);
+// Check if the resolved 'true' path starts with the prefix.
+// If not, user supplied a relative path which is forbidden
+if (substr($TruePath, 0, strlen($PathPrefix)) !== $PathPrefix) {
+    error_log("ERROR: User supplied relative path. Potentially malicious.");
+    header("HTTP/1.1 400 Bad Request");
+    exit(5);
 }
 
 if (!file_exists($FullPath)) {
     error_log("ERROR: File $File does not exist");
     header("HTTP/1.1 404 Not Found");
-    exit(5);
+    exit(6);
 }
 
 header("Content-type: $MimeType");
