@@ -169,7 +169,7 @@ function moveFileToFS(&$fileToUpload)
     $validPreconditions = true;
 
     // update ui to show we are trying to move the file
-    reportProgress(98, "Copying file to $genomic_data_dir ");
+    reportProgress(98, "Copying file...");
     // file system validation
     if (!file_exists($fileToUpload->full_path)) {
         error_log("Specified path $fileToUpload->full_path does not exist.");
@@ -199,7 +199,7 @@ function moveFileToFS(&$fileToUpload)
         );
     }
     // update i to success if no problems encountered
-    reportProgress(99, "File copied to $genomic_data_dir ");
+    reportProgress(99, "File successfully uploaded!");
 }
 
 /**
