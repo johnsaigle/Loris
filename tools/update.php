@@ -97,6 +97,7 @@ function main() : void
                            "php$version-mbstring",
                            "php$version-gd",
                            "libapache2-mod-php$version",
+                           "php-ast",
                           ];
     // Create db connection
     $config    = \NDB_Config::singleton();
