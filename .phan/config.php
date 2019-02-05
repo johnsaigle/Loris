@@ -30,7 +30,6 @@ return [
 		"PhanTypeMismatchArgumentInternal",
 		"PhanTypeMismatchReturn",
 		"PhanTypeMismatchProperty",
-		"PhanNonClassMethodCall",
 		"PhanTypeArraySuspicious",
 	],
 	"analyzed_file_extensions" => ["php", "inc"],
