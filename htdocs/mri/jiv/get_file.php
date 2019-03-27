@@ -168,6 +168,12 @@ if (!file_exists($FullPath)) {
     exit(5);
 }
 
+if (!is_readable($FullPath)) {
+    error_log("ERROR: Apache user cannot read $File");
+    http_response_code(403);
+    exit(6);
+}
+
 header("Content-type: $MimeType");
 if (!empty($DownloadFilename)) {
 
