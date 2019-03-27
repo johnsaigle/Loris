@@ -42,7 +42,6 @@ class DicomArchiveRowProvisioner extends \LORIS\Data\Provisioners\DBRowProvision
             t.PatientGender as Gender,
             t.PatientDoB as `Date of birth`,
             t.DateAcquired as Acquisition,
-            t.ArchiveLocation as Archive_Location,
             'View Details' as Metadata,
             'View Images' as `MRI Browser`,
             (SELECT GROUP_CONCAT(SeriesUID) FROM tarchive_series e WHERE

@@ -122,7 +122,6 @@ class Dicom_Archive extends \NDB_Menu_Filter
                                  'Gender',
                                  'Date Of Birth',
                                  'Acquisition',
-                                 'Archive Location',
                                  'Metadata',
                                  'MRI Browser',
                                  'Seriesuid',
