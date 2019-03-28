@@ -73,13 +73,11 @@ function formatColumn(column, cell, rowData, rowHeaders) {
       log = 3;
     }
 
-    url = loris.BaseURL +
-            "/brainbrowser/?minc_id=" + log + "l" + row.JoinID;
     return (
            <td>
-            <a href= {url} target="_blank" >
+            <p>
             {cell}
-            </a>
+            </p>
            </td>
            );
   }
