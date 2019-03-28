@@ -37,10 +37,6 @@
         {/foreach}
         {foreach from=$subject.tarchiveIDLoc key=tarchive item=tarchiveLoc}
             <li><a href="{$baseurl}/dicom_archive/viewDetails/?tarchiveID={$tarchive}&backURL={$backURL|escape:"url"}">DICOM Archive {$tarchive}</a></li>
-            <li><a href="/mri/jiv/get_file.php?file={$tarchiveLoc}" class="btn btn-primary btn-small">
-                    <span class="glyphicon glyphicon-cloud-download"></span><span class="hidden-xs"> Download DICOM {$tarchive}</span>
-                </a>
-            </li>
         {/foreach}
         {if $mantis}
             <li><a target="mantis" href="{$issue_tracker_url}">Report a Bug (Mantis)</a></li>
