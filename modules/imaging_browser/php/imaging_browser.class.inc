@@ -135,7 +135,9 @@ class Imaging_Browser extends \NDB_Menu_Filter
             JOIN candidate c ON (c.CandID=s.CandID) 
             JOIN files f ON (f.SessionID=s.ID) 
             LEFT JOIN files_qcstatus fqc ON (fqc.FileID=f.FileID) 
-            JOIN mri_acquisition_dates md ON (md.SessionID=s.ID)";
+            JOIN mri_acquisition_dates md ON (md.SessionID=s.ID)
+            JOIN flag fl ON (fl.SessionID=s.ID)
+            JOIN handedness h ON (h.CommentID=fl.CommentID)";
 
         $left_joins = "";
         foreach ($case_desc as $key => $value) {
@@ -154,7 +156,10 @@ class Imaging_Browser extends \NDB_Menu_Filter
             WHERE 
             s.Active = 'Y' AND
             f.PendingStaging=0 AND 
-            f.FileType='mnc'";
+            f.FileType='mnc' AND " .
+            'fl.CommentID NOT LIKE "DDE%" AND ' .
+            "fl.test_name='handedness' AND " .
+            's.Visit_label LIKE "%EN%"';
 
         $this->query .= $left_joins;
         $this->query .= $where;
@@ -206,6 +211,8 @@ class Imaging_Browser extends \NDB_Menu_Filter
                           'c.CandID as DCCID',
                           'c.Gender as Gender',
                           'c.Age_At_MRI as Age_At_MRI',
+                          'c.test_language as test_language',
+                          'h.interpretation as interpretation',
                           's.visit_label as Visit_Label',
                           "$PendingFailSubquery as Visit_QC_Status",
                           'MIN(md.AcquisitionDate) as First_Acquisition',
@@ -229,6 +236,8 @@ class Imaging_Browser extends \NDB_Menu_Filter
                           'DCCID',
                           'Gender',
                           'Age At MRI',
+                          'Test Language',
+                          'Handedness Interpretation',
                           'Visit_Label',
                           'Visit_QC_Status',
                           'First_Acquisition',
