@@ -26,6 +26,7 @@ function formatColumn(column, cell, rowData, rowHeaders) {
     }
     return <td></td>;
   }
+  console.log(column);
 
   if (column === 'Links') {
     var cellTypes = cell.split(",");
@@ -54,6 +55,18 @@ function formatColumn(column, cell, rowData, rowHeaders) {
           all types
         </a>);
     return (<td>{cellLinks}</td>);
+  }
+  if (column === 'Handedness') {
+      console.log('Trying to populate handedness...');
+      return <td><a href={loris.BaseURL +
+          "/handedness/instruments/?commentID" +
+          row.CommentID +
+          "&sessionID=" +
+          row.sessionID +
+          "&candID=" +
+          row.DCCID}>
+      Results
+      </a></td>;
   }
 
   return <td>{cell}</td>;
