@@ -130,13 +130,19 @@ class Imaging_Browser extends \NDB_Menu_Filter
             END 
             ";
 
-        $this->query = " FROM psc AS p 
-            JOIN session s ON (s.CenterID=p.CenterID) 
-            JOIN candidate c ON (c.CandID=s.CandID) 
-            JOIN files f ON (f.SessionID=s.ID) 
-            LEFT JOIN files_qcstatus fqc ON (fqc.FileID=f.FileID) 
-            JOIN flag fl ON (fl.SessionID=s.ID)";
-            //JOIN mri_acquisition_dates md ON (md.SessionID=s.ID)
+        $this->query = " FROM psc AS p
+            JOIN session s ON (s.CenterID=p.CenterID)
+            JOIN candidate c ON (c.CandID=s.CandID)
+            JOIN files f ON (f.SessionID=s.ID)
+            LEFT JOIN files_qcstatus fqc ON (fqc.FileID=f.FileID)
+            JOIN mri_acquisition_dates md ON (md.SessionID=s.ID)
+            LEFT JOIN (
+                SELECT interpretation, candidate.CandID, flag.CommentID
+                FROM handedness
+                JOIN flag USING (CommentID)
+                JOIN session ON (session.ID=flag.SessionID)
+                JOIN candidate USING (Candid)
+            ) AS h ON h.CandID=c.CandID";
 
         $left_joins = "";
         foreach ($case_desc as $key => $value) {
@@ -210,13 +216,13 @@ class Imaging_Browser extends \NDB_Menu_Filter
                           'c.CandID as DCCID',
                           'c.Gender as Gender',
                           'c.Age_At_MRI as Age_At_MRI',
+                          'h.CommentID as CommentID',
                           'c.test_language as test_language',
                           's.visit_label as Visit_Label',
                           "$PendingFailSubquery as Visit_QC_Status",
                           'FROM_UNIXTIME(MIN(f.InsertTime)) as First_Insertion',
                           'FROM_UNIXTIME(MAX(fqc.QCLastChangeTime)) as Last_QC',
                           "$NewDataSubquery as New_Data",
-                          'fl.CommentID as CommentID',
                          );
         $this->columns = array_merge(
             $this->columns,
