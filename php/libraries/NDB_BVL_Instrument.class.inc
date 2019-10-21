@@ -183,7 +183,7 @@ abstract class NDB_BVL_Instrument extends NDB_Page
         string $commentID = '',
         string $page = '',
         bool $guarantee_exists = true
-    ) {
+    ): ?object {
         $class = "NDB_BVL_Instrument_$instrument";
 
         // Make sure the instrument class has been included/required!
@@ -1358,7 +1358,7 @@ abstract class NDB_BVL_Instrument extends NDB_Page
      * Run a XIN rule on an individual element
      *
      * @param ?string $controller The element which affects the validity of this
-     *                           element
+     *                            element
      * @param array   $values     Array of values which will invalidate the rule.
      * @param string  $operator   The operator which is used to compare the rule.
      *
@@ -2098,7 +2098,7 @@ abstract class NDB_BVL_Instrument extends NDB_Page
      * field in the database.
      *
      * @param ?string $date (optional) The date that the age is to
-     *                     be calculated based on.
+     *                      be calculated based on.
      *
      * @return array The age of the candidate in an array containing years, months
      *         and days.
@@ -2125,7 +2125,7 @@ abstract class NDB_BVL_Instrument extends NDB_Page
      *
      * @return string The candidate's DOB.
      */
-    function getDoB()
+    function getDoB(): string
     {
         $db        = \Database::singleton();
         $CommentID = $this->getCommentID();

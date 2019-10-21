@@ -32,7 +32,7 @@ class Site
      *
      * @return Site An object representing this site
      */
-    static function &singleton(int $centerID)
+    static function &singleton(int $centerID): Site
     {
         static $siteList = array();
         if (!isset($siteList[$centerID])) {

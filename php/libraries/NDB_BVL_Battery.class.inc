@@ -10,21 +10,21 @@
  *
  * PHP Version 5
  *
- *  @category Main
- *  @package  Behavioural
- *  @author   Alex Zijdenbos <zijdenbos@example.com>
- *  @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- *  @link     https://www.github.com/aces/Loris-Trunk/
+ * @category Main
+ * @package  Behavioural
+ * @author   Alex Zijdenbos <zijdenbos@example.com>
+ * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link     https://www.github.com/aces/Loris-Trunk/
  */
 
 /**
  * Class that implements a wrapper around a Loris battery.
  *
- *  @category Main
- *  @package  Behavioural
- *  @author   Alex Zijdenbos <zijdenbos@example.com>
- *  @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- *  @link     https://www.github.com/aces/Loris-Trunk/
+ * @category Main
+ * @package  Behavioural
+ * @author   Alex Zijdenbos <zijdenbos@example.com>
+ * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link     https://www.github.com/aces/Loris-Trunk/
  */
 class NDB_BVL_Battery
 {
@@ -50,7 +50,7 @@ class NDB_BVL_Battery
      *
      * @return void
      */
-    function selectBattery($sessionID)
+    function selectBattery(int $sessionID): void
     {
         $timepoint =TimePoint::singleton($sessionID);
 
@@ -111,12 +111,12 @@ class NDB_BVL_Battery
      * @return void
      */
     function createBattery(
-        $SubprojectID,
-        $stage=null,
-        $visit_label=null,
-        $center_ID=null,
-        $firstVisit=null
-    ) {
+        int $SubprojectID,
+        string $stage=null,
+        string $visit_label=null,
+        int $center_ID=null,
+        bool $firstVisit=null
+    ): void {
         // assert that a battery has already been selected
         $this->_assertBatterySelected();
 
@@ -166,7 +166,7 @@ class NDB_BVL_Battery
      *
      * @return string The generated CommentID
      */
-    function addInstrument($testName)
+    function addInstrument(string $testName): string
     {
         $DB = Database::singleton();
         // assert that a battery has already been selected
@@ -238,7 +238,7 @@ class NDB_BVL_Battery
      * @return void
      * @todo   make it do something
      */
-    function removeInstrument($testName)
+    function removeInstrument(string $testName): void
     {
         // assert that a battery has already been selected
         $error = $this->_assertBatterySelected();
@@ -260,7 +260,7 @@ class NDB_BVL_Battery
      *
      * @return array    an array of instrument names
      */
-    function getBattery($stage=null, $SubprojectID=null, $visit_label=null)
+    function getBattery(string $stage=null, int $SubprojectID=null, string $visit_label=null): array
     {
         $DB = Database::singleton();
         // assert that a battery has already been selected
@@ -297,7 +297,7 @@ class NDB_BVL_Battery
      * @return array an associative array containing Test_name,
      *         Full_name, Sub_group, CommentID
      */
-    function getBatteryVerbose($stage=null, $SubprojectID=null)
+    function getBatteryVerbose(string $stage=null, int $SubprojectID=null): array
     {
         $DB = Database::singleton();
         // assert that a battery has already been selected
@@ -361,7 +361,7 @@ class NDB_BVL_Battery
      *
      * @return boolean true if double data entry is enabled for this instrument
      */
-    static function isDoubleDataEntryEnabledForInstrument($instrumentName)
+    static function isDoubleDataEntryEnabledForInstrument(string $instrumentName): bool
     {
 
         $config =& NDB_Config::singleton();
@@ -379,7 +379,7 @@ class NDB_BVL_Battery
      *
      * @return string A test name
      */
-    public static function getInstrumentNameForCommentId($commentId)
+    public static function getInstrumentNameForCommentId(string $commentId): string
     {
         return \Database::singleton()->pselectOne(
             "SELECT Test_name FROM flag WHERE CommentID=:CID",
@@ -416,13 +416,13 @@ class NDB_BVL_Battery
      * @return array  an array of instrument names
      */
     function lookupBattery(
-        $age,
-        $SubprojectID,
-        $stage=null,
-        $visit_label=null,
-        $center_ID=null,
-        $firstVisit=null
-    ) {
+        int $age,
+        int $SubprojectID,
+        string $stage=null,
+        string $visit_label=null,
+        int $center_ID=null,
+        bool $firstVisit=null
+    ): array {
         $DB = Database::singleton();
         if (empty($this->age)) {
             $this->age = $age;
@@ -538,7 +538,7 @@ class NDB_BVL_Battery
      *
      * @return ?string the commentID generated
      */
-    function _createCommentID($testName)
+    function _createCommentID(string $testName): ?string
     {
         // assert that a battery has already been selected
         $error = $this->_assertBatterySelected();
@@ -559,7 +559,7 @@ class NDB_BVL_Battery
      * @return ?string A Validly formatted CommentID or null if information
      *                  is missing in the database.
      */
-    static function generateCommentID($SessionID, $Test_name)
+    static function generateCommentID(int $SessionID, string $Test_name): ?string
     {
         $DB = Database::singleton();
 
@@ -593,7 +593,7 @@ class NDB_BVL_Battery
      *
      * @return boolean true if a battery is selected
      */
-    function _assertBatterySelected()
+    function _assertBatterySelected(): bool
     {
         if (is_null($this->sessionID)) {
             throw new Exception("No battery selected");
@@ -610,7 +610,7 @@ class NDB_BVL_Battery
      *
      * @return boolean true if valid, false if not
      */
-    function _assertValidInstrument($testName)
+    function _assertValidInstrument(string $testName): bool
     {
         $DB    = Database::singleton();
         $query = "SELECT COUNT(*) AS counter FROM test_names WHERE Test_name=:TN";

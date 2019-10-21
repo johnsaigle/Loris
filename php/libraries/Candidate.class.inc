@@ -44,12 +44,12 @@ class Candidate
      * the event that it's called multiple times.
      *
      * @param CandID $candID A 6 digit Loris CandID that matches
-     *                        a candidate in the candidate table
+     *                       a candidate in the candidate table
      *
      * @return Candidate the Candidate object
      * @static
      */
-    static public function &singleton(CandID $candID)
+    static public function &singleton(CandID $candID): Candidate
     {
         $candidateList =& $GLOBALS['__candidateObjects'];
         if (!isset($candidateList[strval($candID)])) {
@@ -354,7 +354,7 @@ class Candidate
      * Return a piece of data about this candidate
      *
      * @param string|null $var The type of data about the Candidate
-     *                    to be returned
+     *                         to be returned
      *
      * @return mixed The info requested
      */
@@ -372,7 +372,7 @@ class Candidate
      * database.
      *
      * @param array $newData Key-value pair(s) of the field(s) to change and the
-     *                              new value(s).
+     *                       new value(s).
      *
      * @return bool
      *
@@ -429,7 +429,7 @@ class Candidate
      *
      * @return integer 6 digit CandID
      */
-    function getCandID()
+    function getCandID(): int
     {
         return $this->candidateInfo["CandID"];
     }
@@ -672,8 +672,8 @@ class Candidate
      *
      * @param string      $PSCID      The PSCID to validate
      * @param string|null $siteAbbrev (optional) The site of the candidate
-     *                           being validated to check against appropriate
-     *                           parts of PSCID definition
+     *                                being validated to check against appropriate
+     *                                parts of PSCID definition
      *
      * @return boolean True if PSCID is valid, false otherwise
      */

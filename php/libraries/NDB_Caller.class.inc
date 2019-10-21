@@ -74,12 +74,12 @@ class NDB_Caller
      * @return string rendered object, as html
      */
     function load(
-        $test_name,
-        $subtest,
-        $CommentID='',
-        $nextpage=null,
-        $anonymous=true
-    ) {
+        string $test_name,
+        string $subtest,
+        string $CommentID='',
+        ?string $nextpage=null,
+        bool $anonymous=true
+    ): string {
         $config = \NDB_Factory::singleton()->config();
         $base   = $config->getSetting('base');
 

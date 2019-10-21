@@ -131,7 +131,7 @@ class NDB_Menu_Filter extends NDB_Menu
      * @return void
      * @access public
      */
-    function setup()
+    function setup(): void
     {
         parent::setup();
 
@@ -169,7 +169,7 @@ class NDB_Menu_Filter extends NDB_Menu
      * @return void
      * @access public
      */
-    function registerDefaultFilter()
+    function registerDefaultFilter(): void
     {
         $this->form->applyFilter('__ALL__', 'trim');
     }
@@ -188,7 +188,7 @@ class NDB_Menu_Filter extends NDB_Menu
      * @return void
      * @access private
      */
-    function _setupVariables()
+    function _setupVariables(): void
     {
     }
 
@@ -198,7 +198,7 @@ class NDB_Menu_Filter extends NDB_Menu
      *
      * @return void
      */
-    function _resetFilters()
+    function _resetFilters(): void
     {
         $_SESSION['State']->setProperty('filter', null);
         $_SESSION['State']->setProperty('keyword', null);
@@ -212,16 +212,16 @@ class NDB_Menu_Filter extends NDB_Menu
      * set.
      *
      * @param array $values An array of the form
-     *                             [FormFieldName => Value,
-     *                             FormFieldName2 => Value2,
-     *                             ...
-     *                             ]
+     *                      [FormFieldName => Value,
+     *                      FormFieldName2 => Value2,
+     *                      ...
+     *                      ]
      *                      to retrieve the values from.
      *
      * @return array of filters in the same form as the $values parameter
      *         that can be saved for future use.
      */
-    function _setFilters($values)
+    function _setFilters(array $values): array
     {
         $newFormFilters = array();
 
@@ -253,15 +253,15 @@ class NDB_Menu_Filter extends NDB_Menu
      * it into the current filter.
      *
      * @param array $order An array of the form
-     *                      [
-     *                          'field' => Form Field Name
-     *                          'fieldOrder' => "ASC|DESC"
-     *                      ]
+     *                     [
+     *                     'field' => Form Field Name
+     *                     'fieldOrder' => "ASC|DESC"
+     *                     ]
      *
      * @return void (modifies both $_SESSION and $this->filter as
      *         a side-effect.)
      */
-    function _setFilterSortOrder($order)
+    function _setFilterSortOrder(array $order): void
     {
         // Get the existing filter. It's already been saved into
         // the session previously in $this->_setupFilters.
@@ -286,7 +286,7 @@ class NDB_Menu_Filter extends NDB_Menu
      *
      * @return void (but side-effect modifies $this->searchKey)
      */
-    function _setSearchKeyword($keyword)
+    function _setSearchKeyword(string $keyword): void
     {
         $this->searchKey = array('keyword' => $keyword);
     }
@@ -307,7 +307,7 @@ class NDB_Menu_Filter extends NDB_Menu
      *
      * @return void
      */
-    function _setupFilters()
+    function _setupFilters(): void
     {
         // 1. Reset filters
         if (isset($_REQUEST['reset'])) {
@@ -380,7 +380,7 @@ class NDB_Menu_Filter extends NDB_Menu
      * @return void
      * @access private
      */
-    function _build()
+    function _build(): void
     {
         // show selection form table
         $this->_setFilterForm();
@@ -402,16 +402,16 @@ class NDB_Menu_Filter extends NDB_Menu
      * @return void
      * @access private
      */
-    function _setFilterForm()
+    function _setFilterForm(): void
     {
         return;
     }
     /**
-    * Gets the base query
-    *
-    * @return string ($query)
-    */
-    function _getBaseQuery()
+     * Gets the base query
+     *
+     * @return string ($query)
+     */
+    function _getBaseQuery(): string
     {
         $query = "SELECT ";
         if (is_array($this->columns) && count($this->columns) > 0) {
@@ -424,15 +424,15 @@ class NDB_Menu_Filter extends NDB_Menu
 
     }
     /**
-    * Adds filters
-    *
-    * @param string $prepared_key filter key
-    * @param string $field        filter field
-    * @param string $val          filter value
-    *
-    * @return string ($query)
-    */
-    function _addValidFilters($prepared_key, $field, $val)
+     * Adds filters
+     *
+     * @param string $prepared_key filter key
+     * @param string $field        filter field
+     * @param string $val          filter value
+     *
+     * @return string ($query)
+     */
+    function _addValidFilters(string $prepared_key, string $field, string $val): string
     {
         $query = '';
         if ((!empty($val) || $val === '0') && $field != 'order') {
@@ -462,7 +462,7 @@ class NDB_Menu_Filter extends NDB_Menu
      * @return array
      * @access private
      */
-    function _getList()
+    function _getList(): array
     {
         // create DB object
         $DB =& Database::singleton();
@@ -506,7 +506,7 @@ class NDB_Menu_Filter extends NDB_Menu
      *               for the SQL query and 'params' which contains the
      *               parameters to use bind for a prepared query.
      */
-    function _getBaseFilter()
+    function _getBaseFilter(): array
     {
         $qparams     = array();
         $WhereClause = '';
@@ -583,7 +583,7 @@ class NDB_Menu_Filter extends NDB_Menu
      * @return void
      * @access private
      */
-    function _setDataTable()
+    function _setDataTable(): void
     {
         // create instance of config object
         $config =& NDB_Config::singleton();
@@ -641,7 +641,7 @@ class NDB_Menu_Filter extends NDB_Menu
      * @return void
      * @access private
      */
-    function _setDataTableRows($count)
+    function _setDataTableRows(int $count): void
     {
         // print out
         $x = 0;
@@ -667,7 +667,7 @@ class NDB_Menu_Filter extends NDB_Menu
      * @return string
      * @access public
      */
-    function display()
+    function display(): string
     {
         switch($this->format) {
         case 'json':
@@ -705,7 +705,7 @@ class NDB_Menu_Filter extends NDB_Menu
      *
      * @return string  csv formated string
      */
-    function getCSVData()
+    function getCSVData(): string
     {
         return $this->arrayToCSV(
             array(
@@ -737,12 +737,12 @@ class NDB_Menu_Filter extends NDB_Menu
     }
 
     /**
-    * Coverts array into CSV string
-    *
-    * @param array $array the array to be converted
-    *
-    * @return string CSV string of data
-    */
+     * Coverts array into CSV string
+     *
+     * @param array $array the array to be converted
+     *
+     * @return string CSV string of data
+     */
     function arrayToCSV(array $array): string
     {
         $fp = fopen("php://temp", 'w+');
@@ -770,7 +770,7 @@ class NDB_Menu_Filter extends NDB_Menu
      *
      * @return array
      */
-    function toArray()
+    function toArray(): array
     {
         $data = $this->_getFullList();
 
@@ -799,7 +799,7 @@ class NDB_Menu_Filter extends NDB_Menu
      *
      * @return string a json encoded string of the headers and data from this table
      */
-    function toJSON()
+    function toJSON(): string
     {
         return json_encode($this->toArray());
     }
@@ -809,7 +809,7 @@ class NDB_Menu_Filter extends NDB_Menu
      * @return array
      * @access private
      */
-    function _getFullList()
+    function _getFullList(): array
     {
         // create DB object
         $factory = NDB_Factory::singleton();
@@ -847,7 +847,7 @@ class NDB_Menu_Filter extends NDB_Menu
      *
      * @return array of filters that are set
      */
-    function _getFilterValues()
+    function _getFilterValues(): array
     {
         $FilterValues = array();
         foreach (array_keys($this->formToFilter) as $formName) {
@@ -866,7 +866,7 @@ class NDB_Menu_Filter extends NDB_Menu
      *
      * @return array of javascript files to be sourced
      */
-    function getJSDependencies()
+    function getJSDependencies(): array
     {
         $factory = NDB_Factory::singleton();
         $depends = parent::getJSDependencies();

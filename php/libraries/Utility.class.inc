@@ -230,7 +230,7 @@ class Utility
      * Returns a list of study Subprojects
      *
      * @param integer|null $projectID The project for which you would like
-     *                           to get the subprojects
+     *                                to get the subprojects
      *
      * @return array       an associative array("SubprojectID" => "Subproject title")
      */
@@ -261,7 +261,7 @@ class Utility
      * Returns a list of study Subprojects associated with a project
      *
      * @param integer|null $projectID The project for which you would like
-     *                           to get the subprojects
+     *                                to get the subprojects
      *
      * @return array an associative array("SubprojectID" => "Subproject title")
      */
@@ -301,7 +301,7 @@ class Utility
      *
      * @param array       $structure  the structure root
      * @param string|null $siteAbbrev the site abbreviation, sometimes used as part
-     *                           of the PSCID
+     *                                of the PSCID
      *
      * @return string the regex pattern
      *
@@ -681,11 +681,11 @@ class Utility
      * Returns all the sourcefrom instruments from parameter_type
      *
      * @param string|null $instrument If specified, return fields from this
-     *                           test_name
+     *                                test_name
      * @param string|null $commentID  If specified, return fields for this
-     *                           commentid
+     *                                commentid
      * @param string|null $name       If specified, return fields for this
-     *                           parameter_type name
+     *                                parameter_type name
      *
      * @return  ?array Format: array(
      *              0 => array(
@@ -742,7 +742,7 @@ class Utility
      * Returns a list of study Visit Labels that are being used by this study.
      *
      * @param integer|null $projectID Limit visit labels to labels used by this
-     *                                  project.
+     *                                project.
      *
      * @return array of study visits in the format array('VL' => 'VL')
      *         where VL is the visit label
@@ -932,7 +932,7 @@ class Utility
      *
      * @param int     $length   How many characters do we want?
      * @param ?string $keyspace A string of all possible characters
-     *                         to select from. Will default to the alphanum set.
+     *                          to select from. Will default to the alphanum set.
      *
      * @return string
      */
@@ -954,15 +954,15 @@ class Utility
     }
 
      /**
-     * Takes an argument and determine whether it is a positive integer
-     * i.e. > 0.
-     *
-     * @param mixed $value The value to check. Intentionally not type hinted as
-     * this function is meant to assist in cases where the type is unknown, e.g.
-     * when a parameter is sent via a form.
-     *
-     * @return bool Whether $value is a positive int.
-     */
+      * Takes an argument and determine whether it is a positive integer
+      * i.e. > 0.
+      *
+      * @param mixed $value The value to check. Intentionally not type hinted as
+      *                     this function is meant to assist in cases where the type is unknown, e.g.
+      *                     when a parameter is sent via a form.
+      *
+      * @return bool Whether $value is a positive int.
+      */
     public static function valueIsPositiveInteger($value): bool
     {
 

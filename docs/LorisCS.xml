@@ -64,4 +64,9 @@
      </rule>
      <!-- Do not allow PHP closing tags because they can cause problems -->
      <rule ref="PSR2.Files.ClosingTag"/>
+
+     <!-- Ensure that type hinting is used whenever the types are documented in
+          PHPDoc comments -->
+    <config name="installed_paths" value="../../slevomat/coding-standard"/><!-- relative path from PHPCS source location -->
+    <rule ref="SlevomatCodingStandard.TypeHints.TypeHintDeclaration" />
 </ruleset>

@@ -37,7 +37,7 @@ class State
      * @return State reference to the State object (new one if none
      *               existed previously)
      */
-    static function &singleton()
+    static function &singleton(): State
     {
         static $instance = null;
         if (is_null($instance)) {
@@ -51,7 +51,7 @@ class State
      * Sets the username
      *
      * @param string|null $username the user's username or null when clearing
-     *                      SESSION state.
+     *                              SESSION state.
      *
      * @return void
      */

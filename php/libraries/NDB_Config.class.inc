@@ -162,7 +162,7 @@ class NDB_Config
      *
      * @return array of XML configuration
      */
-    static function convertToArray(SimpleXMLElement $xml)
+    static function convertToArray(SimpleXMLElement $xml): array
     {
         $retVal   = array();
         $children = $xml->children();
@@ -258,7 +258,7 @@ class NDB_Config
      *
      * @param string   $name The name of the config setting to get
      * @param int|null $id   (optional) The ID of the config setting we're
-     *                      getting to avoid ambiguity.
+     *                       getting to avoid ambiguity.
      *
      * @return mixed The value from the database, or null if nothing found.
      */
@@ -421,7 +421,7 @@ class NDB_Config
      * comparison.
      *
      * @param string $name The name of the setting to retrieve. This setting
-     *                      should have a boolean value in the config file or DB.
+     *                     should have a boolean value in the config file or DB.
      *
      * @return bool True if the setting is equal to "true".
      */
@@ -539,8 +539,8 @@ class NDB_Config
      * the menus, exactly (config.xml, different database tables, etc..)
      *
      * @param int|null $parent The parent ID of the tree. This should not
-     *                        be passed. It's used to build the tree recursively
-     *                        from the LorisMenu table.
+     *                         be passed. It's used to build the tree recursively
+     *                         from the LorisMenu table.
      *
      * @return array          Label, Visible, Link, and ID to build the menu
      *                        for the currently logged in user

@@ -126,7 +126,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return void
      */
-    function setTemplateVar($name, $value)
+    function setTemplateVar(string $name, string $value): void
     {
         $this->tpl_data[$name] = htmlspecialchars($value);
     }
@@ -136,7 +136,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return array Mapping of variable names to template value.
      */
-    function getTemplateData()
+    function getTemplateData(): array
     {
         return $this->tpl_data;
     }
@@ -151,7 +151,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return void
      */
-    function addFile($name, $label, $options=array())
+    function addFile(string $name, string $label, array $options=array()): void
     {
         $this->form->addElement(
             'file',
@@ -168,7 +168,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return void
      */
-    function addHeader($header)
+    function addHeader(string $header): void
     {
         $this->form->addElement('header', null, $header);
     }
@@ -185,7 +185,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return void
      */
-    function addSelect($name, $label, $options, $optional=array())
+    function addSelect(string $name, string $label, array $options, array $optional=array()): void
     {
         $optional = array_merge(
             array('class' => 'form-control input-sm'),
@@ -201,7 +201,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return void
      */
-    function addLabel($label)
+    function addLabel(string $label): void
     {
         $this->form->addElement('static', null, $label);
     }
@@ -214,7 +214,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return void
      */
-    function addScoreColumn($name, $label)
+    function addScoreColumn(string $name, string $label): void
     {
         $this->form->addElement('static', $name, $label);
     }
@@ -230,7 +230,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return void
      */
-    function addBasicText($field, $label, $options=array())
+    function addBasicText(string $field, string $label, array $options=array()): void
     {
         $options = array_merge(array('class' => 'form-control input-sm'), $options);
         $this->form->addElement('text', $field, $label, $options);
@@ -247,10 +247,10 @@ class NDB_Page implements RequestHandlerInterface
      * @return void
      */
     function addBasicTextArea(
-        $field,
-        $label,
-        $specifications=array()
-    ) {
+        string $field,
+        string $label,
+        array $specifications=array()
+    ): void {
         $specifications = array_merge(
             array('class' => 'form-control input-sm'),
             $specifications
@@ -273,11 +273,11 @@ class NDB_Page implements RequestHandlerInterface
      *       added to an element in the LorisForm library. -Alexandra Livadas
      */
     function addBasicDate(
-        $field,
-        $label,
-        $options=array(),
-        $attr=array('class' => 'form-control input-sm')
-    ) {
+        string $field,
+        string $label,
+        array $options=array(),
+        array $attr=array('class' => 'form-control input-sm')
+    ): void {
         if ($options === array() && !empty($this->dateOptions)) {
             $options = $this->dateOptions;
         }
@@ -302,7 +302,7 @@ class NDB_Page implements RequestHandlerInterface
      *       whereas before it was in the $optional array.
      *        - Alexandra Livadas
      */
-    function addCheckbox($name, $label, $options, $optional=array())
+    function addCheckbox(string $name, string $label, array $options, array $optional=array()): void
     {
         $options = array_merge(
             array('class' => 'form-control input-sm'),
@@ -327,7 +327,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return void
      */
-    function addRadio($name, $groupLabel, $radios, $options=array())
+    function addRadio(string $name, string $groupLabel, array $radios, array $options=array()): void
     {
         $radGroup = array();
         foreach ($radios as $radElement) {
@@ -357,7 +357,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return void
      */
-    function addHidden($name, $value=null, $attributes=array())
+    function addHidden(string $name, array $value=null, array $attributes=array()): void
     {
         $this->form->addElement('hidden', $name, $value, $attributes);
     }
@@ -374,13 +374,13 @@ class NDB_Page implements RequestHandlerInterface
      * @return void
      */
     function addTextAreaGroup(
-        $field,
-        $label,
-        $not_answered_options=array(
-                               ''             => '',
-                               'not_answered' => 'Not Answered',
-                              )
-    ) {
+        string $field,
+        string $label,
+        array $not_answered_options=array(
+                                     ''             => '',
+                                     'not_answered' => 'Not Answered',
+                                    )
+    ): void {
         $group   = array();
         $group[] = $this->createTextArea($field, '');
         $group[] = $this->createSelect(
@@ -404,10 +404,10 @@ class NDB_Page implements RequestHandlerInterface
      * @return void
      */
     function addPassword(
-        $field,
-        $label=null,
-        $attr=array('class' => 'form-control input-sm')
-    ) {
+        string $field,
+        string $label=null,
+        array $attr=array('class' => 'form-control input-sm')
+    ): void {
         $this->form->addElement('password', $field, $label, $attr);
     }
 
@@ -427,7 +427,7 @@ class NDB_Page implements RequestHandlerInterface
      *       may be called with four parameters elsewhere in the codebase!
      *       - Alexandra Livadas
      */
-    function addRule($element, $message, $type, $format=null)
+    function addRule(string $element, string $message, string $type, string $format=null): void
     {
         $this->form->addRule($element, $message, $type, $format);
     }
@@ -443,7 +443,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return void
      */
-    function addGroupRule($group, $arg1, $type='', $format=null)
+    function addGroupRule(string $group, $arg1, $type='', $format=null): void
     {
         $this->form->addGroupRule($group, $arg1, $type);
     }
@@ -466,7 +466,7 @@ class NDB_Page implements RequestHandlerInterface
      *       the parameters of LorisForm::addGroup and make their purposes
      *       more clear - Alexandra Livadas
      */
-    function addGroup($elements, $name, $label, $delimiter, $options=null)
+    function addGroup(array $elements, string $name, string $label, string $delimiter, string $options=null): void
     {
         $this->form->addGroup($elements, $name, $label, $delimiter, $options);
     }
@@ -482,11 +482,11 @@ class NDB_Page implements RequestHandlerInterface
      * @return array representing select element
      */
     function createSelect(
-        $field,
-        $label,
-        $options=null,
-        $attr=array('class' => 'form-control input-sm')
-    ) {
+        string $field,
+        string $label,
+        array $options=null,
+        array $attr=array('class' => 'form-control input-sm')
+    ): array {
         return $this->form->createElement("select", $field, $label, $options, $attr);
     }
 
@@ -503,8 +503,8 @@ class NDB_Page implements RequestHandlerInterface
      * @return array representing label element
      */
     function createLabel(
-        $labelString
-    ) {
+        string $labelString
+    ): array {
         return $this->form->createElement(
             "static",
             null,
@@ -522,10 +522,10 @@ class NDB_Page implements RequestHandlerInterface
      * @return array representing text element
      */
     function createText(
-        $field,
-        $label=null,
-        $attribs=array()
-    ) {
+        string $field,
+        string $label=null,
+        array $attribs=array()
+    ): array {
         $attr =array_merge($attribs, array('class' => 'form-control input-sm'));
         return $this->form->createElement("text", $field, $label, $attr);
     }
@@ -538,7 +538,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return array representing textarea element
      */
-    function createTextArea($field, $label=null)
+    function createTextArea(string $field, string $label=null): array
     {
         return $this->form->createElement(
             "textarea",
@@ -563,11 +563,11 @@ class NDB_Page implements RequestHandlerInterface
      *       added to an element in the LorisForm library. -Alexandra Livadas
      */
     function createDate(
-        $field,
-        $label,
-        $dateOptions=null,
-        $attr=array('class' => 'form-control input-sm')
-    ) {
+        string $field,
+        string $label,
+        array $dateOptions=null,
+        array $attr=array('class' => 'form-control input-sm')
+    ): array {
         return $this->form->createElement(
             "date",
             $field,
@@ -589,7 +589,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return array representing checkbox
      */
-    function createCheckbox($field, $label, $options=null, $closer='</label>')
+    function createCheckbox(string $field, string $label, string $options=null, string $closer='</label>'): array
     {
         return $this->form->createElement(
             "advcheckbox",
@@ -609,7 +609,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return array representing radio button
      */
-    function createRadio($field, $label, $options=null)
+    function createRadio(string $field, string $label, string $options=null): array
     {
         return $this->form->createElement(
             "radio",
@@ -630,10 +630,10 @@ class NDB_Page implements RequestHandlerInterface
      * @return array representing form element
      */
     function createPassword(
-        $field,
-        $label=null,
-        $attr=array('class' => 'form-control input-sm')
-    ) {
+        string $field,
+        string $label=null,
+        array $attr=array('class' => 'form-control input-sm')
+    ): array {
         return $this->form->createElement('password', $field, $label, $attr);
     }
 
@@ -711,7 +711,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return string of the content to be inserted into the template
      */
-    function display()
+    function display(): string
     {
         switch($this->format) {
         case 'json':
@@ -759,7 +759,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return array
      */
-    function _getDefaults()
+    function _getDefaults(): array
     {
         return $this->defaults;
     }
@@ -771,7 +771,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return array The defaults
      */
-    function _setDefaults($defaults = array())
+    function _setDefaults(array $defaults = array()): array
     {
         $this->defaults = $defaults;
         $this->form->setDefaults($defaults);
@@ -785,7 +785,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return array of strings with URLs to retrieve JS resources
      */
-    function getJSDependencies()
+    function getJSDependencies(): array
     {
         $factory = NDB_Factory::singleton();
         $config  = $factory->config();
@@ -834,7 +834,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return array of strings with URLs to retrieve CSS resources
      */
-    function getCSSDependencies()
+    function getCSSDependencies(): array
     {
         $factory = NDB_Factory::singleton();
         $config  = $factory->config();
@@ -857,7 +857,7 @@ class NDB_Page implements RequestHandlerInterface
      *
      * @return void (but may have side-effects)
      */
-    function setup()
+    function setup(): void
     {
     }
 

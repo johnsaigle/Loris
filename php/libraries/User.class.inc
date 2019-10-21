@@ -276,10 +276,10 @@ class User extends UserPermissions
     }
 
      /**
-     * Get the user's site's ID number
-     *
-     * @return array
-     */
+      * Get the user's site's ID number
+      *
+      * @return array
+      */
     function getCenterID()
     {
         throw new \LorisException(

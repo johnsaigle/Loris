@@ -281,7 +281,7 @@ class NDB_BVL_Instrument_LINST extends \NDB_BVL_Instrument
      * @param string $elname     The element to be validate
      * @param array  $elements   array of values from current page.
      * @param array  $registered Array of all rules which have been registered.
-     *                            registered.
+     *                           registered.
      *
      * @return boolean true if the element passes, false if it fails a rule.
      */

@@ -141,7 +141,7 @@ class Database
      * @access public
      */
     function connect(
-        $database,
+        string $database,
         ?string $username,
         ?string $password,
         ?string $host,
@@ -664,7 +664,7 @@ class Database
      *
      * @return PDOStatement A PDO prepared statement representing $query
      */
-    function prepare($query)
+    function prepare(string $query): PDOStatement
     {
         return $this->_PDO->prepare($query);
     }
@@ -678,14 +678,14 @@ class Database
      *                               while executing it
      * @param array        $options  A list of key=>value pairs.
      *                               - nofetch : to prevent the fetchAll
-     *                                 function to be excuted. Useful for
-     *                                 insert or update prepared statements.
+     *                               function to be excuted. Useful for
+     *                               insert or update prepared statements.
      *
      * @return array An array of rows in the format ColName => Value after
      *               executing the statement.
      */
     function execute(
-        $prepared,
+        PDOStatement $prepared,
         array $params,
         array $options = array()
     ): array {
@@ -721,7 +721,7 @@ class Database
      *               row returned by the query, and each element is an associative
      *               array representing the row in the format ColumnName => Value
      */
-    function pselect(string $query, array $params)
+    function pselect(string $query, array $params): array
     {
         $this->_printQuery($query, $params);
         $stmt   = $this->prepare($query);
@@ -755,7 +755,7 @@ class Database
         string $query,
         array $params,
         string $uniqueKey
-    ) {
+    ): array {
 
         if (is_null($uniqueKey) || empty($uniqueKey)) {
             throw new LorisException(
@@ -839,7 +839,7 @@ class Database
      * @return array Associative array of form rowID=>value containing all values
      *               for the only column of the select statement
      */
-    function pselectCol(string $query, array $params)
+    function pselectCol(string $query, array $params): array
     {
         $unprocessed = $this->pselect($query, $params);
 
@@ -883,7 +883,7 @@ class Database
         string $query,
         array $params,
         string $uniqueKey
-    ) {
+    ): array {
 
         if (is_null($uniqueKey) || empty($uniqueKey)) {
             throw new LorisException(
@@ -1003,14 +1003,14 @@ class Database
      * or delete query. Generates the string in a prepared statement format.
      *
      * @param string     $glue      The glue used to combine parts of the
-     *                          dataArray (ie " AND ").
+     *                              dataArray (ie " AND ").
      * @param array      $dataArray The array representing the WHERE condition
-     *                          to be glued together into a string.
+     *                              to be glued together into a string.
      * @param array|null $exec_vals The values which are being bound to the
-     *                          query. Used to generate the prepared variable
-     *                          name.
+     *                              query. Used to generate the prepared variable
+     *                              name.
      * @param string     $prefix    A prefix to apply to prepared variable
-     *                          names.
+     *                              names.
      *
      * @return string A string that can be used to generate a prepared statement
      *                with appropriate variable names generated for data

@@ -116,7 +116,7 @@ abstract class DataFrameworkMenu extends NDB_Menu_Filter
      *
      * @return string a json encoded string of the headers and data from this table
      */
-    public function toJSON()
+    public function toJSON(): string
     {
         $table = (new \LORIS\Data\Table())
             ->withDataFrom($this->getDataProvisionerWithFilters());

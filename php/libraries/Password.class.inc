@@ -99,7 +99,7 @@ class Password
      *
      * @throws \InvalidArgumentException When password is too short or weak.
      */
-    private function _validate($value): void
+    private function _validate(string $value): void
     {
         // Check length and complexity separately in order to return a precise
         // error message upon failure.

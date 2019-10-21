@@ -77,8 +77,8 @@ class FeedbackMRI
      * predefined comments internally
      *
      * @param array|null $predefinedCommentIDs an array of integers which are
-     *                                    PredefinedCommentID from
-     *                                    feedback_mri_predefined_comments table
+     *                                         PredefinedCommentID from
+     *                                         feedback_mri_predefined_comments table
      *
      * @return bool true if operation succeeded
      */

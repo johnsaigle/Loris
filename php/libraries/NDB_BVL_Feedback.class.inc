@@ -71,11 +71,11 @@ class NDB_BVL_Feedback
      * @return NDB_BVL_Feedback object
      */
     static function &singleton(
-        $username,
+        string $username,
         ?CandID $candID=null,
-        $sessionID=null,
-        $commentID=null
-    ) {
+        ?integer $sessionID=null,
+        ?string $commentID=null
+    ): NDB_BVL_Feedback {
         // at least one of the args have to be passed
         if (empty($candID) && empty($sessionID) && empty($commentID)) {
             throw new Exception(
@@ -121,7 +121,7 @@ class NDB_BVL_Feedback
      * Sets up a newly instantiated feedback thread object
      *
      * @param string  $username  The name of the currently logged in user.
-     *                          (why is this here?)
+     *                           (why is this here?)
      * @param ?CandID $candID    The CandID we're getting a feedback thread for.
      * @param ?string $sessionID The sessionID we're getting a feedback thread for.
      * @param ?string $commentID The commentID we're getting a feedback thread for.
@@ -132,8 +132,8 @@ class NDB_BVL_Feedback
         string $username,
         ?CandID $candID=null,
         ?string $sessionID=null,
-        $commentID=null
-    ) {
+        ?string $commentID=null
+    ): void {
 
         if (!empty($commentID)) {
             $this->_feedbackObjectInfo['CommentID'] = $commentID;
@@ -164,7 +164,7 @@ class NDB_BVL_Feedback
      *
      * @return void
      */
-    function _setCandidateProfileInfo()
+    function _setCandidateProfileInfo(): void
     {
         // new DB Object
         $db =& Database::singleton();
@@ -224,7 +224,7 @@ class NDB_BVL_Feedback
      *
      * @return string feedback_level (either profile, visit, or instrument)
      */
-    function getFeedbackLevel()
+    function getFeedbackLevel(): string
     {
         return $this->_feedbackLevel;
     }
@@ -234,7 +234,7 @@ class NDB_BVL_Feedback
      *
      * @return array
      */
-    static public function getFeedbackTypes()
+    static public function getFeedbackTypes(): array
     {
         // new DB Object
 
@@ -262,7 +262,7 @@ class NDB_BVL_Feedback
      *
      * @return int feedback type id, empty array if none found
      */
-    public function getFeedbackTypeIdByName($name)
+    public function getFeedbackTypeIdByName(string $name): int
     {
         $factory = NDB_Factory::singleton();
         $db      = $factory->Database();
@@ -284,7 +284,7 @@ class NDB_BVL_Feedback
      * @throws DatabaseException
      * @throws LorisException
      */
-    public function createFeedbackType($name, $description = null)
+    public function createFeedbackType(string $name, string $description = null): int
     {
         if (empty($name) || strlen($name)>100 ) {
             throw new LorisException("Invalid feedback type name");
@@ -313,7 +313,7 @@ class NDB_BVL_Feedback
      * @return string feedback type of the thread
      * @author Evan McIlroy <evanmcilroy@gmail.com>
      */
-    function getThreadType($feedbackID)
+    function getThreadType(int $feedbackID): string
     {
         // new DB Object
         $db =& Database::singleton();
@@ -334,7 +334,7 @@ class NDB_BVL_Feedback
      *
      * @return string color hex code (format #xxxxxx)
      */
-    static function getThreadColor($status)
+    static function getThreadColor(string $status): string
     {
         if (empty($status)) {
             return '';
@@ -353,7 +353,7 @@ class NDB_BVL_Feedback
      *
      * @return string The current status.
      */
-    function getThreadStatus($feedbackID)
+    function getThreadStatus(int $feedbackID): string
     {
         // new DB Object
         $db =& Database::singleton();
@@ -374,7 +374,7 @@ class NDB_BVL_Feedback
      *
      * @return ?string the higest-order status of an active thread
      */
-    function getMaxThreadStatus($select_inactive_threads): ?string
+    function getMaxThreadStatus(string $select_inactive_threads): ?string
     {
         // new DB Object
         $db =& Database::singleton();
@@ -411,7 +411,7 @@ class NDB_BVL_Feedback
      *
      * @return string thread count
      */
-    function getThreadCount()
+    function getThreadCount(): string
     {
         // new DB Object
         $db =& Database::singleton();
@@ -450,7 +450,7 @@ class NDB_BVL_Feedback
      *
      * @return array array of threads
      */
-    function getSummaryOfThreads()
+    function getSummaryOfThreads(): array
     {
         // new DB Object
         $db =& Database::singleton();
@@ -513,7 +513,7 @@ class NDB_BVL_Feedback
      *
      * @return array
      */
-    function getThreadList()
+    function getThreadList(): array
     {
         // new DB Object
         $db =& Database::singleton();
@@ -607,13 +607,13 @@ class NDB_BVL_Feedback
     }
 
     /**
-    * Returns the list of entries for the thread
-    *
-    * @param string $feedbackID feedback_bvl_thread.FeedbackID field
-    *
-    * @return array
-    */
-    static function getThreadEntries($feedbackID)
+     * Returns the list of entries for the thread
+     *
+     * @param string $feedbackID feedback_bvl_thread.FeedbackID field
+     *
+     * @return array
+     */
+    static function getThreadEntries(string $feedbackID): array
     {
         // new DB Object
         $db =& Database::singleton();
@@ -655,7 +655,7 @@ class NDB_BVL_Feedback
      * @throws DatabaseException
      * @throws Exception
      */
-    function createThread($level, $type, $comment, $public=null,$fieldname=null)
+    function createThread(string $level, int $type, string $comment, string $public=null,string $fieldname=null): array
     {
         // new DB Object
         $DB = Database::singleton();
@@ -758,7 +758,7 @@ class NDB_BVL_Feedback
      *
      * @return array
      */
-    function createEntry($feedbackID, $comment, $username): array
+    function createEntry(int $feedbackID, string $comment, string $username): array
     {
         // new DB Object
         $db =& Database::singleton();
@@ -785,20 +785,20 @@ class NDB_BVL_Feedback
      * @param ?integer $type       The typeID to update Feedback_type to
      * @param string   $public     Y or N to update thread's public status to
      * @param string   $status     Status of the thread (options from
-     *                            feedback_bvl_thread.Status)
+     *                             feedback_bvl_thread.Status)
      * @param string   $fieldname  The optional fieldname that the thread is in
-     *                            reference to.
+     *                             reference to.
      *
      * @return void
      */
     function updateThread(
-        $feedbackID,
-        $comment,
-        $type=null,
-        $public='',
-        $status='',
-        $fieldname =''
-    ) {
+        int $feedbackID,
+        string $comment,
+        ?integer $type=null,
+        string $public='',
+        string $status='',
+        string $fieldname =''
+    ): void {
         // new DB Object
         $db =& Database::singleton();
 
@@ -849,7 +849,7 @@ class NDB_BVL_Feedback
      *
      * @return void
      */
-    function deleteThread($feedbackID)
+    function deleteThread(int $feedbackID): void
     {
         // new DB Object
         $db = \Database::singleton();
@@ -875,7 +875,7 @@ class NDB_BVL_Feedback
      *
      * @return void
      */
-    function deleteEntry($entryID)
+    function deleteEntry(string $entryID): void
     {
         // new DB Object
         $db =& Database::singleton();
@@ -891,7 +891,7 @@ class NDB_BVL_Feedback
      *
      * @return void
      */
-    function activateThread($feedbackID=null)
+    function activateThread(int $feedbackID=null): void
     {
         // new DB Object
         $db =& Database::singleton();
@@ -945,7 +945,7 @@ class NDB_BVL_Feedback
      *         refactored
      * FIXME: This needs to properly check for sites.
      */
-    function closeThread($feedbackID=null)
+    function closeThread(int $feedbackID=null): void
     {
         // new DB Object
         $db =& Database::singleton();
@@ -1003,7 +1003,7 @@ class NDB_BVL_Feedback
      *
      * @return void
      */
-    function openThread($feedbackID)
+    function openThread(int $feedbackID): void
     {
         $db =& Database::singleton();
 
@@ -1038,7 +1038,7 @@ class NDB_BVL_Feedback
      *
      * @return string name of the status
      */
-    static function getFeedbackStatusVerbose($statusID)
+    static function getFeedbackStatusVerbose(int $statusID): string
     {
         if (empty($statusID)) {
             throw new Exception(

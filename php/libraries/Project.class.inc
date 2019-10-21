@@ -54,7 +54,7 @@ class Project
      * @return Project the Project object
      * @throws LorisException
      */
-    static function &singleton($projectName)
+    static function &singleton(string $projectName): Project
     {
         if (!isset(self::$_instances[$projectName])) {
             $factory = \NDB_Factory::singleton();

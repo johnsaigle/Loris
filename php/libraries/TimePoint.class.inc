@@ -80,7 +80,7 @@ class TimePoint
      *
      * @return TimePoint object representing $sessionID
      */
-    static function &singleton(int $sessionID)
+    static function &singleton(int $sessionID): TimePoint
     {
         // instantiate new TimePoint object
         static $timePointList = array();
@@ -348,7 +348,7 @@ class TimePoint
      * use setData.
      *
      * @param array $newData Key-value pair(s) of the field(s) to change and its
-     *                              new value(s).
+     *                       new value(s).
      *
      * @return bool
      *
@@ -691,7 +691,7 @@ class TimePoint
      *
      * @return boolean true if stage is dynamic.
      */
-    function isCurrentStageDynamic()
+    function isCurrentStageDynamic(): bool
     {
         $isStageDynamic = $this->isStudyStageDynamic($this->getCurrentStage());
         return $isStageDynamic;

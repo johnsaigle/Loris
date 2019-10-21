@@ -29,7 +29,7 @@ class Notify
      * @param string   $type     The name of the notification type
      * @param string   $message  The message itself
      * @param int|null $centerID CenterID of the target recipients
-     *                         (if null, goes to all users)
+     *                           (if null, goes to all users)
      *
      * @return void
      */

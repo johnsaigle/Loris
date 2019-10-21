@@ -46,7 +46,7 @@ class NDB_Client
      *
      * @return bool true on success, false otherwise
      */
-    function initialize(?string $configFile = null)
+    function initialize(?string $configFile = null): bool
     {
         // Load the config file.
         $factory = NDB_Factory::singleton();

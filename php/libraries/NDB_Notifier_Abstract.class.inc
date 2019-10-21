@@ -373,12 +373,12 @@ abstract class NDB_Notifier_Abstract
             'notification_history',
             array(
              "module_id"    => $this->getNotificationModuleID(
-                 $this->module,
-                 $this->operation
-             ),
+                $this->module,
+                $this->operation
+            ),
              "service_id"   => $this->getNotificationServiceID(
-                 $service
-             ),
+                $service
+            ),
              "trigger_user" => $trigger_user,
              "target_user"  => $target_user,
             )

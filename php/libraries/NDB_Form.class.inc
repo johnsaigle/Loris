@@ -56,7 +56,7 @@ class NDB_Form extends NDB_Page
      *
      * @return \NDB_Form
      */
-    static function &factory($name, $page, $identifier)
+    static function &factory(string $name, string $page, string $identifier): \NDB_Form
     {
         // check that the form class exists
         if (class_exists("NDB_Form_$name")) {
@@ -112,7 +112,7 @@ class NDB_Form extends NDB_Page
      * @return void
      * @access public
      */
-    function registerDefaultFilter()
+    function registerDefaultFilter(): void
     {
         $this->form->applyFilter('__ALL__', 'trim');
     }
@@ -127,7 +127,7 @@ class NDB_Form extends NDB_Page
      * @return void
      * @access public
      */
-    function save()
+    function save(): void
     {
         if ($this->form->validate()) {
             $this->form->process(array(&$this, "_save"));
@@ -143,7 +143,7 @@ class NDB_Form extends NDB_Page
      *
      * @return void
      */
-    function _save($values)
+    function _save(array $values): void
     {
         unset(
             $values['test_name'],
@@ -173,7 +173,7 @@ class NDB_Form extends NDB_Page
      *
      * @return void
      */
-    function _process($values)
+    function _process(array $values): void
     {
         return;
     }
