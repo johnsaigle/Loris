@@ -2128,6 +2128,10 @@ abstract class NDB_BVL_Instrument extends NDB_Page
                 "SELECT * FROM $instrumentInstance->table WHERE CommentID=:CID",
                 array('CID' => $instrumentInstance->getCommentID())
             );
+            array_map(
+                'htmlspecialchars_decode',
+                $defaults
+            );
             return $defaults ?? array();
         }
     }
