@@ -12,6 +12,7 @@
     <div class="success-message">
       <h1>Thank you!</h1>
       <p>Your request for an account has been received successfully.</p>
+      <p>Please <a href='mailto:ukbiobank.neurohub@mcin.ca'>email your supporting documents</a> in order to complete the registration process.</p>
       <a href="/" class="btn btn-primary btn-block">
         Return to Login Page
       </a>
@@ -60,6 +61,32 @@
       </div>
       <div class="form-group">
           {$form.radiologist.html}
+      </div>
+      <div class="form-group">
+          <h4>Consent Information</h4>
+		<p>You must read the following forms in order to request an account.</p>
+		<ul>
+		<!-- <li><a href={$mta}>Material Transfer Agreement</a></li> -->
+		<li>Material Transfer Agreement (not yet available)</li>
+		<li><a href='?download=consent'>McGill User Consent Form</a></li>
+		</ul>
+          {$form.consent.html}
+          {if $form.consent.error}
+            <span id="helpBlock" class="help-block">
+              <b class="text-danger">{$form.consent.error}</b>
+            </span>
+          {/if}
+	<!-- The following lines are not used at this time but may be useful later.
+		Design decisions are needed for how uploaded files will be processed.
+		<h5>Supporting Documents</h5>
+	<!--	<p><i>Please add the completed McGill User Consent Form as well as any required supporting documents <b>as a single file</b> and upload using the button below.</i></p>
+        <!--  {$form.upload.html}
+        <!--  {if $form.upload.error}
+        <!--    <span id="helpBlock" class="help-block">
+        <!--      <b class="text-danger">{$form.upload.error}</b>
+        <!--    </span>
+        <!--  {/if} -->
+
       </div>
         {if $captcha_key}
             {* Google reCaptcha *}

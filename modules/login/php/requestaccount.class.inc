@@ -32,6 +32,29 @@ class RequestAccount extends \NDB_Form
      */
     function setup()
     {
+	    // Serve the files as downloadable links upon GET. If POST present, do not
+	    // serve files as this may interfere with file downloading.
+	    // This is a hack...
+	    if (isset($_GET['download']) && empty($_POST)) {
+		    switch ($_GET['download']) {
+			    case 'mta':
+				    //TODO Change this to link to the MTA once it has been
+				    //de-identified.
+				    //$filename = 'mta.doc';
+				    $filename = 'mcgill-user-consent-form.docx';
+				    break;
+			    case 'consent':
+				    $filename = 'mcgill-user-consent-form.docx';
+				    break;
+			    default:
+				    http_response_code(400);
+				    return;
+		    }
+		    header('Content-Disposition: attachment; filename=' . $filename);
+		    $fp = fopen("/data/loris/account_requests/$filename", 'r');
+		    fpassthru($fp);
+		    fclose($fp);
+	    }
         $config   = \NDB_Config::singleton();
         $tpl_data = array();
         $this->tpl_data['page_title'] = 'Request Account';
@@ -72,6 +95,26 @@ class RequestAccount extends \NDB_Form
         $this->addCheckbox("examiner", "Examiner role", array());
         $this->addCheckbox("radiologist", "Radiologist", array());
 
+	// Add consent elements.
+	$tpl_data['mta'] = 'test';
+	$tpl_data['mcgillconsent'] = 'test';
+	$this->addCheckbox(
+		"consent", 
+		"I confirm that I have read and understood the MTA & Approved Application"
+		. " and agree to act in accordance with all terms and conditions therein."
+		,
+		array('required' => true)
+	);
+
+	$this->addFile(
+		'upload', 
+		'Supporting Document', 
+		array(
+			"placeholder" => "Upload file...",
+			"required"    => true,
+		)
+	);
+
         // Get reCATPCHA keys
         $reCAPTCHAPrivate = $config->getSetting('reCAPTCHAPrivate');
         $reCAPTCHAPublic  = $config->getSetting('reCAPTCHAPublic');
@@ -92,6 +135,7 @@ class RequestAccount extends \NDB_Form
      */
     function _validate($values): array
     {
+
         $errors = array();
         // FIXME: These error checks are direct ports from when the request
         // account page was a standalone php script (with the ridiculous
@@ -113,6 +157,15 @@ class RequestAccount extends \NDB_Form
         if (empty($values['site'])) {
             $errors['site'] = "Please choose a site!";
         }
+
+	if (!isset($values['consent'])) {
+	    $errors['consent'] = "You must consent to proceed.";
+	}
+
+	#if (empty($_FILES)) {
+	#	error_log('_FILES is empty');
+	#    $errors['upload'] = "You must upload a file.";
+	#}
 
         // I don't think this is required because insert uses prepared statements,
         // but I'm keeping it for now because it doesn't do any harm (unlike the
@@ -143,6 +196,7 @@ class RequestAccount extends \NDB_Form
      */
     function _process($values)
     {
+
         $DB       = \Database::singleton();
         $name     = htmlspecialchars($_REQUEST["firstname"], ENT_QUOTES);
         $lastname = htmlspecialchars($_REQUEST["lastname"], ENT_QUOTES);
@@ -234,6 +288,21 @@ class RequestAccount extends \NDB_Form
                 $err['captcha'] = 'Please complete the reCaptcha!';
             }
         }
+
+	// Do file upload. TODO This is provisional code used to get a demo working.
+	// It should not be used on production. Update this code to use the class
+	// FilesUploadHandler ASAP!
+	#$filepath = 
+	#	'/data/loris/account_requests/' . 
+	#	sprintf("%s_%s_%s/", $lastname, $name, date('Y-m-d'));
+	#error_log($filepath);
+	#mkdir($filepath, 0755, true);
+	#if (move_uploaded_file($_FILES["upload"]["tmp_name"], $filepath . 'consent') === false) {
+	#	error_log('Could not upload file.');
+	#	$err['upload'] = 'Upload failed. Please contact the administrator.';
+	#}
+	#chmod($filepath . 'consent', 400);
+
         // Show success message even if email already exists for security reasons
         $this->tpl_data['success'] = true;
     }
